@@ -1,0 +1,45 @@
+name: 每日行情自動更新
+# 台灣時間週一至週五 18:30 執行（UTC 10:30）：抓最近 14 天增量、重建掃描包、
+# commit 回 repo 後由 pages.yml 自動重新部署，使用者開站即是最新資料。
+on:
+  schedule:
+    - cron: "30 10 * * 1-5"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: data-update
+  cancel-in-progress: false
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 每日增量更新
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: python3 backend/update_data.py daily --sleep 0.3
+      - name: Commit 資料
+        id: commit
+        run: |
+          git config user.name "twstock-data-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "無資料變動，不 commit"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "data: 每日行情自動更新 $(date -u +%F)"
+            git push
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: 觸發 Pages 重新部署
+        if: steps.commit.outputs.committed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml
