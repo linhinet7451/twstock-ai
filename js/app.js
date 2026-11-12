@@ -143,6 +143,7 @@ async function loadBackendData(autoScanAfter) {
     const csvOnly = state.realStocks.filter(s => !backendStocks.some(b => b.code === s.code));
     state.realStocks = backendStocks.concat(csvOnly);
     state.mode = 'real'; backendLoaded = true;
+    state.backendUpdatedAt = man.updatedAt; state.backendLatest = man.latestDate;
     statusEl.textContent = `後端資料：${man.scanStocks} 檔可掃描（共 ${man.stockCount} 檔含完整歷史）｜最新行情 ${man.latestDate}｜更新於 ${man.updatedAt}（每日盤後由後端排程自動更新）`;
     log(`後端資料載入完成：${backendStocks.length} 檔，最新 ${man.latestDate}`);
     refreshStatus(); setProgress(100, '後端資料載入完成');
@@ -169,21 +170,26 @@ async function ensureFullHistory(stock) {
   } catch (e) { return stock; } // 無完整歷史檔時用既有資料
 }
 
-// ---------- 官方資料 (#35, #169-170) ----------
-async function fetchOfficialSnapshot() {
+// ---------- 更新最新資料（後端線路） ----------
+// 官方 TWSE/TPEx OpenAPI 皆未提供 Access-Control-Allow-Origin 標頭（2026-11-12 實測），
+// 瀏覽器直連必被 CORS 阻擋，且舊版快照下載後未併入資料集、按下等於沒作用。
+// 改走穩定線路：後端（GitHub Actions）每日盤後自動更新 data/ 資料包，本鈕負責檢查並取回最新一版後自動重掃。
+async function updateToLatest() {
   if (state.busy) return noteBusy();
-  setBusy(true); setProgress(10, '下載 TWSE／TPEx 最新日線…');
+  setBusy(true); setProgress(10, '檢查後端最新資料…');
   try {
-    const twse = await (await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL')).json();
-    log(`TWSE 最新日線取得 ${twse.length} 檔`);
-    let tpexCount = 0;
-    try { const tpex = await (await fetch('https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes')).json(); tpexCount = tpex.length; log(`TPEx 最新日線取得 ${tpexCount} 檔`); }
-    catch (e) { log('TPEx 介面取得失敗：' + e.message); }
-    state.snapshot = twse;
-    setProgress(100, `官方最新日線完成：TWSE ${twse.length} 檔、TPEx ${tpexCount} 檔（歷史掃描需 CSV 匯入或個股補抓）`);
+    const man = await (await fetch('data/manifest.json', { cache: 'no-store' })).json();
+    if (!man || !man.scanFile) throw new Error('後端 manifest 格式不正確');
+    const isNewer = !state.backendUpdatedAt || man.updatedAt !== state.backendUpdatedAt;
+    const okLoad = await loadBackendData(false);
+    if (!okLoad) throw new Error('後端資料載入失敗');
+    setProgress(100, isNewer
+      ? `已更新到最新資料：行情 ${man.latestDate}、${man.scanStocks} 檔可掃描（後端更新於 ${man.updatedAt}）`
+      : `目前已是最新資料：行情 ${man.latestDate}、${man.scanStocks} 檔（後端每日 18:30 自動更新，有新版時按此鈕即可取得）`);
+    runScan();
   } catch (e) {
-    log('官方資料下載失敗（可能為網路或 CORS 限制）：' + e.message);
-    setProgress(0, '下載失敗：' + e.message);
+    log('更新失敗：' + e.message);
+    setProgress(0, '更新失敗：' + e.message);
   } finally { setBusy(false); refreshStatus(); }
 }
 async function fetchStockHistoryTWSE(code, months) {
@@ -224,6 +230,7 @@ async function runScan() {
   }
   try {
     const res = TWCore.scan(stocks, scanOpts());
+    state.lastStats = res.stats;
     state.results.candidates = res.allCandidates.slice(0, scanOpts().topN);
     state.results.watch = res.watch;
     $('sumScanned').textContent = res.stats.scanned;
@@ -276,7 +283,12 @@ function renderList() {
   const empty = $('emptyHint');
   if (!list.length) {
     empty.classList.remove('hidden');
-    empty.textContent = '目前名單是空的。可能原因：門檻過高、資料不足或最新日期不一致。可嘗試降低最低技術分／進場適合度、放寬成交額、勾選納入 ETF，或先補齊歷史資料。系統不會為了湊數放寬標準。';
+    const st = state.lastStats;
+    if (st && st.scanned === 0 && st.typeExcluded > 0) {
+      empty.textContent = `目前這批資料的 ${st.typeExcluded} 檔全是代號 00 開頭的 ETF／ETN，而你沒有勾選「納入 ETF 推薦」，所以實際掃描 0 檔、名單為空。勾選「納入 ETF」後重新掃描就會有結果；一般股票（代號 1101 起）會隨後端回補進度陸續加入（回補依代號順序進行中）。`;
+    } else {
+      empty.textContent = '目前名單是空的。可能原因：門檻過高、資料不足或最新日期不一致。可嘗試降低最低技術分／進場適合度、放寬成交額、勾選納入 ETF，或先補齊歷史資料。系統不會為了湊數放寬標準。';
+    }
   } else empty.classList.add('hidden');
   if (list.length && (!state.selected || !list.some(a => a.code === state.selected.code))) selectAnalysis(list[0], false);
   else if (state.selected) selectAnalysis(state.selected, false);
@@ -588,7 +600,7 @@ function init() {
 loadSettings();
 SETTING_IDS.forEach(id => $(id).addEventListener('change', saveSettings));
 document.querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { $('inpDays').value = b.dataset.days; saveSettings();}));
-$('btnOfficial').addEventListener('click', () => { if (confirm('官方介面僅提供最新一日全市場行情；長期歷史請以 CSV 匯入或個股補抓為準。下載可能因網路／CORS 失敗，確定繼續？')) fetchOfficialSnapshot();});
+$('btnOfficial').addEventListener('click', updateToLatest);
 $('btnIntegrity').addEventListener('click', showIntegrity);
 $('btnDemo').addEventListener('click', () => { state.mode = 'demo'; if (!state.demoStocks.length) state.demoStocks = TWDemo.generateDemoStocks(); refreshStatus(); log('已載入離線示範資料（虛構）'); runScan();});
 $('btnReal').addEventListener('click', () => { state.mode = 'real'; refreshStatus(); log('已切回正式資料模式');});
