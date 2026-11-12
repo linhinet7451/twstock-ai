@@ -60,12 +60,16 @@ function markPreset() {
   const hint = $('presetHint');
   if (hint) hint.textContent = active ? PRESETS[active].desc : '自訂門檻：你已手動微調下面的分數，不屬於任何預設風格。';
 }
-function applyPreset(k) {
+async function applyPreset(k) {
   const p = PRESETS[k]; if (!p) return;
   $('inpMinTech').value = p.tech; $('inpMinEntry').value = p.entry;
   saveSettings(); markPreset();
   log(`已套用選股風格「${p.label}」（技術分 ≥ ${p.tech}、進場適合度 ≥ ${p.entry}）`);
-  if (stocksNow().length) runScan();
+  if (stocksNow().length) {
+    const y = window.scrollY;         // 掃描會重繪上方結果區、改變頁面高度，先記住位置
+    await runScan();
+    window.scrollTo(0, y);            // 掃完回到原位，避免畫面亂跳
+  }
 }
 
 function scanOpts() {
@@ -280,6 +284,7 @@ function currentList() {
   if ($('chkNear').checked) list = list.filter(a => a.status === '接近進場');
   return list;
 }
+const CARD_KEY = [0, 1, 2, 5, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18]; // 手機卡片預設顯示的關鍵欄位，其餘收進「展開全部欄位」
 function renderList() {
   const list = currentList();
   const body = $('resultBody');
@@ -299,7 +304,11 @@ function renderList() {
       ['目標1 / 目標2', `${fmt(a.strat.target1)} / ${fmt(a.strat.target2)}`],
       ['風險報酬', '1 : ' + fmt(a.strat.rr)], ['推薦／觀察原因', a.reason],
     ];
-    tr.innerHTML = cells.map(([label, v], ci) => `<td data-label="${label}"${ci === 18 ? ' class="reason"' : ''}>${v}</td>`).join('');
+    tr.innerHTML = cells.map(([label, v], ci) => `<td data-label="${label}" class="${ci === 18 ? 'reason ' : ''}${CARD_KEY.includes(ci) ? 'k' : 'x'}">${v}</td>`).join('');
+    const tg = document.createElement('td');
+    tg.className = 'tg'; tg.textContent = '▾ 展開全部欄位';
+    tg.addEventListener('click', ev => { ev.stopPropagation(); const open = tr.classList.toggle('open'); tg.textContent = open ? '▴ 收合欄位' : '▾ 展開全部欄位'; });
+    tr.appendChild(tg);
     tr.addEventListener('click', () => selectAnalysis(a, true));
     body.appendChild(tr);
   });
@@ -599,16 +608,20 @@ function download(blob, name) { const a = document.createElement('a'); a.href = 
 
 // ---------- 完整性統計 (#45-48) ----------
 function showIntegrity() {
-const stocks = stocksNow();
-const by = {};
-for (const s of stocks) { const m = s.market; by[m] = by[m] || { count: 0, rows: 0, min: '9999', max: ''}; by[m].count++; by[m].rows += s.bars.close.length; const f = s.bars.dates[0], l = s.bars.dates.at(-1); if (f < by[m].min) by[m].min = f; if (l > by[m].max) by[m].max = l;}
-let bad = 0;
-for (const s of stocks) for (let i = 0; i < s.bars.close.length; i++) { const b = s.bars; if (!(b.high[i] >= b.low[i] && b.close[i] > 0 && b.volume[i] >= 0)) bad++;}
-const etf = stocks.filter(s => TWCore.isETF(s.code)).length;
-alert(`行情完整性（目前模式：${state.mode === 'demo'? '示範': '正式／匯入'}）\n` +
-Object.entries(by).map(([m, v]) => `${m}：${v.count} 檔、${v.rows} 筆日線、${v.min} ～ ${v.max}`).join('\n') +
-`\nETF 粗估數量（代號 00 開頭）：${etf}\n異常 OHLCV 筆數：${bad}\n先前下載失敗市場日期數：${state.failedDates.length}`);
-log('已開啟完整性統計');
+  try {
+    const stocks = stocksNow();
+    if (!stocks.length) { setProgress(0, '目前沒有資料可檢查，請先載入後端資料或示範資料'); return; }
+    const by = {};
+    for (const s of stocks) { const m = s.market; by[m] = by[m] || { count: 0, rows: 0, min: '9999', max: '' }; by[m].count++; by[m].rows += s.bars.close.length; const f = s.bars.dates[0], l = s.bars.dates[s.bars.dates.length - 1]; if (f < by[m].min) by[m].min = f; if (l > by[m].max) by[m].max = l; }
+    let bad = 0;
+    for (const s of stocks) { const b = s.bars; for (let i = 0; i < b.close.length; i++) { if (!(b.high[i] >= b.low[i] && b.close[i] > 0 && b.volume[i] >= 0)) bad++; } }
+    const etf = stocks.filter(s => TWCore.isETF(s.code)).length;
+    $('integrityBody').innerHTML = `目前模式：${state.mode === 'demo' ? '示範' : '正式／匯入'}<br>` +
+      Object.entries(by).map(([m, v]) => `${m}：${v.count} 檔、${v.rows.toLocaleString()} 筆日線、${v.min} ～ ${v.max}`).join('<br>') +
+      `<br>ETF 粗估數量（代號 00 開頭）：${etf}<br>異常 OHLCV 筆數：${bad}<br>先前下載失敗市場日期數：${state.failedDates.length}`;
+    $('integrityDialog').showModal();
+    log('已開啟完整性統計');
+  } catch (e) { setProgress(0, '完整性檢查失敗：' + e.message); log('完整性檢查失敗：' + e.message); }
 }
 
 // ---------- 分頁切換 ----------
