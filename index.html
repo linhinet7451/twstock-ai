@@ -50,14 +50,22 @@
 
     <details open class="block"><summary>② 選股設定</summary>
       <div class="block-body">
+        <label>選股風格（點一下就套用，不用懂分數）</label>
+        <div class="btn-row" id="presetRow">
+          <button class="btn small preset" data-preset="strict">嚴選強勢</button>
+          <button class="btn small preset" data-preset="steady">穩健推薦</button>
+          <button class="btn small preset" data-preset="active">積極進場</button>
+          <button class="btn small preset" data-preset="all">全部探索</button>
+        </div>
+        <p class="hint" id="presetHint"></p>
         <label>推薦最多幾檔（1～9999）<input type="number" id="inpTopN" min="1" max="9999" value="10"></label>
-        <label>最低技術分（0～100）<input type="number" id="inpMinTech" min="0" max="100" value="65"></label>
+        <label>最低技術分（進階微調，0～100）<input type="number" id="inpMinTech" min="0" max="100" value="65"></label>
         <label>近20日均成交額（百萬元，0～2000）<input type="number" id="inpMinAmount" min="0" max="2000" value="10"></label>
         <label>策略週期
           <select id="selPeriod"><option>自動判斷</option><option>短線</option><option>中線</option><option>中長線</option><option>長線</option></select></label>
         <label>推薦模式
           <select id="selSort"><option>綜合模式</option><option>技術強勢優先</option><option>近期進場優先</option></select></label>
-        <label>最低進場適合度（0～100）<input type="number" id="inpMinEntry" min="0" max="100" value="45"></label>
+        <label>最低進場適合度（進階微調，0～100）<input type="number" id="inpMinEntry" min="0" max="100" value="45"></label>
         <label class="check"><input type="checkbox" id="chkEtf"> 納入 ETF 推薦</label>
         <button id="btnExplain" class="btn">查看技術分／進場適合度計算說明</button>
       </div>
