@@ -45,6 +45,29 @@ function loadSettings() {
     for (const id of SETTING_IDS) if (id in d) { const el = $(id); if (el.type === 'checkbox') el.checked = !!d[id]; else el.value = d[id]; }
   } catch (e) { /* ignore */ }
 }
+// ---------- 選股風格預設（把分數門檻藏在直觀名稱後面） ----------
+const PRESETS = {
+  strict: { tech: 75, entry: 60, label: '嚴選強勢', desc: '嚴選強勢：只列趨勢與動能最強、且已在合理進場位置的股票。名單通常很短，盤勢偏弱時可能一檔都沒有——那是系統在保護你，不是故障。' },
+  steady: { tech: 65, entry: 45, label: '穩健推薦', desc: '穩健推薦：技術面夠強、又接近合理進場點才列入（原系統預設標準；不確定選哪個，就用這個）。盤勢弱時名單會明顯變短。' },
+  active: { tech: 50, entry: 30, label: '積極進場', desc: '積極進場：趨勢剛確立（約一半技術訊號成立）的股票也納入，名單較多，適合願意自己再篩一輪的人。' },
+  all:    { tech: 0,  entry: 0,  label: '全部探索', desc: '全部探索：通過策略基本檢查的全部列出，自己慢慢研究（風報比太差、條件失效的仍會擋下）。' },
+};
+function markPreset() {
+  const t = +$('inpMinTech').value || 0, e = +$('inpMinEntry').value || 0;
+  let active = '';
+  for (const k in PRESETS) if (PRESETS[k].tech === t && PRESETS[k].entry === e) active = k;
+  document.querySelectorAll('.preset').forEach(b => b.classList.toggle('active', b.dataset.preset === active));
+  const hint = $('presetHint');
+  if (hint) hint.textContent = active ? PRESETS[active].desc : '自訂門檻：你已手動微調下面的分數，不屬於任何預設風格。';
+}
+function applyPreset(k) {
+  const p = PRESETS[k]; if (!p) return;
+  $('inpMinTech').value = p.tech; $('inpMinEntry').value = p.entry;
+  saveSettings(); markPreset();
+  log(`已套用選股風格「${p.label}」（技術分 ≥ ${p.tech}、進場適合度 ≥ ${p.entry}）`);
+  if (stocksNow().length) runScan();
+}
+
 function scanOpts() {
   return {
     topN: Math.max(1, Math.min(9999, +$('inpTopN').value || 10)),
@@ -599,6 +622,9 @@ if (id === 'tabStrategy' && state.selected) drawChart(state.selected);
 function init() {
 loadSettings();
 SETTING_IDS.forEach(id => $(id).addEventListener('change', saveSettings));
+document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
+['inpMinTech', 'inpMinEntry'].forEach(id => $(id).addEventListener('change', markPreset));
+markPreset();
 document.querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { $('inpDays').value = b.dataset.days; saveSettings();}));
 $('btnOfficial').addEventListener('click', updateToLatest);
 $('btnIntegrity').addEventListener('click', showIntegrity);
