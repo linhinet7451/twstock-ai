@@ -44,6 +44,7 @@ jobs:
             --batch "${{ inputs.batch || '300' }}" \
             --sleep 0.5
       - name: Commit 資料與進度
+        if: always()
         id: commit
         run: |
           git config user.name "twstock-data-bot"
@@ -62,15 +63,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run pages.yml
       - name: 自動接力下一批
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           REMAINING=$(python3 -c "import json;print(json.load(open('data/state.json')).get('remaining',0))")
           RUNS=$(python3 -c "import json;print(json.load(open('data/state.json')).get('runs',0))")
-          echo "remaining=$REMAINING runs=$RUNS"
-          if [ "$REMAINING" -gt 0 ] && [ "$RUNS" -lt 20 ]; then
+          RL=$(python3 -c "import json;print(json.load(open('data/state.json')).get('rate_limited',False))")
+          ERR=$(python3 -c "import json;print(json.load(open('data/state.json')).get('last_error',''))")
+          echo "remaining=$REMAINING runs=$RUNS rate_limited=$RL last_error=$ERR"
+          if [ "$REMAINING" -gt 0 ] && [ "$RUNS" -lt 20 ] && [ "$RL" != "True" ] && [ -z "$ERR" ]; then
             gh workflow run data-backfill.yml
             echo "已接力下一批"
           else
-            echo "回補完成或達接力上限，停止接力"
+            echo "回補完成、達接力上限、被限流或發生錯誤，停止接力（進度已 commit，可稍後手動再觸發）"
           fi
