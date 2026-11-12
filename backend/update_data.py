@@ -1,1 +1,321 @@
-IyEvdXNyL2Jpbi9lbnYgcHl0aG9uMwoiIiLlj7DogqEgQUkg5pm65oWn6YG46IKh5bel5L2c5Y+wIFYyLjDvvIjntrLpoIHniYjvvInigJQg6LOH5paZ5b6M56uvCgrmnrbmp4vvvJpHaXRIdWIgQWN0aW9ucyDlsLHmmK/lvoznq6/jgILmnKzohbPmnKzlnKggQWN0aW9ucyDoo6Hln7fooYzvvIjmjpLnqIvmr4/ml6Xlop7ph4/jgIEK5omL5YuV5YiG5om55Zue6KOc77yJ77yM5oqK6KGM5oOF5a+r5oiQ6Z2c5oWL5qqU5qGIIGNvbW1pdCDlm54gcmVwb++8jEdpdEh1YiBQYWdlcyDpg6jnvbLlvowK5YmN56uv55u05o6l6K6A5Y+W77yM5L2/55So6ICF6ZaL56uZ5Y2z5piv5pyA5paw6LOH5paZ77yM5LiN6ZyA6KaB5Lu75L2V5Lq65omL5YuV5pu05paw44CCCgros4fmlpnkvobmupDvvJpGaW5NaW5kIEFQSe+8iFRhaXdhblN0b2NrSW5mbyAvIFRhaXdhblN0b2NrUHJpY2XvvIzmtrXok4sgVFdTRe+8i1RQRXjvvIwK5Zau5LiA6KuL5rGC5Y2z5Y+v5Y+W5Zue5LiA5qqU6IKh56Wo55qE5a6M5pW05q235Y+y77yM6YGp5ZCI5Zue6KOcIDEwIOW5tO+8ieOAggrlj6/pgbjnkrDlooPorormlbggRklOTUlORF9UT0tFTu+8iOWcqCByZXBvIFNlY3JldHMg6Kit5a6a77yJ5Y+v5o+Q6auYIEFQSSDphY3poY3vvJsK5pyq6Kit5a6a5pmC5Lul5pyq55m75YWl6YWN6aGN5Z+36KGM77yM6IWz5pys5pyD6Ieq5YuV56+A5rWB5LiU5Y+v5Lit5pa357qM6LeR44CCCgrmqpTmoYjnlKLlh7rvvIhkYXRhL++8ie+8mgogIGhpc3RvcnkvPGNvZGU+Lmpzb24uZ3og5q+P5qqU5a6M5pW05q235Y+y77yIZ3ppcO+8jOe0hCA1MUtCL+aqlO+8ie+8mnsiY29kZSIsIm5hbWUiLCJtYXJrZXQiLCJyb3dzIjpbW2RhdGUsbyxoLGwsYyx2LGFtdF0sLi4uXX0KICBzY2FuLmpzb24uZ3ogICAgICAgICAg5pyA6L+RIDM3MCDlgIvkuqTmmJPml6XnmoTlhajluILloLTnsr7nsKHljIXvvIjliY3nq6/mjoPmj4/nlKjvvIxnemlw77yJCiAgbWFuaWZlc3QuanNvbiAgICAgICAgIHt1cGRhdGVkQXQsIGxhdGVzdERhdGUsIHN0b2NrQ291bnQsIHdpdGhIaXN0b3J5LCBzY2FuRmlsZSwuLi59CiAgc3RhdGUuanNvbiAgICAgICAgICAgIOWbnuijnOmAsuW6piB7ZG9uZTpbLi4uXSwgZW1wdHk6Wy4uLl0sIGZhaWxlZDp7Li4ufX3vvIhjb21taXQg5b6M5Y+v57qM6LeR77yJCgrnlKjms5XvvJoKICBweXRob24zIGJhY2tlbmQvdXBkYXRlX2RhdGEucHkgYmFja2ZpbGwgLS15ZWFycyAxMCAtLWJhdGNoIDE1MCBbLS1zbGVlcCAwLjVdCiAgcHl0aG9uMyBiYWNrZW5kL3VwZGF0ZV9kYXRhLnB5IGRhaWx5ICAgIFstLXNsZWVwIDAuM10gICAgICAgICMg5pyA6L+RIDE0IOWkqeWinumHj+WQiOS9tQogIHB5dGhvbjMgYmFja2VuZC91cGRhdGVfZGF0YS5weSBidWlsZCAgICAgICAgICAgICAgICAgICAgICAgICAgIyDph43lu7ogc2Nhbi5qc29uLmd6ICsgbWFuaWZlc3QKICBweXRob24zIGJhY2tlbmQvdXBkYXRlX2RhdGEucHkgc2VsZnRlc3QgICAgICAgICAgICAgICAgICAgICAgICMg6Zui57ea6Ieq5oiR5ris6KmmCiIiIgpmcm9tIF9fZnV0dXJlX18gaW1wb3J0IGFubm90YXRpb25zCgppbXBvcnQgYXJncGFyc2UKaW1wb3J0IGd6aXAKaW1wb3J0IGpzb24KaW1wb3J0IG9zCmltcG9ydCByZQppbXBvcnQgc3lzCmltcG9ydCB0aW1lCmltcG9ydCB1cmxsaWIucGFyc2UKaW1wb3J0IHVybGxpYi5yZXF1ZXN0CmZyb20gZGF0ZXRpbWUgaW1wb3J0IGRhdGUsIHRpbWVkZWx0YQpmcm9tIHBhdGhsaWIgaW1wb3J0IFBhdGgKCkFQSSA9ICJodHRwczovL2FwaS5maW5taW5kdHJhZGUuY29tL2FwaS92NC9kYXRhIgpDT0RFX1JFID0gcmUuY29tcGlsZShyIl5bMC05QS1aXXs0LDZ9JCIpClNDQU5fREFZUyA9IDM3MCAgICAgICAgICAjIOWJjeerr+WFqOW4guWgtOaOg+aPj+mcgOimgeeahOacgOWkp+aXpee3muaVuO+8iGNvcmUuanMg5LiK6ZmQIDM2MO+8jOeVmee3qeihne+8iQpNSU5fU0NBTl9ST1dTID0gMTI1ICAgICAgIyDntI3lhaXmjoPmj4/nmoTmnIDlsJHkuqTmmJPml6XvvIjopo/moLwgIzk477yJCgoKZGVmIGxvZygqYSk6CiAgICBwcmludCgiW3VwZGF0ZV9kYXRhXSIsICphLCBmbHVzaD1UcnVlKQoKCmRlZiBmZXRjaF9qc29uKGRhdGFzZXQ6IHN0ciwgdG9rZW46IHN0ciA9ICIiLCAqKnBhcmFtcykgLT4gbGlzdFtkaWN0XToKICAgIHEgPSB7ImRhdGFzZXQiOiBkYXRhc2V0LCAqKntrOiB2IGZvciBrLCB2IGluIHBhcmFtcy5pdGVtcygpIGlmIHYgbm90IGluICgiIiwgTm9uZSl9fQogICAgaWYgdG9rZW46CiAgICAgICAgcVsidG9rZW4iXSA9IHRva2VuCiAgICB1cmwgPSBBUEkgKyAiPyIgKyB1cmxsaWIucGFyc2UudXJsZW5jb2RlKHEpCiAgICByZXEgPSB1cmxsaWIucmVxdWVzdC5SZXF1ZXN0KHVybCwgaGVhZGVycz17IlVzZXItQWdlbnQiOiAidHdzdG9jay13ZWItYmFja2VuZC8yLjAifSkKICAgIHdpdGggdXJsbGliLnJlcXVlc3QudXJsb3BlbihyZXEsIHRpbWVvdXQ9NjApIGFzIHJlc3A6CiAgICAgICAgcGF5bG9hZCA9IGpzb24ubG9hZHMocmVzcC5yZWFkKCkuZGVjb2RlKCJ1dGYtOCIpKQogICAgaWYgcGF5bG9hZC5nZXQoInN0YXR1cyIpICE9IDIwMDoKICAgICAgICByYWlzZSBSdW50aW1lRXJyb3IoZiJGaW5NaW5kIHtkYXRhc2V0fToge3BheWxvYWQuZ2V0KCdtc2cnKX0iKQogICAgcmV0dXJuIHBheWxvYWQuZ2V0KCJkYXRhIikgb3IgW10KCgpkZWYgZ2V0X3N0b2NrX2xpc3QodG9rZW46IHN0cikgLT4gbGlzdFtkaWN0XToKICAgIHJvd3MgPSBmZXRjaF9qc29uKCJUYWl3YW5TdG9ja0luZm8iLCB0b2tlbikKICAgIGJlc3Q6IGRpY3Rbc3RyLCBkaWN0XSA9IHt9CiAgICBmb3IgciBpbiByb3dzOgogICAgICAgIGlmIHIuZ2V0KCJ0eXBlIikgbm90IGluICgidHdzZSIsICJ0cGV4Iik6CiAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgY29kZSA9IHN0cihyLmdldCgic3RvY2tfaWQiLCAiIikpLnN0cmlwKCkKICAgICAgICBpZiBub3QgQ09ERV9SRS5tYXRjaChjb2RlKToKICAgICAgICAgICAgY29udGludWUKICAgICAgICBpZiBjb2RlIG5vdCBpbiBiZXN0IG9yIChyLmdldCgiZGF0ZSIpIG9yICIiKSA+IChiZXN0W2NvZGVdLmdldCgiZGF0ZSIpIG9yICIiKToKICAgICAgICAgICAgYmVzdFtjb2RlXSA9IHIKICAgIG91dCA9IFt7CiAgICAgICAgImNvZGUiOiBjb2RlLAogICAgICAgICJuYW1lIjogci5nZXQoInN0b2NrX25hbWUiKSBvciBjb2RlLAogICAgICAgICJtYXJrZXQiOiAiVFdTRSIgaWYgclsidHlwZSJdID09ICJ0d3NlIiBlbHNlICJUUEVYIiwKICAgIH0gZm9yIGNvZGUsIHIgaW4gc29ydGVkKGJlc3QuaXRlbXMoKSldCiAgICBsb2coZiLogqHnpajmuIXllq7vvJp7bGVuKG91dCl9IOaqlO+8iFRXU0UvVFBFeCDljrvph43lvozvvIkiKQogICAgcmV0dXJuIG91dAoKCmRlZiByb3dzX2Zyb21fcHJpY2VzKGRhdGE6IGxpc3RbZGljdF0pIC0+IGxpc3RbbGlzdF06CiAgICByb3dzID0gW10KICAgIGZvciByIGluIGRhdGE6CiAgICAgICAgdHJ5OgogICAgICAgICAgICByb3dzLmFwcGVuZChbCiAgICAgICAgICAgICAgICByWyJkYXRlIl0sCiAgICAgICAgICAgICAgICByb3VuZChmbG9hdChyWyJvcGVuIl0pLCAyKSwgcm91bmQoZmxvYXQoclsibWF4Il0pLCAyKSwKICAgICAgICAgICAgICAgIHJvdW5kKGZsb2F0KHJbIm1pbiJdKSwgMiksIHJvdW5kKGZsb2F0KHJbImNsb3NlIl0pLCAyKSwKICAgICAgICAgICAgICAgIGludChmbG9hdChyWyJUcmFkaW5nX1ZvbHVtZSJdKSksIGludChmbG9hdChyWyJUcmFkaW5nX21vbmV5Il0pKSwKICAgICAgICAgICAgXSkKICAgICAgICBleGNlcHQgKEtleUVycm9yLCBUeXBlRXJyb3IsIFZhbHVlRXJyb3IpOgogICAgICAgICAgICBjb250aW51ZQogICAgcmV0dXJuIHJvd3MKCgpkZWYgbWVyZ2Vfcm93cyhvbGQ6IGxpc3RbbGlzdF0sIG5ldzogbGlzdFtsaXN0XSkgLT4gbGlzdFtsaXN0XToKICAgIGJ5X2RhdGUgPSB7clswXTogciBmb3IgciBpbiBvbGR9CiAgICBmb3IgciBpbiBuZXc6CiAgICAgICAgYnlfZGF0ZVtyWzBdXSA9IHIKICAgIHJldHVybiBbYnlfZGF0ZVtkXSBmb3IgZCBpbiBzb3J0ZWQoYnlfZGF0ZSldCgoKY2xhc3MgU3RvcmU6CiAgICBkZWYgX19pbml0X18oc2VsZiwgZGF0YV9kaXI6IFBhdGgpOgogICAgICAgIHNlbGYuZGlyID0gZGF0YV9kaXIKICAgICAgICBzZWxmLmhpc3QgPSBkYXRhX2RpciAvICJoaXN0b3J5IgogICAgICAgIHNlbGYuaGlzdC5ta2RpcihwYXJlbnRzPVRydWUsIGV4aXN0X29rPVRydWUpCiAgICAgICAgc2VsZi5zdGF0ZV9wYXRoID0gZGF0YV9kaXIgLyAic3RhdGUuanNvbiIKICAgICAgICBzZWxmLnN0YXRlID0geyJkb25lIjogW10sICJlbXB0eSI6IFtdLCAiZmFpbGVkIjoge319CiAgICAgICAgaWYgc2VsZi5zdGF0ZV9wYXRoLmV4aXN0cygpOgogICAgICAgICAgICB0cnk6CiAgICAgICAgICAgICAgICBzZWxmLnN0YXRlLnVwZGF0ZShqc29uLmxvYWRzKHNlbGYuc3RhdGVfcGF0aC5yZWFkX3RleHQoZW5jb2Rpbmc9InV0Zi04IikpKQogICAgICAgICAgICBleGNlcHQgRXhjZXB0aW9uOgogICAgICAgICAgICAgICAgcGFzcwoKICAgIGRlZiBzYXZlX3N0YXRlKHNlbGYpOgogICAgICAgIHNlbGYuc3RhdGVfcGF0aC53cml0ZV90ZXh0KGpzb24uZHVtcHMoc2VsZi5zdGF0ZSwgZW5zdXJlX2FzY2lpPUZhbHNlKSwgZW5jb2Rpbmc9InV0Zi04IikKCiAgICBkZWYgc3RvY2tfZmlsZShzZWxmLCBjb2RlOiBzdHIpIC0+IFBhdGg6CiAgICAgICAgcmV0dXJuIHNlbGYuaGlzdCAvIGYie2NvZGV9Lmpzb24uZ3oiCgogICAgZGVmIHJlYWRfc3RvY2soc2VsZiwgY29kZTogc3RyKSAtPiBkaWN0IHwgTm9uZToKICAgICAgICBwID0gc2VsZi5zdG9ja19maWxlKGNvZGUpCiAgICAgICAgaWYgbm90IHAuZXhpc3RzKCk6CiAgICAgICAgICAgIHJldHVybiBOb25lCiAgICAgICAgdHJ5OgogICAgICAgICAgICB3aXRoIGd6aXAub3BlbihwLCAicmIiKSBhcyBmOgogICAgICAgICAgICAgICAgcmV0dXJuIGpzb24ubG9hZHMoZi5yZWFkKCkuZGVjb2RlKCJ1dGYtOCIpKQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb246CiAgICAgICAgICAgIHJldHVybiBOb25lCgogICAgZGVmIHdyaXRlX3N0b2NrKHNlbGYsIGNvZGU6IHN0ciwgbmFtZTogc3RyLCBtYXJrZXQ6IHN0ciwgcm93czogbGlzdFtsaXN0XSk6CiAgICAgICAgcGF5bG9hZCA9IHsiY29kZSI6IGNvZGUsICJuYW1lIjogbmFtZSwgIm1hcmtldCI6IG1hcmtldCwgInJvd3MiOiByb3dzfQogICAgICAgIHJhdyA9IGpzb24uZHVtcHMocGF5bG9hZCwgZW5zdXJlX2FzY2lpPUZhbHNlLCBzZXBhcmF0b3JzPSgiLCIsICI6IikpLmVuY29kZSgidXRmLTgiKQogICAgICAgIHdpdGggZ3ppcC5vcGVuKHNlbGYuc3RvY2tfZmlsZShjb2RlKSwgIndiIiwgY29tcHJlc3NsZXZlbD05KSBhcyBmOgogICAgICAgICAgICBmLndyaXRlKHJhdykKCgpkZWYgcG9saXRlX3NsZWVwKHNlYzogZmxvYXQpOgogICAgaWYgc2VjID4gMDoKICAgICAgICB0aW1lLnNsZWVwKHNlYykKCgpkZWYgY21kX2JhY2tmaWxsKGFyZ3MsIHN0b3JlOiBTdG9yZSwgdG9rZW46IHN0cikgLT4gaW50OgogICAgc3RhcnQgPSAoZGF0ZS50b2RheSgpIC0gdGltZWRlbHRhKGRheXM9aW50KGFyZ3MueWVhcnMgKiAzNjUuMjUpKSkuaXNvZm9ybWF0KCkKICAgIHRyeToKICAgICAgICBzdG9ja3MgPSBnZXRfc3RvY2tfbGlzdCh0b2tlbikKICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAjIOS4jeimgeiukyB3b3JrZmxvdyDntIXnh4jlkJ7mjonoqLrmlrfvvJrmiorpjK/oqqTlr6vpgLIgc3RhdGUuanNvbiDkuKbmraPluLjntZDmnZ/vvIwKICAgICAgICAjIOW+jOe6jCBjb21taXQg5q2l6amf5pyD5oqKIHN0YXRlIOWCs+WbniByZXBv77yM5pa55L6/6YGg56uv5Yik6K6A44CCCiAgICAgICAgc3RvcmUuc3RhdGVbImxhc3RfZXJyb3IiXSA9IGYic3RvY2tfbGlzdDoge2V9IgogICAgICAgIHN0b3JlLnNhdmVfc3RhdGUoKQogICAgICAgIGxvZyhmIuiCoeelqOa4heWWruWPluW+l+WkseaVl++8jOmMr+iqpOW3suiomOmMhOWIsCBzdGF0ZS5qc29u77yae2V9IikKICAgICAgICByZXR1cm4gMAogICAgc3RvcmUuc3RhdGUucG9wKCJsYXN0X2Vycm9yIiwgTm9uZSkKICAgIHN0b3JlLnN0YXRlLnBvcCgicmF0ZV9saW1pdGVkIiwgTm9uZSkKICAgIGRvbmUgPSBzZXQoc3RvcmUuc3RhdGVbImRvbmUiXSkgfCBzZXQoc3RvcmUuc3RhdGVbImVtcHR5Il0pCiAgICB0b2RvID0gW3MgZm9yIHMgaW4gc3RvY2tzIGlmIHNbImNvZGUiXSBub3QgaW4gZG9uZV0KICAgIGxvZyhmIuWbnuijnOi1t+Wni+aXpSB7c3RhcnR977yb5b6F6JmV55CGIHtsZW4odG9kbyl9IOaqlO+8jOacrOaJueS4iumZkCB7YXJncy5iYXRjaH0g5qqUIikKICAgIHByb2Nlc3NlZCA9IDAKICAgIGZvciBzIGluIHRvZG86CiAgICAgICAgaWYgcHJvY2Vzc2VkID49IGFyZ3MuYmF0Y2g6CiAgICAgICAgICAgIGJyZWFrCiAgICAgICAgY29kZSA9IHNbImNvZGUiXQogICAgICAgIHRyeToKICAgICAgICAgICAgZGF0YSA9IGZldGNoX2pzb24oIlRhaXdhblN0b2NrUHJpY2UiLCB0b2tlbiwgZGF0YV9pZD1jb2RlLCBzdGFydF9kYXRlPXN0YXJ0KQogICAgICAgICAgICByb3dzID0gcm93c19mcm9tX3ByaWNlcyhkYXRhKQogICAgICAgICAgICBpZiByb3dzOgogICAgICAgICAgICAgICAgZXhpc3RpbmcgPSBzdG9yZS5yZWFkX3N0b2NrKGNvZGUpCiAgICAgICAgICAgICAgICBpZiBleGlzdGluZzoKICAgICAgICAgICAgICAgICAgICByb3dzID0gbWVyZ2Vfcm93cyhleGlzdGluZ1sicm93cyJdLCByb3dzKQogICAgICAgICAgICAgICAgc3RvcmUud3JpdGVfc3RvY2soY29kZSwgc1sibmFtZSJdLCBzWyJtYXJrZXQiXSwgcm93cykKICAgICAgICAgICAgICAgIHN0b3JlLnN0YXRlWyJkb25lIl0uYXBwZW5kKGNvZGUpCiAgICAgICAgICAgICAgICBzdG9yZS5zdGF0ZVsiZmFpbGVkIl0ucG9wKGNvZGUsIE5vbmUpCiAgICAgICAgICAgICAgICBsb2coZiIgIHtjb2RlfSB7c1snbmFtZSddfe+8mntsZW4ocm93cyl9IOethiIpCiAgICAgICAgICAgIGVsc2U6CiAgICAgICAgICAgICAgICBzdG9yZS5zdGF0ZVsiZW1wdHkiXS5hcHBlbmQoY29kZSkgICAjIOS4i+W4gi/nhKHkuqTmmJPos4fmlpnvvIzkuYvlvozkuI3lho3ph43oqaYKICAgICAgICAgICAgcHJvY2Vzc2VkICs9IDEKICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIG1zZyA9IHN0cihlKQogICAgICAgICAgICBzdG9yZS5zdGF0ZVsiZmFpbGVkIl1bY29kZV0gPSBtc2cKICAgICAgICAgICAgbG9nKGYiICB7Y29kZX0g5aSx5pWX77yae21zZ30iKQogICAgICAgICAgICBpZiAiNDI5IiBpbiBtc2cgb3IgInJhdGUiIGluIG1zZy5sb3dlcigpOgogICAgICAgICAgICAgICAgbG9nKCLnlpHkvLzop7jlj4ogQVBJIOmFjemhje+8jOWBnOatouacrOaJueS4puS/neWtmOmAsuW6pu+8jOS4i+asoeWft+ihjOacg+iHquWLlee6jOi3kSIpCiAgICAgICAgICAgICAgICBzdG9yZS5zdGF0ZVsicmF0ZV9saW1pdGVkIl0gPSBUcnVlCiAgICAgICAgICAgICAgICByZW1haW4gPSBsZW4oW3MgZm9yIHMgaW4gc3RvY2tzIGlmIHNbImNvZGUiXSBub3QgaW4gc2V0KHN0b3JlLnN0YXRlWyJkb25lIl0pIHwgc2V0KHN0b3JlLnN0YXRlWyJlbXB0eSJdKV0pCiAgICAgICAgICAgICAgICBzdG9yZS5zdGF0ZVsicmVtYWluaW5nIl0gPSByZW1haW4KICAgICAgICAgICAgICAgIHN0b3JlLnN0YXRlWyJydW5zIl0gPSBpbnQoc3RvcmUuc3RhdGUuZ2V0KCJydW5zIiwgMCkpICsgMQogICAgICAgICAgICAgICAgc3RvcmUuc2F2ZV9zdGF0ZSgpCiAgICAgICAgICAgICAgICByZXR1cm4gMCAgICMg6ZmQ5rWB5piv6aCQ5pyf5Lit55qE5pqr5YGc77yM5LiN5piv5aSx5pWX77yb6K6TIGNvbW1pdCDmraXpqZ/kv53lrZjpgLLluqYKICAgICAgICAgICAgcHJvY2Vzc2VkICs9IDEKICAgICAgICBzdG9yZS5zYXZlX3N0YXRlKCkKICAgICAgICBwb2xpdGVfc2xlZXAoYXJncy5zbGVlcCkKICAgIHJlbWFpbiA9IGxlbihbcyBmb3IgcyBpbiBzdG9ja3MgaWYgc1siY29kZSJdIG5vdCBpbiBzZXQoc3RvcmUuc3RhdGVbImRvbmUiXSkgfCBzZXQoc3RvcmUuc3RhdGVbImVtcHR5Il0pXSkKICAgIHN0b3JlLnN0YXRlWyJyZW1haW5pbmciXSA9IHJlbWFpbgogICAgc3RvcmUuc3RhdGVbInJ1bnMiXSA9IGludChzdG9yZS5zdGF0ZS5nZXQoInJ1bnMiLCAwKSkgKyAxCiAgICBzdG9yZS5zYXZlX3N0YXRlKCkKICAgIGxvZyhmIuacrOaJueWujOaIkCB7cHJvY2Vzc2VkfSDmqpTvvJvlsJrppJgge3JlbWFpbn0g5qqU5b6F5Zue6KOc77yI57Sv6KiI56ysIHtzdG9yZS5zdGF0ZVsncnVucyddfSDmibnvvIkiKQogICAgcmV0dXJuIDAKCgpkZWYgY21kX2RhaWx5KGFyZ3MsIHN0b3JlOiBTdG9yZSwgdG9rZW46IHN0cikgLT4gaW50OgogICAgc3RhcnQgPSAoZGF0ZS50b2RheSgpIC0gdGltZWRlbHRhKGRheXM9MTQpKS5pc29mb3JtYXQoKQogICAgZmlsZXMgPSBzb3J0ZWQoc3RvcmUuaGlzdC5nbG9iKCIqLmpzb24uZ3oiKSkKICAgIGlmIG5vdCBmaWxlczoKICAgICAgICBsb2coIuWwmueEoeatt+WPsuaqlOahiO+8jOiri+WFiOWft+ihjCBiYWNrZmlsbCIpCiAgICAgICAgcmV0dXJuIDEKICAgIGxvZyhmIuavj+aXpeWinumHj++8mntsZW4oZmlsZXMpfSDmqpTvvIzoh6oge3N0YXJ0fSDotbflkIjkvbUiKQogICAgb2sgPSBmYWlsID0gMAogICAgZm9yIGksIHAgaW4gZW51bWVyYXRlKGZpbGVzKToKICAgICAgICBjb2RlID0gcC5uYW1lLnJlcGxhY2UoIi5qc29uLmd6IiwgIiIpCiAgICAgICAgdHJ5OgogICAgICAgICAgICBjdXIgPSBzdG9yZS5yZWFkX3N0b2NrKGNvZGUpIG9yIHsibmFtZSI6IGNvZGUsICJtYXJrZXQiOiAiVFdTRSIsICJyb3dzIjogW119CiAgICAgICAgICAgIGRhdGEgPSBmZXRjaF9qc29uKCJUYWl3YW5TdG9ja1ByaWNlIiwgdG9rZW4sIGRhdGFfaWQ9Y29kZSwgc3RhcnRfZGF0ZT1zdGFydCkKICAgICAgICAgICAgcm93cyA9IHJvd3NfZnJvbV9wcmljZXMoZGF0YSkKICAgICAgICAgICAgaWYgcm93czoKICAgICAgICAgICAgICAgIG1lcmdlZCA9IG1lcmdlX3Jvd3MoY3VyWyJyb3dzIl0sIHJvd3MpCiAgICAgICAgICAgICAgICBpZiBtZXJnZWQgIT0gY3VyWyJyb3dzIl06CiAgICAgICAgICAgICAgICAgICAgc3RvcmUud3JpdGVfc3RvY2soY29kZSwgY3VyLmdldCgibmFtZSIsIGNvZGUpLCBjdXIuZ2V0KCJtYXJrZXQiLCAiVFdTRSIpLCBtZXJnZWQpCiAgICAgICAgICAgICAgICBvayArPSAxCiAgICAgICAgICAgIGVsc2U6CiAgICAgICAgICAgICAgICBvayArPSAxCiAgICAgICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgICAgICBmYWlsICs9IDEKICAgICAgICAgICAgbG9nKGYiICB7Y29kZX0g5aKe6YeP5aSx5pWX77yae2V9IikKICAgICAgICAgICAgaWYgIjQyOSIgaW4gc3RyKGUpOgogICAgICAgICAgICAgICAgbG9nKCLnlpHkvLzop7jlj4ogQVBJIOmFjemhje+8jOWBnOatouS4puS/neWtmOW3suWujOaIkOmDqOWIhiIpCiAgICAgICAgICAgICAgICBicmVhawogICAgICAgIGlmIChpICsgMSkgJSAyMDAgPT0gMDoKICAgICAgICAgICAgbG9nKGYiICDpgLLluqYge2kgKyAxfS97bGVuKGZpbGVzKX3vvIjmiJDlip8ge29rfeOAgeWkseaVlyB7ZmFpbH3vvIkiKQogICAgICAgIHBvbGl0ZV9zbGVlcChhcmdzLnNsZWVwKQogICAgbG9nKGYi5q+P5pel5aKe6YeP5a6M5oiQ77ya5oiQ5YqfIHtva33jgIHlpLHmlZcge2ZhaWx9IikKICAgIHJldHVybiAwCgoKZGVmIGJ1aWxkX2J1bmRsZShzdG9yZTogU3RvcmUpIC0+IGRpY3Q6CiAgICBzdG9ja3MgPSBbXQogICAgbGF0ZXN0ID0gIiIKICAgIGZvciBwIGluIHNvcnRlZChzdG9yZS5oaXN0Lmdsb2IoIiouanNvbi5neiIpKToKICAgICAgICBzID0gc3RvcmUucmVhZF9zdG9jayhwLm5hbWUucmVwbGFjZSgiLmpzb24uZ3oiLCAiIikpCiAgICAgICAgaWYgbm90IHMgb3IgbGVuKHMuZ2V0KCJyb3dzIiwgW10pKSA8IE1JTl9TQ0FOX1JPV1M6CiAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgcm93cyA9IHNbInJvd3MiXVstU0NBTl9EQVlTOl0KICAgICAgICBzdG9ja3MuYXBwZW5kKHsiYyI6IHNbImNvZGUiXSwgIm4iOiBzWyJuYW1lIl0sICJtIjogc1sibWFya2V0Il0sICJyIjogcm93c30pCiAgICAgICAgaWYgcm93cyBhbmQgcm93c1stMV1bMF0gPiBsYXRlc3Q6CiAgICAgICAgICAgIGxhdGVzdCA9IHJvd3NbLTFdWzBdCiAgICBwYXlsb2FkID0geyJsYXRlc3REYXRlIjogbGF0ZXN0LCAic3RvY2tzIjogc3RvY2tzfQogICAgcmF3ID0ganNvbi5kdW1wcyhwYXlsb2FkLCBlbnN1cmVfYXNjaWk9RmFsc2UsIHNlcGFyYXRvcnM9KCIsIiwgIjoiKSkuZW5jb2RlKCJ1dGYtOCIpCiAgICBnel9wYXRoID0gc3RvcmUuZGlyIC8gInNjYW4uanNvbi5neiIKICAgIHdpdGggZ3ppcC5vcGVuKGd6X3BhdGgsICJ3YiIsIGNvbXByZXNzbGV2ZWw9OSkgYXMgZjoKICAgICAgICBmLndyaXRlKHJhdykKICAgIHRvdGFsX2hpc3QgPSBsZW4obGlzdChzdG9yZS5oaXN0Lmdsb2IoIiouanNvbi5neiIpKSkKICAgIG1hbmlmZXN0ID0gewogICAgICAgICJhcHAiOiAidHdzdG9jay13ZWIiLAogICAgICAgICJ1cGRhdGVkQXQiOiB0aW1lLnN0cmZ0aW1lKCIlWS0lbS0lZFQlSDolTTolU1oiLCB0aW1lLmdtdGltZSgpKSwKICAgICAgICAibGF0ZXN0RGF0ZSI6IGxhdGVzdCwKICAgICAgICAic3RvY2tDb3VudCI6IHRvdGFsX2hpc3QsCiAgICAgICAgInNjYW5TdG9ja3MiOiBsZW4oc3RvY2tzKSwKICAgICAgICAic2NhbkZpbGUiOiAic2Nhbi5qc29uLmd6IiwKICAgICAgICAic2NhbkJ5dGVzIjogZ3pfcGF0aC5zdGF0KCkuc3Rfc2l6ZSwKICAgICAgICAic2NhblJhd0J5dGVzIjogbGVuKHJhdyksCiAgICAgICAgInNvdXJjZSI6ICJGaW5NaW5kIFRhaXdhblN0b2NrUHJpY2UgKFRXU0UvVFBFeCkiLAogICAgfQogICAgKHN0b3JlLmRpciAvICJtYW5pZmVzdC5qc29uIikud3JpdGVfdGV4dCgKICAgICAgICBqc29uLmR1bXBzKG1hbmlmZXN0LCBlbnN1cmVfYXNjaWk9RmFsc2UsIGluZGVudD0yKSwgZW5jb2Rpbmc9InV0Zi04IikKICAgIGxvZyhmIuaOg+aPj+WMheWujOaIkO+8mntsZW4oc3RvY2tzKX0g5qqU44CB5pyA5pawIHtsYXRlc3R944CBZ3ppcCB7bWFuaWZlc3RbJ3NjYW5CeXRlcyddfSBieXRlc++8iOWOn+WniyB7bGVuKHJhdyl977yJIikKICAgIHJldHVybiBtYW5pZmVzdAoKCmRlZiBjbWRfc2VsZnRlc3Qoc3RvcmU6IFN0b3JlKSAtPiBpbnQ6CiAgICAjIOWQiOS9tS/ljrvph40KICAgIGEgPSBbWyIyMDI2LTAxLTAyIiwgMTAsIDExLCA5LCAxMC41LCAxMDAwLCAxMDUwMF0sIFsiMjAyNi0wMS0wNSIsIDEwLjUsIDExLCAxMCwgMTEsIDEyMDAsIDEzMjAwXV0KICAgIGIgPSBbWyIyMDI2LTAxLTA1IiwgMTAuNSwgMTEuNSwgMTAsIDExLjIsIDEzMDAsIDE0NTYwXSwgWyIyMDI2LTAxLTA2IiwgMTEuMiwgMTIsIDExLCAxMS44LCA5MDAsIDEwNjIwXV0KICAgIG0gPSBtZXJnZV9yb3dzKGEsIGIpCiAgICBhc3NlcnQgbGVuKG0pID09IDMgYW5kIG1bMV1bNF0gPT0gMTEuMiBhbmQgbVstMV1bMF0gPT0gIjIwMjYtMDEtMDYiLCBtCiAgICAjIHJvd3Mg6L2J5o+bCiAgICByb3dzID0gcm93c19mcm9tX3ByaWNlcyhbeyJkYXRlIjogIjIwMjYtMDEtMDIiLCAib3BlbiI6IDEsICJtYXgiOiAyLCAibWluIjogMC41LCAiY2xvc2UiOiAxLjUsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiVHJhZGluZ19Wb2x1bWUiOiAxMDAsICJUcmFkaW5nX21vbmV5IjogMTUwfV0pCiAgICBhc3NlcnQgcm93cyA9PSBbWyIyMDI2LTAxLTAyIiwgMS4wLCAyLjAsIDAuNSwgMS41LCAxMDAsIDE1MF1dLCByb3dzCiAgICAjIOW7uue9ruaOg+aPj+WMhe+8mjEzMCDnrYbnmoTogqHnpajmh4nlhaXljIXjgIExMDAg562G55qE5LiN5YWlCiAgICBiYXNlID0gZGF0ZSgyMDI1LCAxLCAyKQogICAgZGVmIGZha2Vfcm93cyhuKToKICAgICAgICByZXR1cm4gW1soYmFzZSArIHRpbWVkZWx0YShkYXlzPWkpKS5pc29mb3JtYXQoKSwgMTAsIDEwLjUsIDkuNSwgMTAuMiwgMTAwMCwgMTAyMDBdIGZvciBpIGluIHJhbmdlKG4pXQogICAgc3RvcmUud3JpdGVfc3RvY2soIjk5OTkiLCAi5ris6Kmm6IKhIiwgIlRXU0UiLCBmYWtlX3Jvd3MoMTMwKSkKICAgIHN0b3JlLndyaXRlX3N0b2NrKCI5OTk4IiwgIuefreatt+WPsiIsICJUV1NFIiwgZmFrZV9yb3dzKDEwMCkpCiAgICBtYW4gPSBidWlsZF9idW5kbGUoc3RvcmUpCiAgICBhc3NlcnQgbWFuWyJzY2FuU3RvY2tzIl0gPT0gMSBhbmQgbWFuWyJzdG9ja0NvdW50Il0gPT0gMiwgbWFuCiAgICB3aXRoIGd6aXAub3BlbihzdG9yZS5kaXIgLyAic2Nhbi5qc29uLmd6IiwgInJiIikgYXMgZjoKICAgICAgICBwYXlsb2FkID0ganNvbi5sb2FkcyhmLnJlYWQoKS5kZWNvZGUoInV0Zi04IikpCiAgICBhc3NlcnQgcGF5bG9hZFsic3RvY2tzIl1bMF1bImMiXSA9PSAiOTk5OSIgYW5kIGxlbihwYXlsb2FkWyJzdG9ja3MiXVswXVsiciJdKSA9PSAxMzAKICAgIGxvZygic2VsZnRlc3QgT0siKQogICAgcmV0dXJuIDAKCgpkZWYgbWFpbihhcmd2PU5vbmUpIC0+IGludDoKICAgIGFwID0gYXJncGFyc2UuQXJndW1lbnRQYXJzZXIoZGVzY3JpcHRpb249InR3c3RvY2std2ViIOizh+aWmeW+jOerryIpCiAgICBhcC5hZGRfYXJndW1lbnQoIm1vZGUiLCBjaG9pY2VzPVsiYmFja2ZpbGwiLCAiZGFpbHkiLCAiYnVpbGQiLCAic2VsZnRlc3QiXSkKICAgIGFwLmFkZF9hcmd1bWVudCgiLS1kYXRhLWRpciIsIGRlZmF1bHQ9c3RyKFBhdGgoX19maWxlX18pLnJlc29sdmUoKS5wYXJlbnQucGFyZW50IC8gImRhdGEiKSkKICAgIGFwLmFkZF9hcmd1bWVudCgiLS15ZWFycyIsIHR5cGU9ZmxvYXQsIGRlZmF1bHQ9MTApCiAgICBhcC5hZGRfYXJndW1lbnQoIi0tYmF0Y2giLCB0eXBlPWludCwgZGVmYXVsdD0xNTApCiAgICBhcC5hZGRfYXJndW1lbnQoIi0tc2xlZXAiLCB0eXBlPWZsb2F0LCBkZWZhdWx0PTAuNSkKICAgIGFyZ3MgPSBhcC5wYXJzZV9hcmdzKGFyZ3YpCiAgICBzdG9yZSA9IFN0b3JlKFBhdGgoYXJncy5kYXRhX2RpcikpCiAgICB0b2tlbiA9IG9zLmVudmlyb24uZ2V0KCJGSU5NSU5EX1RPS0VOIiwgIiIpCiAgICBpZiBhcmdzLm1vZGUgPT0gInNlbGZ0ZXN0IjoKICAgICAgICByZXR1cm4gY21kX3NlbGZ0ZXN0KHN0b3JlKQogICAgaWYgYXJncy5tb2RlID09ICJiYWNrZmlsbCI6CiAgICAgICAgcmMgPSBjbWRfYmFja2ZpbGwoYXJncywgc3RvcmUsIHRva2VuKQogICAgICAgIGJ1aWxkX2J1bmRsZShzdG9yZSkKICAgICAgICByZXR1cm4gcmMKICAgIGlmIGFyZ3MubW9kZSA9PSAiZGFpbHkiOgogICAgICAgIHJjID0gY21kX2RhaWx5KGFyZ3MsIHN0b3JlLCB0b2tlbikKICAgICAgICBidWlsZF9idW5kbGUoc3RvcmUpCiAgICAgICAgcmV0dXJuIHJjCiAgICBidWlsZF9idW5kbGUoc3RvcmUpCiAgICByZXR1cm4gMAoKCmlmIF9fbmFtZV9fID09ICJfX21haW5fXyI6CiAgICBzeXMuZXhpdChtYWluKCkpCg==
+#!/usr/bin/env python3
+"""台股 AI 智慧選股工作台 V2.0（網頁版）— 資料後端
+
+架構：GitHub Actions 就是後端。本腳本在 Actions 裡執行（排程每日增量、
+手動分批回補），把行情寫成靜態檔案 commit 回 repo，GitHub Pages 部署後
+前端直接讀取，使用者開站即是最新資料，不需要任何人手動更新。
+
+資料來源：FinMind API（TaiwanStockInfo / TaiwanStockPrice，涵蓋 TWSE＋TPEx，
+單一請求即可取回一檔股票的完整歷史，適合回補 10 年）。
+可選環境變數 FINMIND_TOKEN（在 repo Secrets 設定）可提高 API 配額；
+未設定時以未登入配額執行，腳本會自動節流且可中斷續跑。
+
+檔案產出（data/）：
+  history/<code>.json.gz 每檔完整歷史（gzip，約 51KB/檔）：{"code","name","market","rows":[[date,o,h,l,c,v,amt],...]}
+  scan.json.gz          最近 370 個交易日的全市場精簡包（前端掃描用，gzip）
+  manifest.json         {updatedAt, latestDate, stockCount, withHistory, scanFile,...}
+  state.json            回補進度 {done:[...], empty:[...], failed:{...}}（commit 後可續跑）
+
+用法：
+  python3 backend/update_data.py backfill --years 10 --batch 150 [--sleep 0.5]
+  python3 backend/update_data.py daily    [--sleep 0.3]        # 最近 14 天增量合併
+  python3 backend/update_data.py build                          # 重建 scan.json.gz + manifest
+  python3 backend/update_data.py selftest                       # 離線自我測試
+"""
+from __future__ import annotations
+
+import argparse
+import gzip
+import json
+import os
+import re
+import sys
+import time
+import urllib.parse
+import urllib.request
+from datetime import date, timedelta
+from pathlib import Path
+
+API = "https://api.finmindtrade.com/api/v4/data"
+CODE_RE = re.compile(r"^[0-9A-Z]{4,6}$")
+SCAN_DAYS = 370          # 前端全市場掃描需要的最大日線數（core.js 上限 360，留緩衝）
+MIN_SCAN_ROWS = 125      # 納入掃描的最少交易日（規格 #98）
+
+
+def log(*a):
+    print("[update_data]", *a, flush=True)
+
+
+def fetch_json(dataset: str, token: str = "", **params) -> list[dict]:
+    q = {"dataset": dataset, **{k: v for k, v in params.items() if v not in ("", None)}}
+    if token:
+        q["token"] = token
+    url = API + "?" + urllib.parse.urlencode(q)
+    req = urllib.request.Request(url, headers={"User-Agent": "twstock-web-backend/2.0"})
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        payload = json.loads(resp.read().decode("utf-8"))
+    if payload.get("status") != 200:
+        raise RuntimeError(f"FinMind {dataset}: {payload.get('msg')}")
+    return payload.get("data") or []
+
+
+def get_stock_list(token: str) -> list[dict]:
+    rows = fetch_json("TaiwanStockInfo", token)
+    best: dict[str, dict] = {}
+    for r in rows:
+        if r.get("type") not in ("twse", "tpex"):
+            continue
+        code = str(r.get("stock_id", "")).strip()
+        if not CODE_RE.match(code):
+            continue
+        if code not in best or (r.get("date") or "") > (best[code].get("date") or ""):
+            best[code] = r
+    out = [{
+        "code": code,
+        "name": r.get("stock_name") or code,
+        "market": "TWSE" if r["type"] == "twse" else "TPEX",
+    } for code, r in sorted(best.items())]
+    log(f"股票清單：{len(out)} 檔（TWSE/TPEx 去重後）")
+    return out
+
+
+def rows_from_prices(data: list[dict]) -> list[list]:
+    rows = []
+    for r in data:
+        try:
+            rows.append([
+                r["date"],
+                round(float(r["open"]), 2), round(float(r["max"]), 2),
+                round(float(r["min"]), 2), round(float(r["close"]), 2),
+                int(float(r["Trading_Volume"])), int(float(r["Trading_money"])),
+            ])
+        except (KeyError, TypeError, ValueError):
+            continue
+    return rows
+
+
+def merge_rows(old: list[list], new: list[list]) -> list[list]:
+    by_date = {r[0]: r for r in old}
+    for r in new:
+        by_date[r[0]] = r
+    return [by_date[d] for d in sorted(by_date)]
+
+
+class Store:
+    def __init__(self, data_dir: Path):
+        self.dir = data_dir
+        self.hist = data_dir / "history"
+        self.hist.mkdir(parents=True, exist_ok=True)
+        self.state_path = data_dir / "state.json"
+        self.state = {"done": [], "empty": [], "failed": {}}
+        if self.state_path.exists():
+            try:
+                self.state.update(json.loads(self.state_path.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+
+    def save_state(self):
+        self.state_path.write_text(json.dumps(self.state, ensure_ascii=False), encoding="utf-8")
+
+    def stock_file(self, code: str) -> Path:
+        return self.hist / f"{code}.json.gz"
+
+    def read_stock(self, code: str) -> dict | None:
+        p = self.stock_file(code)
+        if not p.exists():
+            return None
+        try:
+            with gzip.open(p, "rb") as f:
+                return json.loads(f.read().decode("utf-8"))
+        except Exception:
+            return None
+
+    def write_stock(self, code: str, name: str, market: str, rows: list[list]):
+        payload = {"code": code, "name": name, "market": market, "rows": rows}
+        raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        with gzip.open(self.stock_file(code), "wb", compresslevel=9) as f:
+            f.write(raw)
+
+
+def polite_sleep(sec: float):
+    if sec > 0:
+        time.sleep(sec)
+
+
+def cmd_backfill(args, store: Store, token: str) -> int:
+    start = (date.today() - timedelta(days=int(args.years * 365.25))).isoformat()
+    try:
+        stocks = get_stock_list(token)
+    except Exception as e:
+        # 不要讓 workflow 紅燈吞掉診斷：把錯誤寫進 state.json 並正常結束，
+        # 後續 commit 步驟會把 state 傳回 repo，方便遠端判讀。
+        store.state["last_error"] = f"stock_list: {e}"
+        store.save_state()
+        log(f"股票清單取得失敗，錯誤已記錄到 state.json：{e}")
+        return 0
+    store.state.pop("last_error", None)
+    store.state.pop("rate_limited", None)
+    done = set(store.state["done"]) | set(store.state["empty"])
+    todo = [s for s in stocks if s["code"] not in done]
+    log(f"回補起始日 {start}；待處理 {len(todo)} 檔，本批上限 {args.batch} 檔")
+    processed = 0
+    for s in todo:
+        if processed >= args.batch:
+            break
+        code = s["code"]
+        try:
+            data = fetch_json("TaiwanStockPrice", token, data_id=code, start_date=start)
+            rows = rows_from_prices(data)
+            if rows:
+                existing = store.read_stock(code)
+                if existing:
+                    rows = merge_rows(existing["rows"], rows)
+                store.write_stock(code, s["name"], s["market"], rows)
+                store.state["done"].append(code)
+                store.state["failed"].pop(code, None)
+                log(f"  {code} {s['name']}：{len(rows)} 筆")
+            else:
+                store.state["empty"].append(code)   # 下市/無交易資料，之後不再重試
+            processed += 1
+        except Exception as e:
+            msg = str(e)
+            store.state["failed"][code] = msg
+            log(f"  {code} 失敗：{msg}")
+            if "429" in msg or "rate" in msg.lower():
+                log("疑似觸及 API 配額，停止本批並保存進度，下次執行會自動續跑")
+                store.state["rate_limited"] = True
+                remain = len([s for s in stocks if s["code"] not in set(store.state["done"]) | set(store.state["empty"])])
+                store.state["remaining"] = remain
+                store.state["runs"] = int(store.state.get("runs", 0)) + 1
+                store.save_state()
+                return 0   # 限流是預期中的暫停，不是失敗；讓 commit 步驟保存進度
+            processed += 1
+        store.save_state()
+        polite_sleep(args.sleep)
+    remain = len([s for s in stocks if s["code"] not in set(store.state["done"]) | set(store.state["empty"])])
+    store.state["remaining"] = remain
+    store.state["runs"] = int(store.state.get("runs", 0)) + 1
+    store.save_state()
+    log(f"本批完成 {processed} 檔；尚餘 {remain} 檔待回補（累計第 {store.state['runs']} 批）")
+    return 0
+
+
+def cmd_daily(args, store: Store, token: str) -> int:
+    start = (date.today() - timedelta(days=14)).isoformat()
+    files = sorted(store.hist.glob("*.json.gz"))
+    if not files:
+        log("尚無歷史檔案，請先執行 backfill")
+        return 1
+    log(f"每日增量：{len(files)} 檔，自 {start} 起合併")
+    ok = fail = 0
+    for i, p in enumerate(files):
+        code = p.name.replace(".json.gz", "")
+        try:
+            cur = store.read_stock(code) or {"name": code, "market": "TWSE", "rows": []}
+            data = fetch_json("TaiwanStockPrice", token, data_id=code, start_date=start)
+            rows = rows_from_prices(data)
+            if rows:
+                merged = merge_rows(cur["rows"], rows)
+                if merged != cur["rows"]:
+                    store.write_stock(code, cur.get("name", code), cur.get("market", "TWSE"), merged)
+                ok += 1
+            else:
+                ok += 1
+        except Exception as e:
+            fail += 1
+            log(f"  {code} 增量失敗：{e}")
+            if "429" in str(e):
+                log("疑似觸及 API 配額，停止並保存已完成部分")
+                break
+        if (i + 1) % 200 == 0:
+            log(f"  進度 {i + 1}/{len(files)}（成功 {ok}、失敗 {fail}）")
+        polite_sleep(args.sleep)
+    log(f"每日增量完成：成功 {ok}、失敗 {fail}")
+    return 0
+
+
+def build_bundle(store: Store) -> dict:
+    stocks = []
+    latest = ""
+    for p in sorted(store.hist.glob("*.json.gz")):
+        s = store.read_stock(p.name.replace(".json.gz", ""))
+        if not s or len(s.get("rows", [])) < MIN_SCAN_ROWS:
+            continue
+        rows = s["rows"][-SCAN_DAYS:]
+        stocks.append({"c": s["code"], "n": s["name"], "m": s["market"], "r": rows})
+        if rows and rows[-1][0] > latest:
+            latest = rows[-1][0]
+    payload = {"latestDate": latest, "stocks": stocks}
+    raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    gz_path = store.dir / "scan.json.gz"
+    with gzip.open(gz_path, "wb", compresslevel=9) as f:
+        f.write(raw)
+    total_hist = len(list(store.hist.glob("*.json.gz")))
+    manifest = {
+        "app": "twstock-web",
+        "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "latestDate": latest,
+        "stockCount": total_hist,
+        "scanStocks": len(stocks),
+        "scanFile": "scan.json.gz",
+        "scanBytes": gz_path.stat().st_size,
+        "scanRawBytes": len(raw),
+        "source": "FinMind TaiwanStockPrice (TWSE/TPEx)",
+    }
+    (store.dir / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    log(f"掃描包完成：{len(stocks)} 檔、最新 {latest}、gzip {manifest['scanBytes']} bytes（原始 {len(raw)}）")
+    return manifest
+
+
+def cmd_selftest(store: Store) -> int:
+    # 合併/去重
+    a = [["2026-01-02", 10, 11, 9, 10.5, 1000, 10500], ["2026-01-05", 10.5, 11, 10, 11, 1200, 13200]]
+    b = [["2026-01-05", 10.5, 11.5, 10, 11.2, 1300, 14560], ["2026-01-06", 11.2, 12, 11, 11.8, 900, 10620]]
+    m = merge_rows(a, b)
+    assert len(m) == 3 and m[1][4] == 11.2 and m[-1][0] == "2026-01-06", m
+    # rows 轉換
+    rows = rows_from_prices([{"date": "2026-01-02", "open": 1, "max": 2, "min": 0.5, "close": 1.5,
+                               "Trading_Volume": 100, "Trading_money": 150}])
+    assert rows == [["2026-01-02", 1.0, 2.0, 0.5, 1.5, 100, 150]], rows
+    # 建置掃描包：130 筆的股票應入包、100 筆的不入
+    base = date(2025, 1, 2)
+    def fake_rows(n):
+        return [[(base + timedelta(days=i)).isoformat(), 10, 10.5, 9.5, 10.2, 1000, 10200] for i in range(n)]
+    store.write_stock("9999", "測試股", "TWSE", fake_rows(130))
+    store.write_stock("9998", "短歷史", "TWSE", fake_rows(100))
+    man = build_bundle(store)
+    assert man["scanStocks"] == 1 and man["stockCount"] == 2, man
+    with gzip.open(store.dir / "scan.json.gz", "rb") as f:
+        payload = json.loads(f.read().decode("utf-8"))
+    assert payload["stocks"][0]["c"] == "9999" and len(payload["stocks"][0]["r"]) == 130
+    log("selftest OK")
+    return 0
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description="twstock-web 資料後端")
+    ap.add_argument("mode", choices=["backfill", "daily", "build", "selftest"])
+    ap.add_argument("--data-dir", default=str(Path(__file__).resolve().parent.parent / "data"))
+    ap.add_argument("--years", type=float, default=10)
+    ap.add_argument("--batch", type=int, default=150)
+    ap.add_argument("--sleep", type=float, default=0.5)
+    args = ap.parse_args(argv)
+    store = Store(Path(args.data_dir))
+    token = os.environ.get("FINMIND_TOKEN", "")
+    if args.mode == "selftest":
+        return cmd_selftest(store)
+    if args.mode == "backfill":
+        rc = cmd_backfill(args, store, token)
+        build_bundle(store)
+        return rc
+    if args.mode == "daily":
+        rc = cmd_daily(args, store, token)
+        build_bundle(store)
+        return rc
+    build_bundle(store)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
