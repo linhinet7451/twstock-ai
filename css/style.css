@@ -37,6 +37,7 @@ input[type=checkbox]{width:auto}
 .btn.big{width:100%;padding:12px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .btn-row{display:flex;gap:6px;flex-wrap:wrap}
+.btn.preset.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:700}
 .run-box{display:flex;flex-direction:column;gap:8px}
 .progress{height:10px;background:#0b1626;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 #progBar{height:100%;width:0;background:var(--primary);transition:width .2s}
