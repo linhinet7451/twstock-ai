@@ -39,6 +39,7 @@ input[type=checkbox]{width:auto}
 .btn-row{display:flex;gap:6px;flex-wrap:wrap}
 .btn.preset.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:700}
 .run-box{display:flex;flex-direction:column;gap:8px}
+.action-bar{margin:12px 12px 0}
 .progress{height:10px;background:#0b1626;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 #progBar{height:100%;width:0;background:var(--primary);transition:width .2s}
 .prog-msg{font-size:13px;color:var(--muted);min-height:18px}
@@ -75,8 +76,17 @@ dialog table{min-width:0}
 dialog td,dialog th{white-space:normal;text-align:left}
 /* 手機版：單欄、表格列轉卡片 */
 @media (max-width:900px){
-  .layout{grid-template-columns:1fr;padding:8px}
+  .topbar{position:static}
+  .layout{display:flex;flex-direction:column;padding:8px}
+  .right{order:-1} /* 手機先看結果，設定區排後面 */
   .left{max-height:none;overflow:visible}
+  /* 操作列置頂固定：更新／掃描的進度條與訊息隨時可見 */
+  .action-bar{position:sticky;top:0;z-index:30;margin:8px 8px 0;flex-direction:row;flex-wrap:wrap;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  .action-bar .btn.primary{flex:1 1 52%;width:auto}
+  .action-bar .btn.danger{flex:1 1 34%;padding:12px 8px}
+  .action-bar .progress{flex:1 1 100%}
+  .action-bar .prog-msg{flex:1 1 100%}
+  input,select{font-size:16px} /* 避免 iOS 聚焦時自動放大 */
   h1{font-size:17px}
   table{min-width:0}
   thead{display:none}
