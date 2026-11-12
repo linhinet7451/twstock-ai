@@ -58,6 +58,7 @@ tbody tr.selected{outline:2px solid var(--primary);background:#1a3a66}
 .up{color:var(--up)} .down{color:var(--down)}
 .score-hi{color:var(--good);font-weight:700} .score-mid{color:var(--warn)}
 td.reason{white-space:normal;min-width:200px;text-align:left;color:var(--muted)}
+td.tg{display:none}
 .empty{border:1px dashed var(--warn);color:var(--warn);border-radius:8px;padding:10px;margin-bottom:8px;font-size:14px;line-height:1.6}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;margin:12px 0 8px}
 .tabs button{background:#0b1626;color:var(--muted);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:8px 10px;font-size:14px;cursor:pointer}
@@ -90,9 +91,15 @@ dialog td,dialog th{white-space:normal;text-align:left}
   h1{font-size:17px}
   table{min-width:0}
   thead{display:none}
-  tbody tr{display:block;margin:8px;border:1px solid var(--line);border-radius:8px;padding:4px 0}
-  tbody td{display:flex;justify-content:space-between;gap:10px;border-top:none;padding:5px 10px;white-space:normal;text-align:right}
-  tbody td::before{content:attr(data-label);color:var(--muted);text-align:left}
-  td.reason{justify-content:flex-start}
+  /* 精簡卡片：雙欄只放關鍵欄位，其餘欄位收進「展開全部欄位」 */
+  tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;margin:8px;border:1px solid var(--line);border-radius:8px;padding:6px 4px}
+  tbody td{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border-top:none;padding:3px 8px;white-space:normal;text-align:left}
+  tbody td::before{content:attr(data-label);color:var(--muted);text-align:left;font-size:11.5px}
+  td.x{display:none}
+  tr.open td.x{display:flex}
+  td.reason{grid-column:1/-1;justify-content:flex-start;min-width:0}
+  td.tg{display:block;grid-column:1/-1;text-align:center;color:var(--good);cursor:pointer;padding:7px;font-size:13px}
+  td.tg::before{content:''}
+  .action-bar .prog-msg{min-height:34px}
   .table-wrap{max-height:none;border:none}
 }
