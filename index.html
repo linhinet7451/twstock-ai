@@ -158,6 +158,12 @@
   本工具僅供研究與學習用途，技術分數為規則式評分，不保證預測股價走勢，不提供自動下單功能。盤後價格不等於即時價格，停損與目標價屬技術情境推導，歷史價位不保證成交。投資決策請自行判斷並承擔風險。
 </footer>
 
+<dialog id="integrityDialog">
+  <h3>行情資料完整性</h3>
+  <div id="integrityBody" class="card"></div>
+  <button class="btn" onclick="document.getElementById('integrityDialog').close()">關閉</button>
+</dialog>
+
 <dialog id="explainDialog">
   <h3>技術分（滿分 100，13 項訊號成立才加分）</h3>
   <div id="explainBody"></div>
