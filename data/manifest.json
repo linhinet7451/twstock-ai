@@ -1,11 +1,11 @@
 {
   "app": "twstock-web",
-  "updatedAt": "2026-11-12T16:35:59Z",
+  "updatedAt": "2026-11-12T16:45:59Z",
   "latestDate": "2026-11-12",
-  "stockCount": 1734,
-  "scanStocks": 1701,
+  "stockCount": 2027,
+  "scanStocks": 1994,
   "scanFile": "scan.json.gz",
-  "scanBytes": 10668110,
-  "scanRawBytes": 32479308,
+  "scanBytes": 12580573,
+  "scanRawBytes": 38148535,
   "source": "FinMind TaiwanStockPrice (TWSE/TPEx)"
 }
