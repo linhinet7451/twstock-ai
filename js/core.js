@@ -1,1 +1,315 @@
-Lyog5Y+w6IKhIEFJIOaZuuaFp+mBuOiCoeW3peS9nOWPsCBWMi4w77yI57ay6aCB54mI77yJ5qC45b+D5byV5pOOCiAqIOaKgOihk+aMh+aomSAvIDEzIOmghSAxMDAg5YiG6KiI5YiGIC8g562W55Wl5YO55L2NIC8g6YCy5aC06YGp5ZCI5bqmIC8g5o6D5o+P56+p6YG4CiAqIOimj+WJh+WFqOmDqOeUseacrOaqlOioiOeul++8m0FJ77yIR2VtaW5p77yJ5Y+q5YGa5paH5a2X6Kej6K6A77yM5LiN5b6X5pS55YO55L2N77yI6KaP5qC8ICMxMu+8ieOAggogKiDlkIzmmYLmlK/mj7TngI/opr3lmajvvIh3aW5kb3cuVFdDb3Jl77yJ6IiHIE5vZGUg5ris6Kmm77yIbW9kdWxlLmV4cG9ydHPvvInjgIIgKi8KKGZ1bmN0aW9uIChnbG9iYWwpIHsKICAndXNlIHN0cmljdCc7CgogIC8vIC0tLS0tLS0tLS0g5bel5YW3IC0tLS0tLS0tLS0KICBmdW5jdGlvbiBzbWEodiwgcCkgewogICAgY29uc3Qgb3V0ID0gbmV3IEFycmF5KHYubGVuZ3RoKS5maWxsKG51bGwpOyBsZXQgcyA9IDA7CiAgICBmb3IgKGxldCBpID0gMDsgaSA8IHYubGVuZ3RoOyBpKyspIHsKICAgICAgcyArPSB2W2ldOyBpZiAoaSA+PSBwKSBzIC09IHZbaSAtIHBdOwogICAgICBpZiAoaSA+PSBwIC0gMSkgb3V0W2ldID0gcyAvIHA7CiAgICB9IHJldHVybiBvdXQ7CiAgfQogIGZ1bmN0aW9uIGVtYSh2LCBwKSB7CiAgICBjb25zdCBvdXQgPSBuZXcgQXJyYXkodi5sZW5ndGgpLmZpbGwobnVsbCk7CiAgICBpZiAodi5sZW5ndGggPCBwKSByZXR1cm4gb3V0OwogICAgY29uc3QgayA9IDIgLyAocCArIDEpOwogICAgbGV0IHByZXYgPSB2LnNsaWNlKDAsIHApLnJlZHVjZSgoYSwgYikgPT4gYSArIGIsIDApIC8gcDsKICAgIG91dFtwIC0gMV0gPSBwcmV2OwogICAgZm9yIChsZXQgaSA9IHA7IGkgPCB2Lmxlbmd0aDsgaSsrKSB7IHByZXYgPSB2W2ldICogayArIHByZXYgKiAoMSAtIGspOyBvdXRbaV0gPSBwcmV2OyB9CiAgICByZXR1cm4gb3V0OwogIH0KICBmdW5jdGlvbiB0aWNrU2l6ZShwcmljZSkgeyAvLyAjMTE4IOWPsOiCoeWNh+mZjeWWruS9jQogICAgaWYgKHByaWNlIDwgMTApIHJldHVybiAwLjAxOyBpZiAocHJpY2UgPCA1MCkgcmV0dXJuIDAuMDU7IGlmIChwcmljZSA8IDEwMCkgcmV0dXJuIDAuMTsKICAgIGlmIChwcmljZSA8IDUwMCkgcmV0dXJuIDAuNTsgaWYgKHByaWNlIDwgMTAwMCkgcmV0dXJuIDE7IHJldHVybiA1OwogIH0KICBmdW5jdGlvbiByb3VuZFRpY2socHJpY2UpIHsgY29uc3QgdCA9IHRpY2tTaXplKHByaWNlKTsgcmV0dXJuIE1hdGgucm91bmQoTWF0aC5yb3VuZChwcmljZSAvIHQpICogdCAqIDEwMCkgLyAxMDA7IH0KICBjb25zdCBjbGFtcCA9ICh4LCBsbywgaGkpID0+IE1hdGgubWluKGhpLCBNYXRoLm1heChsbywgeCkpOwoKICAvLyAtLS0tLS0tLS0tIOaMh+aomSAoIzk1KSAtLS0tLS0tLS0tCiAgZnVuY3Rpb24gY29tcHV0ZUluZGljYXRvcnMoYikgewogICAgY29uc3QgbiA9IGIuY2xvc2UubGVuZ3RoLCBjID0gYi5jbG9zZSwgaW5kID0geyBiYXJzOiBiIH07CiAgICBpbmQubWE1ID0gc21hKGMsIDUpOyBpbmQubWExMCA9IHNtYShjLCAxMCk7IGluZC5tYTIwID0gc21hKGMsIDIwKTsKICAgIGluZC5tYTYwID0gc21hKGMsIDYwKTsgaW5kLm1hMTIwID0gc21hKGMsIDEyMCk7CiAgICBpbmQuZW1hMTIgPSBlbWEoYywgMTIpOyBpbmQuZW1hMjYgPSBlbWEoYywgMjYpOwogICAgaW5kLm1hY2QgPSBpbmQuZW1hMTIubWFwKChhLCBpKSA9PiAoYSAhPSBudWxsICYmIGluZC5lbWEyNltpXSAhPSBudWxsKSA/IGEgLSBpbmQuZW1hMjZbaV0gOiBudWxsKTsKICAgIGNvbnN0IHZhbHMgPSBbXTsgaW5kLm1hY2QuZm9yRWFjaCgodiwgaSkgPT4geyBpZiAodiAhPSBudWxsKSB2YWxzLnB1c2goW2ksIHZdKTsgfSk7CiAgICBpbmQubWFjZFNpZ25hbCA9IG5ldyBBcnJheShuKS5maWxsKG51bGwpOwogICAgaWYgKHZhbHMubGVuZ3RoID49IDkpIHsKICAgICAgY29uc3QgZXMgPSBlbWEodmFscy5tYXAoeCA9PiB4WzFdKSwgOSk7CiAgICAgIHZhbHMuZm9yRWFjaCgoeCwgaikgPT4geyBpbmQubWFjZFNpZ25hbFt4WzBdXSA9IGVzW2pdOyB9KTsKICAgIH0KICAgIGluZC5tYWNkSGlzdCA9IGluZC5tYWNkLm1hcCgoYSwgaSkgPT4gKGEgIT0gbnVsbCAmJiBpbmQubWFjZFNpZ25hbFtpXSAhPSBudWxsKSA/IGEgLSBpbmQubWFjZFNpZ25hbFtpXSA6IG51bGwpOwogICAgLy8gUlNJMTQgKFdpbGRlcikKICAgIGluZC5yc2kxNCA9IG5ldyBBcnJheShuKS5maWxsKG51bGwpOwogICAgaWYgKG4gPiAxNCkgewogICAgICBsZXQgYWcgPSAwLCBhbCA9IDA7CiAgICAgIGZvciAobGV0IGkgPSAxOyBpIDw9IDE0OyBpKyspIHsgY29uc3QgZCA9IGNbaV0gLSBjW2kgLSAxXTsgYWcgKz0gTWF0aC5tYXgoZCwgMCk7IGFsICs9IE1hdGgubWF4KC1kLCAwKTsgfQogICAgICBhZyAvPSAxNDsgYWwgLz0gMTQ7CiAgICAgIGluZC5yc2kxNFsxNF0gPSBhbCA9PT0gMCA/IDEwMCA6IDEwMCAtIDEwMCAvICgxICsgYWcgLyBhbCk7CiAgICAgIGZvciAobGV0IGkgPSAxNTsgaSA8IG47IGkrKykgewogICAgICAgIGNvbnN0IGQgPSBjW2ldIC0gY1tpIC0gMV07CiAgICAgICAgYWcgPSAoYWcgKiAxMyArIE1hdGgubWF4KGQsIDApKSAvIDE0OyBhbCA9IChhbCAqIDEzICsgTWF0aC5tYXgoLWQsIDApKSAvIDE0OwogICAgICAgIGluZC5yc2kxNFtpXSA9IGFsID09PSAwID8gMTAwIDogMTAwIC0gMTAwIC8gKDEgKyBhZyAvIGFsKTsKICAgICAgfQogICAgfQogICAgLy8gS0QgKFJTViA577yMMS8zIOW5s+a7kSkKICAgIGNvbnN0IHJzdiA9IG5ldyBBcnJheShuKS5maWxsKG51bGwpOwogICAgZm9yIChsZXQgaSA9IDg7IGkgPCBuOyBpKyspIHsKICAgICAgY29uc3QgaGggPSBNYXRoLm1heCguLi5iLmhpZ2guc2xpY2UoaSAtIDgsIGkgKyAxKSksIGxsID0gTWF0aC5taW4oLi4uYi5sb3cuc2xpY2UoaSAtIDgsIGkgKyAxKSk7CiAgICAgIHJzdltpXSA9IGhoID09PSBsbCA/IDUwIDogKGNbaV0gLSBsbCkgLyAoaGggLSBsbCkgKiAxMDA7CiAgICB9CiAgICBpbmQuayA9IG5ldyBBcnJheShuKS5maWxsKG51bGwpOyBpbmQuZCA9IG5ldyBBcnJheShuKS5maWxsKG51bGwpOwogICAgbGV0IHBrID0gNTAsIHBkID0gNTA7CiAgICBmb3IgKGxldCBpID0gMDsgaSA8IG47IGkrKykgaWYgKHJzdltpXSAhPSBudWxsKSB7IHBrID0gcGsgKiAyIC8gMyArIHJzdltpXSAvIDM7IGluZC5rW2ldID0gcGs7IHBkID0gcGQgKiAyIC8gMyArIHBrIC8gMzsgaW5kLmRbaV0gPSBwZDsgfQogICAgLy8g5biD5p6XIE1BMjAgwrEgMs+DCiAgICBpbmQuYm9sbE1pZCA9IGluZC5tYTIwOyBpbmQuYm9sbFVwcGVyID0gbmV3IEFycmF5KG4pLmZpbGwobnVsbCk7IGluZC5ib2xsTG93ZXIgPSBuZXcgQXJyYXkobikuZmlsbChudWxsKTsKICAgIGZvciAobGV0IGkgPSAxOTsgaSA8IG47IGkrKykgewogICAgICBjb25zdCB3ID0gYy5zbGljZShpIC0gMTksIGkgKyAxKSwgbSA9IGluZC5tYTIwW2ldOwogICAgICBjb25zdCBzZCA9IE1hdGguc3FydCh3LnJlZHVjZSgocywgeCkgPT4gcyArICh4IC0gbSkgKiogMiwgMCkgLyAyMCk7CiAgICAgIGluZC5ib2xsVXBwZXJbaV0gPSBtICsgMiAqIHNkOyBpbmQuYm9sbExvd2VyW2ldID0gbSAtIDIgKiBzZDsKICAgIH0KICAgIC8vIEFUUjE0IChXaWxkZXIpCiAgICBjb25zdCB0ciA9IGIuY2xvc2UubWFwKChfLCBpKSA9PiBpID09PSAwID8gYi5oaWdoWzBdIC0gYi5sb3dbMF0gOgogICAgICBNYXRoLm1heChiLmhpZ2hbaV0gLSBiLmxvd1tpXSwgTWF0aC5hYnMoYi5oaWdoW2ldIC0gY1tpIC0gMV0pLCBNYXRoLmFicyhiLmxvd1tpXSAtIGNbaSAtIDFdKSkpOwogICAgaW5kLmF0cjE0ID0gbmV3IEFycmF5KG4pLmZpbGwobnVsbCk7CiAgICBpZiAobiA+IDE0KSB7CiAgICAgIGxldCBwcmV2ID0gdHIuc2xpY2UoMSwgMTUpLnJlZHVjZSgoYSwgeCkgPT4gYSArIHgsIDApIC8gMTQ7IGluZC5hdHIxNFsxNF0gPSBwcmV2OwogICAgICBmb3IgKGxldCBpID0gMTU7IGkgPCBuOyBpKyspIHsgcHJldiA9IChwcmV2ICogMTMgKyB0cltpXSkgLyAxNDsgaW5kLmF0cjE0W2ldID0gcHJldjsgfQogICAgfQogICAgLy8gQURYIC8gK0RJIC8gLURJIChXaWxkZXIpCiAgICBpbmQuYWR4ID0gbmV3IEFycmF5KG4pLmZpbGwobnVsbCk7IGluZC5wbHVzRGkgPSBuZXcgQXJyYXkobikuZmlsbChudWxsKTsgaW5kLm1pbnVzRGkgPSBuZXcgQXJyYXkobikuZmlsbChudWxsKTsKICAgIHsKICAgICAgY29uc3QgcGRtID0gbmV3IEFycmF5KG4pLmZpbGwoMCksIG1kbSA9IG5ldyBBcnJheShuKS5maWxsKDApOwogICAgICBmb3IgKGxldCBpID0gMTsgaSA8IG47IGkrKykgewogICAgICAgIGNvbnN0IHVwID0gYi5oaWdoW2ldIC0gYi5oaWdoW2kgLSAxXSwgZG4gPSBiLmxvd1tpIC0gMV0gLSBiLmxvd1tpXTsKICAgICAgICBwZG1baV0gPSAodXAgPiBkbiAmJiB1cCA+IDApID8gdXAgOiAwOyBtZG1baV0gPSAoZG4gPiB1cCAmJiBkbiA+IDApID8gZG4gOiAwOwogICAgICB9CiAgICAgIGNvbnN0IHNtb290aCA9IHggPT4geyBjb25zdCBvID0gbmV3IEFycmF5KG4pLmZpbGwoMCk7IGlmIChuID4gMTQpIHsgb1sxNF0gPSB4LnNsaWNlKDEsIDE1KS5yZWR1Y2UoKGEsIHYpID0+IGEgKyB2LCAwKTsgZm9yIChsZXQgaSA9IDE1OyBpIDwgbjsgaSsrKSBvW2ldID0gb1tpIC0gMV0gLSBvW2kgLSAxXSAvIDE0ICsgeFtpXTsgfSByZXR1cm4gbzsgfTsKICAgICAgY29uc3Qgc1RyID0gc21vb3RoKHRyKSwgc1AgPSBzbW9vdGgocGRtKSwgc00gPSBzbW9vdGgobWRtKSwgZHggPSBuZXcgQXJyYXkobikuZmlsbChudWxsKTsKICAgICAgZm9yIChsZXQgaSA9IDE0OyBpIDwgbjsgaSsrKSBpZiAoc1RyW2ldID4gMCkgewogICAgICAgIGluZC5wbHVzRGlbaV0gPSBzUFtpXSAvIHNUcltpXSAqIDEwMDsgaW5kLm1pbnVzRGlbaV0gPSBzTVtpXSAvIHNUcltpXSAqIDEwMDsKICAgICAgICBjb25zdCBkZW4gPSBpbmQucGx1c0RpW2ldICsgaW5kLm1pbnVzRGlbaV07CiAgICAgICAgZHhbaV0gPSBkZW4gPyBNYXRoLmFicyhpbmQucGx1c0RpW2ldIC0gaW5kLm1pbnVzRGlbaV0pIC8gZGVuICogMTAwIDogMDsKICAgICAgfQogICAgICBjb25zdCB2aSA9IGR4Lm1hcCgodiwgaSkgPT4gdiAhPSBudWxsID8gaSA6IC0xKS5maWx0ZXIoaSA9PiBpID49IDApOwogICAgICBpZiAodmkubGVuZ3RoID4gMTQpIHsKICAgICAgICBsZXQgcHJldiA9IHZpLnNsaWNlKDAsIDE0KS5yZWR1Y2UoKHMsIGkpID0+IHMgKyBkeFtpXSwgMCkgLyAxNDsKICAgICAgICBpbmQuYWR4W3ZpWzEzXV0gPSBwcmV2OwogICAgICAgIGZvciAobGV0IGogPSAxNDsgaiA8IHZpLmxlbmd0aDsgaisrKSB7IHByZXYgPSAocHJldiAqIDEzICsgZHhbdmlbal1dKSAvIDE0OyBpbmQuYWR4W3ZpW2pdXSA9IHByZXY7IH0KICAgICAgfQogICAgfQogICAgLy8gTUZJMTQKICAgIGluZC5tZmkxNCA9IG5ldyBBcnJheShuKS5maWxsKG51bGwpOwogICAgeyBjb25zdCB0cCA9IGIuY2xvc2UubWFwKChfLCBpKSA9PiAoYi5oaWdoW2ldICsgYi5sb3dbaV0gKyBjW2ldKSAvIDMpOwogICAgICBmb3IgKGxldCBpID0gMTQ7IGkgPCBuOyBpKyspIHsgbGV0IHBvcyA9IDAsIG5lZyA9IDA7CiAgICAgICAgZm9yIChsZXQgaiA9IGkgLSAxMzsgaiA8PSBpOyBqKyspIHsgY29uc3QgZiA9IHRwW2pdICogYi52b2x1bWVbal07IGlmICh0cFtqXSA+IHRwW2ogLSAxXSkgcG9zICs9IGY7IGVsc2UgaWYgKHRwW2pdIDwgdHBbaiAtIDFdKSBuZWcgKz0gZjsgfQogICAgICAgIGluZC5tZmkxNFtpXSA9IG5lZyA9PT0gMCA/IDEwMCA6IDEwMCAtIDEwMCAvICgxICsgcG9zIC8gbmVnKTsgfSB9CiAgICAvLyBPQlYKICAgIGluZC5vYnYgPSBbMF07IGZvciAobGV0IGkgPSAxOyBpIDwgbjsgaSsrKSBpbmQub2J2LnB1c2goaW5kLm9idltpIC0gMV0gKyAoY1tpXSA+IGNbaSAtIDFdID8gYi52b2x1bWVbaV0gOiBjW2ldIDwgY1tpIC0gMV0gPyAtYi52b2x1bWVbaV0gOiAwKSk7CiAgICAvLyBTdXBlcnRyZW5kICgxMCwgMykKICAgIGluZC5zdEJ1bGwgPSBuZXcgQXJyYXkobikuZmlsbChudWxsKTsgaW5kLnN0TGluZSA9IG5ldyBBcnJheShuKS5maWxsKG51bGwpOwogICAgeyBsZXQgZlUgPSBudWxsLCBmTCA9IG51bGwsIHByZXZCdWxsID0gdHJ1ZTsKICAgICAgZm9yIChsZXQgaSA9IDA7IGkgPCBuOyBpKyspIHsgaWYgKGluZC5hdHIxNFtpXSA9PSBudWxsKSBjb250aW51ZTsKICAgICAgICBjb25zdCBtaWQgPSAoYi5oaWdoW2ldICsgYi5sb3dbaV0pIC8gMjsKICAgICAgICBsZXQgdXAgPSBtaWQgKyAzICogaW5kLmF0cjE0W2ldLCBsbyA9IG1pZCAtIDMgKiBpbmQuYXRyMTRbaV07CiAgICAgICAgaWYgKGZVICE9IG51bGwpIHsgdXAgPSAodXAgPCBmVSB8fCBjW2kgLSAxXSA+IGZVKSA/IHVwIDogZlU7IGxvID0gKGxvID4gZkwgfHwgY1tpIC0gMV0gPCBmTCkgPyBsbyA6IGZMOyB9CiAgICAgICAgbGV0IGN1cjsgaWYgKGZMID09IG51bGwpIGN1ciA9IHRydWU7IGVsc2UgaWYgKHByZXZCdWxsKSBjdXIgPSAhKGNbaV0gPCBmTCk7IGVsc2UgY3VyID0gY1tpXSA+IGZVOwogICAgICAgIGluZC5zdEJ1bGxbaV0gPSBjdXI7IGluZC5zdExpbmVbaV0gPSBjdXIgPyBsbyA6IHVwOyBmVSA9IHVwOyBmTCA9IGxvOyBwcmV2QnVsbCA9IGN1cjsgfSB9CiAgICAvLyDkuIDnm67lnYfooaHooagKICAgIGNvbnN0IG1pZFAgPSAocCwgaSkgPT4gaSA8IHAgLSAxID8gbnVsbCA6IChNYXRoLm1heCguLi5iLmhpZ2guc2xpY2UoaSAtIHAgKyAxLCBpICsgMSkpICsgTWF0aC5taW4oLi4uYi5sb3cuc2xpY2UoaSAtIHAgKyAxLCBpICsgMSkpKSAvIDI7CiAgICBpbmQudGVua2FuID0gYy5tYXAoKF8sIGkpID0+IG1pZFAoOSwgaSkpOyBpbmQua2lqdW4gPSBjLm1hcCgoXywgaSkgPT4gbWlkUCgyNiwgaSkpOwogICAgaW5kLnNlbmtvdUEgPSBpbmQudGVua2FuLm1hcCgodCwgaSkgPT4gKHQgIT0gbnVsbCAmJiBpbmQua2lqdW5baV0gIT0gbnVsbCkgPyAodCArIGluZC5raWp1bltpXSkgLyAyIDogbnVsbCk7CiAgICBpbmQuc2Vua291QiA9IGMubWFwKChfLCBpKSA9PiBtaWRQKDUyLCBpKSk7CiAgICAvLyDooY3nlJ/ph48KICAgIGluZC52b2xSYXRpbyA9IG4gPj0gMjEgPyAoYi52b2x1bWVbbiAtIDFdIC8gKGIudm9sdW1lLnNsaWNlKG4gLSAyMSwgbiAtIDEpLnJlZHVjZSgoYSwgeCkgPT4gYSArIHgsIDApIC8gMjApKSA6IG51bGw7IC8vICM5NgogICAgaW5kLmF2Z0Ftb3VudDIwTSA9IG4gPj0gMjAgPyBiLmNsb3NlLnNsaWNlKG4gLSAyMCkucmVkdWNlKChzLCBfLCBqKSA9PiB7IC8vICM5N++8iOeZvuiQrOWFg++8iQogICAgICBjb25zdCBpID0gbiAtIDIwICsgajsgY29uc3QgYW10ID0gKGIuYW1vdW50ICYmIGIuYW1vdW50W2ldKSA/IGIuYW1vdW50W2ldIDogYi52b2x1bWVbaV0gKiBiLmNsb3NlW2ldOyByZXR1cm4gcyArIGFtdDsgfSwgMCkgLyAyMCAvIDFlNiA6IG51bGw7CiAgICBpbmQucHJldjIwSGlnaCA9IG4gPj0gMjEgPyBNYXRoLm1heCguLi5iLmhpZ2guc2xpY2UobiAtIDIxLCBuIC0gMSkpIDogbnVsbDsKICAgIGluZC5sb3cyMCA9IE1hdGgubWluKC4uLmIubG93LnNsaWNlKC0yMCkpOyBpbmQubG93NjAgPSBNYXRoLm1pbiguLi5iLmxvdy5zbGljZSgtNjApKTsKICAgIHJldHVybiBpbmQ7CiAgfQogIGNvbnN0IGxhc3QgPSBzZXEgPT4gc2VxICYmIHNlcS5sZW5ndGggPyBzZXFbc2VxLmxlbmd0aCAtIDFdIDogbnVsbDsKICBjb25zdCBwcmV2ID0gc2VxID0+IHNlcSAmJiBzZXEubGVuZ3RoID49IDIgPyBzZXFbc2VxLmxlbmd0aCAtIDJdIDogbnVsbDsKICBjb25zdCBjcm9zc2VkVXAgPSAoYSwgYikgPT4gcHJldihhKSAhPSBudWxsICYmIHByZXYoYikgIT0gbnVsbCAmJiBsYXN0KGEpICE9IG51bGwgJiYgbGFzdChiKSAhPSBudWxsICYmIHByZXYoYSkgPD0gcHJldihiKSAmJiBsYXN0KGEpID4gbGFzdChiKTsKCiAgLy8gLS0tLS0tLS0tLSAxMyDpoIXoqIjliIYgKCM4MS05NO+8jOa7v+WIhiAxMDApIC0tLS0tLS0tLS0KICBjb25zdCBTSUdOQUxfREVGUyA9IFsKICAgIFsnTUHlpJrpoK3mjpLliJcnLCAxMCwgaW5kID0+IGxhc3QoaW5kLm1hNSkgPiBsYXN0KGluZC5tYTIwKSAmJiBsYXN0KGluZC5tYTIwKSA+IGxhc3QoaW5kLm1hNjApXSwKICAgIFsn5Z2H57ea6buD6YeR5Lqk5Y+JJywgOCwgaW5kID0+IGNyb3NzZWRVcChpbmQubWE1LCBpbmQubWEyMCldLAogICAgWydNQUNE57+75aSaJywgMTAsIGluZCA9PiBjcm9zc2VkVXAoaW5kLm1hY2QsIGluZC5tYWNkU2lnbmFsKV0sCiAgICBbJ1JTSeWBj+WkmicsIDgsIGluZCA9PiBsYXN0KGluZC5yc2kxNCkgPj0gNTAgJiYgbGFzdChpbmQucnNpMTQpIDw9IDc1XSwKICAgIFsnS0Tpu4Pph5HkuqTlj4knLCA2LCBpbmQgPT4gY3Jvc3NlZFVwKGluZC5rLCBpbmQuZCldLAogICAgWyfluIPmnpflgY/lpJonLCA2LCBpbmQgPT4gbGFzdChpbmQuYmFycy5jbG9zZSkgPiBsYXN0KGluZC5tYTIwKSAmJiBsYXN0KGluZC5iYXJzLmNsb3NlKSA8PSBsYXN0KGluZC5ib2xsVXBwZXIpICogMS4wMl0sCiAgICBbJ+aIkOS6pOmHj+aUvuWkpycsIDEwLCBpbmQgPT4gaW5kLnZvbFJhdGlvICE9IG51bGwgJiYgaW5kLnZvbFJhdGlvID49IDEuNV0sCiAgICBbJ09CVuWBj+WkmicsIDYsIGluZCA9PiBsYXN0KGluZC5vYnYpID4gTWF0aC5tYXgoLi4uaW5kLm9idi5zbGljZSgtMjEsIC0xKSldLAogICAgWydBRFjlvLfli6InLCA2LCBpbmQgPT4gbGFzdChpbmQuYWR4KSA+PSAyNSAmJiBsYXN0KGluZC5wbHVzRGkpID4gbGFzdChpbmQubWludXNEaSldLAogICAgWyfnqoHnoLTliY3pq5gnLCAxMCwgaW5kID0+IGluZC5wcmV2MjBIaWdoICE9IG51bGwgJiYgbGFzdChpbmQuYmFycy5jbG9zZSkgPiBpbmQucHJldjIwSGlnaF0sCiAgICBbJ1N1cGVydHJlbmTnv7vlpJonLCA4LCBpbmQgPT4gbGFzdChpbmQuc3RCdWxsKSA9PT0gdHJ1ZV0sCiAgICBbJ+S4gOebruWdh+ihoeihqOWBj+WkmicsIDYsIGluZCA9PiB7CiAgICAgIGNvbnN0IGkgPSBpbmQuYmFycy5jbG9zZS5sZW5ndGggLSAxLCBhID0gaW5kLnNlbmtvdUFbaSAtIDI2XSwgYmIgPSBpbmQuc2Vua291QltpIC0gMjZdLCBjbCA9IGluZC5iYXJzLmNsb3NlW2ldOwogICAgICByZXR1cm4gYSAhPSBudWxsICYmIGJiICE9IG51bGwgJiYgY2wgPiBhICYmIGNsID4gYmIgJiYgbGFzdChpbmQudGVua2FuKSA+IGxhc3QoaW5kLmtpanVuKTsKICAgIH1dLAogICAgWydNRknlgY/lpJonLCA2LCBpbmQgPT4gbGFzdChpbmQubWZpMTQpID49IDUwXSwKICBdOwogIGZ1bmN0aW9uIHNjb3JlVGVjaChpbmQpIHsKICAgIGNvbnN0IGhpdCA9IFtdLCBtaXNzID0gW107IGxldCBzY29yZSA9IDA7CiAgICBmb3IgKGNvbnN0IFtuYW1lLCBwdHMsIGZuXSBvZiBTSUdOQUxfREVGUykgewogICAgICBsZXQgb2sgPSBmYWxzZTsgdHJ5IHsgb2sgPSAhIWZuKGluZCk7IH0gY2F0Y2ggKGUpIHsgb2sgPSBmYWxzZTsgfQogICAgICBpZiAob2spIHsgc2NvcmUgKz0gcHRzOyBoaXQucHVzaCh7IG5hbWUsIHB0cyB9KTsgfSBlbHNlIG1pc3MucHVzaCh7IG5hbWUsIHB0cyB9KTsKICAgIH0KICAgIHJldHVybiB7IHNjb3JlLCBoaXQsIG1pc3MgfTsKICB9CgogIC8vIC0tLS0tLS0tLS0g562W55Wl6IiH5YO55L2NICgjMTAzLTEyMykgLS0tLS0tLS0tLQogIGZ1bmN0aW9uIGJ1aWxkU3RyYXRlZ3koaW5kLCB0ZWNoU2NvcmUsIHBlcmlvZE1vZGUpIHsKICAgIGNvbnN0IGIgPSBpbmQuYmFycywgY2xvc2UgPSBsYXN0KGIuY2xvc2UpLCBhdHIgPSBsYXN0KGluZC5hdHIxNCk7CiAgICBpZiAoY2xvc2UgPT0gbnVsbCB8fCBhdHIgPT0gbnVsbCB8fCBhdHIgPD0gMCkgcmV0dXJuIG51bGw7CiAgICBsZXQgcGVyaW9kID0gcGVyaW9kTW9kZSAmJiBwZXJpb2RNb2RlICE9PSAn6Ieq5YuV5Yik5pa3JyA/IHBlcmlvZE1vZGUgOiBudWxsOwogICAgaWYgKCFwZXJpb2QpIHBlcmlvZCA9IChjbG9zZSA+IGxhc3QoaW5kLm1hNjApICYmIGxhc3QoaW5kLm1hMjApID4gbGFzdChpbmQubWE2MCkgJiYgdGVjaFNjb3JlID49IDY1KSA/ICfkuK3nt5onIDogJ+efree3mic7IC8vICMxMDMKICAgIGNvbnN0IGhvbGRpbmcgPSBwZXJpb2QgPT09ICfnn63nt5onID8gJzPvvZ4xNSDlgIvkuqTmmJPml6UnIDogcGVyaW9kID09PSAn6ZW357eaJyA/ICcx772eNiDlgIvmnIjvvIjmioDooZPotqjli6Lop4Dlr5/vvIknIDogJzPvvZ44IOmAsSc7IC8vICMxMDQtMTA3CiAgICBjb25zdCBiYXNlTWEgPSBwZXJpb2QgPT09ICfplbfnt5onID8gbGFzdChpbmQubWE2MCkgOiBsYXN0KGluZC5tYTIwKTsKICAgIGlmIChiYXNlTWEgPT0gbnVsbCkgcmV0dXJuIG51bGw7CiAgICBjb25zdCBpc0JyZWFrb3V0ID0gaW5kLnByZXYyMEhpZ2ggIT0gbnVsbCAmJiBjbG9zZSA+IGluZC5wcmV2MjBIaWdoICYmIGluZC52b2xSYXRpbyAhPSBudWxsICYmIGluZC52b2xSYXRpbyA+PSAxLjI7IC8vICMxMDkKICAgIGNvbnN0IHR5cGUgPSBpc0JyZWFrb3V0ID8gJ+eqgeegtOmAsuWgtCcgOiAn5Zue5qqU6YCy5aC0JzsgLy8gIzEwOAogICAgbGV0IGVudHJ5TG93ID0gTWF0aC5taW4oY2xvc2UgLSAwLjQ1ICogYXRyLCBiYXNlTWEgKyAwLjI1ICogYXRyKTsgICAvLyAjMTEwCiAgICBsZXQgZW50cnlIaWdoID0gTWF0aC5taW4oY2xvc2UsIGJhc2VNYSArIDAuNjUgKiBhdHIpOyAgICAgICAgICAgICAgIC8vICMxMTEKICAgIGlmIChlbnRyeUxvdyA+PSBlbnRyeUhpZ2gpIGVudHJ5TG93ID0gZW50cnlIaWdoIC0gdGlja1NpemUoZW50cnlIaWdoKTsKICAgIGNvbnN0IGVudHJ5TWlkID0gcm91bmRUaWNrKChlbnRyeUxvdyArIGVudHJ5SGlnaCkgLyAyKTsgICAgICAgICAgICAvLyAjMTEyCiAgICBjb25zdCBzdXBwb3J0ID0gTWF0aC5taW4oaW5kLmxvdzIwLCBpbmQubG93NjAsIGJhc2VNYSk7ICAgICAgICAgICAgIC8vICMxMTPvvIjliY3kvY7ku6Xov5EyMOaXpeS9juS7o+ihqO+8jOiIhzYw5pel5L2OL+Wfuua6luWdh+e3muWPluacgOS9ju+8iQogICAgbGV0IHN0b3AgPSBNYXRoLm1pbihlbnRyeUxvdyAtIDEuMjUgKiBhdHIsIHN1cHBvcnQgLSAwLjE1ICogYXRyKTsgICAvLyAjMTE0CiAgICBpZiAoc3RvcCA+PSBlbnRyeUxvdykgc3RvcCA9IGVudHJ5TG93IC0gdGlja1NpemUoZW50cnlMb3cpOwogICAgc3RvcCA9IHJvdW5kVGljayhzdG9wKTsKICAgIGNvbnN0IHJpc2sgPSBlbnRyeU1pZCAtIHN0b3A7CiAgICBpZiAocmlzayA8PSAwKSByZXR1cm4gbnVsbDsKICAgIGNvbnN0IHByZXNzdXJlID0gaW5kLnByZXYyMEhpZ2ggIT0gbnVsbCAmJiBpbmQucHJldjIwSGlnaCA+IGVudHJ5TWlkID8gaW5kLnByZXYyMEhpZ2ggOiAwOwogICAgY29uc3QgdGFyZ2V0MSA9IHJvdW5kVGljayhNYXRoLm1heChlbnRyeU1pZCArIDEuOCAqIHJpc2ssIHByZXNzdXJlKSk7IC8vICMxMTUKICAgIGNvbnN0IHRhcmdldDIgPSByb3VuZFRpY2soTWF0aC5tYXgodGFyZ2V0MSArIHRpY2tTaXplKHRhcmdldDEpLCBlbnRyeU1pZCArIDMgKiByaXNrKSk7IC8vICMxMTYKICAgIGNvbnN0IHJyID0gKHRhcmdldDEgLSBlbnRyeU1pZCkgLyByaXNrOyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC8vICMxMTcKICAgIGNvbnN0IGRpc3RQY3QgPSBNYXRoLm1heCgwLCBjbG9zZSAtIGVudHJ5SGlnaCkgLyBlbnRyeUhpZ2ggKiAxMDA7ICAgIC8vICMxMTkKICAgIC8vIOmAsuWgtOeLgOaFiyAoIzEzMy0xMzcpCiAgICBsZXQgc3RhdHVzOwogICAgaWYgKGNsb3NlIDwgZW50cnlMb3cgLSAwLjUgKiBhdHIpIHN0YXR1cyA9ICfmop3ku7blpLHmlYgnOwogICAgZWxzZSBpZiAoY2xvc2UgPj0gZW50cnlMb3cgJiYgY2xvc2UgPD0gZW50cnlIaWdoKSBzdGF0dXMgPSAn5o6l6L+R6YCy5aC0JzsKICAgIGVsc2UgaWYgKGlzQnJlYWtvdXQgJiYgY2xvc2UgPD0gZW50cnlIaWdoICsgMC44ICogYXRyKSBzdGF0dXMgPSAn56qB56C06KeA5a+fJzsKICAgIGVsc2UgaWYgKGNsb3NlID4gZW50cnlIaWdoICsgMC44ICogYXRyKSBzdGF0dXMgPSAn5pqr5LiN6L+95YO5JzsKICAgIGVsc2Ugc3RhdHVzID0gJ+etieW+heWbnuaqlCc7CiAgICAvLyDpgLLloLTpganlkIjluqYgKCMxMjQtMTMyKQogICAgY29uc3QgcGFydHMgPSB7CiAgICAgIGJhc2U6IDQ1LAogICAgICBkaXN0UGVuYWx0eTogLU1hdGgubWluKDQ1LCBkaXN0UGN0ICogMi4yKSwKICAgICAgdGVjaEJvbnVzOiBNYXRoLm1pbigyMCwgTWF0aC5tYXgoMCwgKHRlY2hTY29yZSAtIDUwKSAqIDAuNDUpKSwKICAgICAgdm9sQm9udXM6IE1hdGgubWluKDE1LCBNYXRoLm1heCgwLCAoKGluZC52b2xSYXRpbyA/PyAwKSAtIDAuOCkgKiAxMCkpLAogICAgICByckJvbnVzOiBNYXRoLm1pbigxNSwgTWF0aC5tYXgoMCwgKHJyIC0gMSkgKiA3KSksCiAgICAgIGF0clBlbmFsdHk6IC1NYXRoLm1pbigxNSwgTWF0aC5tYXgoMCwgYXRyIC8gY2xvc2UgKiAxMDAgKiAxLjUpKSwKICAgIH07CiAgICBsZXQgZW50cnlTY29yZSA9IE1hdGgucm91bmQocGFydHMuYmFzZSArIHBhcnRzLmRpc3RQZW5hbHR5ICsgcGFydHMudGVjaEJvbnVzICsgcGFydHMudm9sQm9udXMgKyBwYXJ0cy5yckJvbnVzICsgcGFydHMuYXRyUGVuYWx0eSk7CiAgICBlbnRyeVNjb3JlID0gc3RhdHVzID09PSAn5qKd5Lu25aSx5pWIJyA/IDAgOiBjbGFtcChlbnRyeVNjb3JlLCAwLCAxMDApOwogICAgcmV0dXJuIHsKICAgICAgcGVyaW9kLCBob2xkaW5nLCB0eXBlLCBiYXNlTWEsIGVudHJ5TG93OiByb3VuZFRpY2soZW50cnlMb3cpLCBlbnRyeUhpZ2g6IHJvdW5kVGljayhlbnRyeUhpZ2gpLAogICAgICBlbnRyeU1pZCwgc3RvcCwgdGFyZ2V0MSwgdGFyZ2V0MiwgcnIsIGRpc3RQY3QsIHN0YXR1cywgZW50cnlTY29yZSwgcGFydHMsIHN1cHBvcnQsCiAgICAgIGJhc2lzOiBg5Z+65rqW5Z2H57eaICR7cGVyaW9kID09PSAn6ZW357eaJyA/ICdNQTYwJyA6ICdNQTIwJ309JHtiYXNlTWEudG9GaXhlZCgyKX3vvZxBVFIxND0ke2F0ci50b0ZpeGVkKDIpfe+9nOaUr+aSkOWPg+iAgz0ke3N1cHBvcnQudG9GaXhlZCgyKX1gLAogICAgICB0cmlnZ2VyOiBg6IKh5YO56YCy5YWl6YCy5aC05Y2A6ZaTICR7cm91bmRUaWNrKGVudHJ5TG93KS50b0ZpeGVkKDIpfe+9niR7cm91bmRUaWNrKGVudHJ5SGlnaCkudG9GaXhlZCgyKX3vvIzkuJTph4/lg7nmnKrovYnlvLFgLAogICAgICBpbnZhbGlkOiBg6LeM56C05YGc5pCNICR7c3RvcC50b0ZpeGVkKDIpfeOAgemAsuWgtOaineS7tuWkseaViOaIlumHjeWkp+WfuuacrOmdouWIqeepuuaZgumgiOmHjeaWsOipleS8sGAsCiAgICB9OwogIH0KCiAgZnVuY3Rpb24gYW5hbHl6ZShzdG9jaywgcGVyaW9kTW9kZSkgewogICAgY29uc3QgaW5kID0gY29tcHV0ZUluZGljYXRvcnMoc3RvY2suYmFycyk7CiAgICBjb25zdCB7IHNjb3JlLCBoaXQsIG1pc3MgfSA9IHNjb3JlVGVjaChpbmQpOwogICAgY29uc3Qgc3RyYXQgPSBidWlsZFN0cmF0ZWd5KGluZCwgc2NvcmUsIHBlcmlvZE1vZGUpOwogICAgaWYgKCFzdHJhdCkgcmV0dXJuIG51bGw7CiAgICBjb25zdCBjID0gc3RvY2suYmFycy5jbG9zZSwgbiA9IGMubGVuZ3RoOwogICAgY29uc3QgY2hnID0gbiA+PSAyID8gY1tuIC0gMV0gLSBjW24gLSAyXSA6IDA7CiAgICByZXR1cm4gewogICAgICBjb2RlOiBzdG9jay5jb2RlLCBuYW1lOiBzdG9jay5uYW1lLCBtYXJrZXQ6IHN0b2NrLm1hcmtldCwgaXNEZW1vOiAhIXN0b2NrLmlzRGVtbywKICAgICAgZGF0ZTogc3RvY2suYmFycy5kYXRlc1tuIC0gMV0sIGNsb3NlOiBjW24gLSAxXSwgY2hhbmdlOiBjaGcsCiAgICAgIGNoYW5nZVBjdDogbiA+PSAyICYmIGNbbiAtIDJdID8gY2hnIC8gY1tuIC0gMl0gKiAxMDAgOiAwLAogICAgICB0ZWNoU2NvcmU6IHNjb3JlLCBoaXQsIG1pc3MsIGluZCwgc3RyYXQsCiAgICAgIGVudHJ5U2NvcmU6IHN0cmF0LmVudHJ5U2NvcmUsIHN0YXR1czogc3RyYXQuc3RhdHVzLCBwZXJpb2Q6IHN0cmF0LnBlcmlvZCwgdHlwZTogc3RyYXQudHlwZSwKICAgICAgYXZnQW1vdW50MjBNOiBpbmQuYXZnQW1vdW50MjBNLCB2b2xSYXRpbzogaW5kLnZvbFJhdGlvLAogICAgICByZWFzb246ICcnLAogICAgfTsKICB9CgogIGZ1bmN0aW9uIGlzRVRGKGNvZGUpIHsgcmV0dXJuIC9eMDAvLnRlc3QoY29kZSk7IH0gLy8gIzQ3IOeyl+eVpeS8sOeulwoKICAvLyAtLS0tLS0tLS0tIOWFqOW4guWgtOaOg+aPjyAoIzk4LTk5LCAjMTM4LTE0NykgLS0tLS0tLS0tLQogIGZ1bmN0aW9uIHNjYW4oc3RvY2tzLCBvcHRzKSB7CiAgICBjb25zdCBvID0gT2JqZWN0LmFzc2lnbih7IHRvcE46IDEwLCBtaW5UZWNoOiA2NSwgbWluQXZnQW1vdW50TTogMTAsIG1pbkVudHJ5OiA0NSwgaW5jbHVkZUVURjogZmFsc2UsIHBlcmlvZE1vZGU6ICfoh6rli5XliKTmlrcnLCBzb3J0TW9kZTogJ+e2nOWQiOaooeW8jycgfSwgb3B0cyk7CiAgICBjb25zdCBzdGF0cyA9IHsgc2Nhbm5lZDogMCwgdHlwZUV4Y2x1ZGVkOiAwLCBoaXN0b3J5U2hvcnQ6IDAsIHF1YWxpdHlCYWQ6IDAsIGFtb3VudExvdzogMCwgdGVjaExvdzogMCwgc3RyYXRGYWlsOiAwLCBlbnRyeUZhaWw6IDAgfTsKICAgIGxldCBsYXRlc3REYXRlID0gJyc7CiAgICBmb3IgKGNvbnN0IHMgb2Ygc3RvY2tzKSBpZiAocy5iYXJzLmRhdGVzLmxlbmd0aCkgeyBjb25zdCBkID0gcy5iYXJzLmRhdGVzW3MuYmFycy5kYXRlcy5sZW5ndGggLSAxXTsgaWYgKGQgPiBsYXRlc3REYXRlKSBsYXRlc3REYXRlID0gZDsgfQogICAgY29uc3QgY2FuZGlkYXRlcyA9IFtdLCB3YXRjaCA9IFtdLCBzZWVuID0gbmV3IFNldCgpOwogICAgZm9yIChjb25zdCBzIG9mIHN0b2NrcykgewogICAgICBpZiAoc2Vlbi5oYXMocy5jb2RlKSkgY29udGludWU7IHNlZW4uYWRkKHMuY29kZSk7CiAgICAgIGlmICghby5pbmNsdWRlRVRGICYmIGlzRVRGKHMuY29kZSkpIHsgc3RhdHMudHlwZUV4Y2x1ZGVkKys7IGNvbnRpbnVlOyB9CiAgICAgIGNvbnN0IGIgPSBzLmJhcnM7CiAgICAgIGlmIChiLmNsb3NlLmxlbmd0aCA8IDEyNSkgeyBzdGF0cy5oaXN0b3J5U2hvcnQrKzsgY29udGludWU7IH0gLy8gIzk4CiAgICAgIC8vIOizh+aWmeWTgeizqiAoIzE0NinvvJrml6XmnJ/ph43opIcv6YCG5bqP44CBT0hMQ1Yg54Sh5pWI44CB5pyA5paw5YWp562G55u46ZqUID4xMiDml6UKICAgICAgbGV0IGJhZCA9IGZhbHNlOwogICAgICBmb3IgKGxldCBpID0gMTsgaSA8IGIuZGF0ZXMubGVuZ3RoOyBpKyspIGlmIChiLmRhdGVzW2ldIDw9IGIuZGF0ZXNbaSAtIDFdKSB7IGJhZCA9IHRydWU7IGJyZWFrOyB9CiAgICAgIGlmICghYmFkICYmIGIuZGF0ZXMubGVuZ3RoID49IDIpIHsKICAgICAgICBjb25zdCBnYXAgPSAobmV3IERhdGUoYi5kYXRlc1tiLmRhdGVzLmxlbmd0aCAtIDFdKSAtIG5ldyBEYXRlKGIuZGF0ZXNbYi5kYXRlcy5sZW5ndGggLSAyXSkpIC8gODY0MDAwMDA7CiAgICAgICAgaWYgKGdhcCA+IDEyKSBiYWQgPSB0cnVlOwogICAgICB9CiAgICAgIGlmICghYmFkKSBmb3IgKGxldCBpID0gMDsgaSA8IGIuY2xvc2UubGVuZ3RoOyBpKyspIHsKICAgICAgICBpZiAoIShiLmhpZ2hbaV0gPj0gYi5sb3dbaV0gJiYgYi5oaWdoW2ldID49IGIub3BlbltpXSAmJiBiLmhpZ2hbaV0gPj0gYi5jbG9zZVtpXSAmJiBiLmxvd1tpXSA8PSBiLm9wZW5baV0gJiYgYi5sb3dbaV0gPD0gYi5jbG9zZVtpXSAmJiBiLnZvbHVtZVtpXSA+PSAwKSkgeyBiYWQgPSB0cnVlOyBicmVhazsgfQogICAgICB9CiAgICAgIGlmIChiYWQpIHsgc3RhdHMucXVhbGl0eUJhZCsrOyBjb250aW51ZTsgfQogICAgICBpZiAoYi5kYXRlc1tiLmRhdGVzLmxlbmd0aCAtIDFdICE9PSBsYXRlc3REYXRlKSB7IHN0YXRzLnF1YWxpdHlCYWQrKzsgY29udGludWU7IH0gLy8gIzE0NSDml6XmnJ/kuIDoh7TmgKcKICAgICAgc3RhdHMuc2Nhbm5lZCsrOwogICAgICBsZXQgYSA9IG51bGw7CiAgICAgIHRyeSB7IGEgPSBhbmFseXplKHsgY29kZTogcy5jb2RlLCBuYW1lOiBzLm5hbWUsIG1hcmtldDogcy5tYXJrZXQsIGlzRGVtbzogcy5pc0RlbW8sIGJhcnM6IHRyaW1CYXJzKGIsIDM2MCkgfSwgby5wZXJpb2RNb2RlKTsgfSBjYXRjaCAoZSkgeyBhID0gbnVsbDsgfQogICAgICBpZiAoIWEpIHsgc3RhdHMuc3RyYXRGYWlsKys7IGNvbnRpbnVlOyB9CiAgICAgIGlmIChhLmF2Z0Ftb3VudDIwTSA9PSBudWxsIHx8IGEuYXZnQW1vdW50MjBNIDwgby5taW5BdmdBbW91bnRNKSB7IHN0YXRzLmFtb3VudExvdysrOyBjb250aW51ZTsgfQogICAgICBpZiAoYS50ZWNoU2NvcmUgPCBvLm1pblRlY2gpIHsgc3RhdHMudGVjaExvdysrOyBjb250aW51ZTsgfQogICAgICBjb25zdCBwcmljZU9rID0gYS5zdHJhdC5zdG9wIDwgYS5zdHJhdC5lbnRyeUxvdyAmJiBhLnN0cmF0LmVudHJ5TG93IDwgYS5zdHJhdC50YXJnZXQxOwogICAgICBjb25zdCBvayA9IGEuZW50cnlTY29yZSA+PSBvLm1pbkVudHJ5ICYmIGEuc3RhdHVzICE9PSAn5qKd5Lu25aSx5pWIJyAmJiBhLnN0YXR1cyAhPT0gJ+aaq+S4jei/veWDuScgJiYgcHJpY2VPayAmJiBhLnN0cmF0LnJyID49IDEuNTsgLy8gIzEzOC0xMzkKICAgICAgaWYgKG9rKSB7IGEucmVhc29uID0gYOaKgOihkyAke2EudGVjaFNjb3JlfSDliIbjgIHpgLLloLTpganlkIjluqYgJHthLmVudHJ5U2NvcmV9IOWIhuOAgemiqOWgsSAxOiR7YS5zdHJhdC5yci50b0ZpeGVkKDIpfe+8jOeLgOaFi+OAjCR7YS5zdGF0dXN944CNYDsgY2FuZGlkYXRlcy5wdXNoKGEpOyB9CiAgICAgIGVsc2UgeyBhLnJlYXNvbiA9IGDmioDooZPlvLfli6LvvIgke2EudGVjaFNjb3JlfSDliIbvvInvvIzkvYYke2EuZW50cnlTY29yZSA8IG8ubWluRW50cnkgPyAn6YCy5aC06YGp5ZCI5bqmICcgKyBhLmVudHJ5U2NvcmUgKyAnIOacqumBlCAnICsgby5taW5FbnRyeSA6IGEuc3RyYXQucnIgPCAxLjUgPyAn6aKo5aCx5q+UIDE6JyArIGEuc3RyYXQucnIudG9GaXhlZCgyKSArICcg5pyq6YGUIDEuNScgOiAn54uA5oWL44CMJyArIGEuc3RhdHVzICsgJ+OAjeW+heingOWvnyd9YDsgd2F0Y2gucHVzaChhKTsgc3RhdHMuZW50cnlGYWlsKys7IH0KICAgIH0KICAgIGNvbnN0IGxpcVNjb3JlID0gYSA9PiBNYXRoLm1pbigxMDAsIE1hdGgubWF4KDAsIE1hdGgubG9nMTAoTWF0aC5tYXgoYS5hdmdBbW91bnQyME0gfHwgMSwgMSkpICogNTApKTsKICAgIGNvbnN0IHJyU2NvcmUgPSBhID0+IE1hdGgubWluKDEwMCwgYS5zdHJhdC5yciAvIDMgKiAxMDApOwogICAgY29uc3QgY29tcG9zaXRlID0gYSA9PiBhLnRlY2hTY29yZSAqIDAuNDIgKyBhLmVudHJ5U2NvcmUgKiAwLjM4ICsgbGlxU2NvcmUoYSkgKiAwLjEwICsgcnJTY29yZShhKSAqIDAuMTA7IC8vICMxNDIKICAgIGlmIChvLnNvcnRNb2RlID09PSAn5oqA6KGT5by35Yui5YSq5YWIJykgY2FuZGlkYXRlcy5zb3J0KCh4LCB5KSA9PiB5LnRlY2hTY29yZSAtIHgudGVjaFNjb3JlIHx8IHkuZW50cnlTY29yZSAtIHguZW50cnlTY29yZSB8fCAoeS5hdmdBbW91bnQyME0gfHwgMCkgLSAoeC5hdmdBbW91bnQyME0gfHwgMCkpOyAvLyAjMTQzCiAgICBlbHNlIGlmIChvLnNvcnRNb2RlID09PSAn6L+R5pyf6YCy5aC05YSq5YWIJykgY2FuZGlkYXRlcy5zb3J0KCh4LCB5KSA9PiB5LmVudHJ5U2NvcmUgLSB4LmVudHJ5U2NvcmUgfHwgeC5zdHJhdC5kaXN0UGN0IC0geS5zdHJhdC5kaXN0UGN0IHx8IHkudGVjaFNjb3JlIC0geC50ZWNoU2NvcmUpOyAvLyAjMTQ0CiAgICBlbHNlIGNhbmRpZGF0ZXMuc29ydCgoeCwgeSkgPT4gY29tcG9zaXRlKHkpIC0gY29tcG9zaXRlKHgpKTsKICAgIHdhdGNoLnNvcnQoKHgsIHkpID0+IHkudGVjaFNjb3JlIC0geC50ZWNoU2NvcmUgfHwgeS5lbnRyeVNjb3JlIC0geC5lbnRyeVNjb3JlKTsKICAgIHJldHVybiB7IGNhbmRpZGF0ZXM6IGNhbmRpZGF0ZXMuc2xpY2UoMCwgby50b3BOKSwgYWxsQ2FuZGlkYXRlczogY2FuZGlkYXRlcywgd2F0Y2gsIHN0YXRzLCBsYXRlc3REYXRlIH07IC8vICM2NiDploDmqrvlmrTmoLzvvIzkuI3muYrmlbgKICB9CiAgZnVuY3Rpb24gdHJpbUJhcnMoYiwgbWF4KSB7CiAgICBpZiAoYi5jbG9zZS5sZW5ndGggPD0gbWF4KSByZXR1cm4gYjsKICAgIGNvbnN0IHMgPSBiLmNsb3NlLmxlbmd0aCAtIG1heDsKICAgIHJldHVybiB7IGRhdGVzOiBiLmRhdGVzLnNsaWNlKHMpLCBvcGVuOiBiLm9wZW4uc2xpY2UocyksIGhpZ2g6IGIuaGlnaC5zbGljZShzKSwgbG93OiBiLmxvdy5zbGljZShzKSwgY2xvc2U6IGIuY2xvc2Uuc2xpY2UocyksIHZvbHVtZTogYi52b2x1bWUuc2xpY2UocyksIGFtb3VudDogKGIuYW1vdW50IHx8IFtdKS5zbGljZShzKSB9OwogIH0KCiAgLy8gLS0tLS0tLS0tLSDmrbflj7LoqIromZ/op4Dlr58gKCMyNDAtMjUwKSAtLS0tLS0tLS0tCiAgZnVuY3Rpb24gaGlzdG9yeVN0YXRzKHN0b2NrLCBjb3N0UmF0ZSA9IDAuMDA0LCBzbGlwcGFnZSA9IDAuMDAxKSB7CiAgICBjb25zdCBiID0gc3RvY2suYmFycywgaG9yaXpvbnMgPSBbNSwgMTAsIDIwXSwgb3V0ID0ge307CiAgICBmb3IgKGNvbnN0IGggb2YgaG9yaXpvbnMpIG91dFtoXSA9IHsgY291bnQ6IDAsIHVwUmF0aW86IDAsIGF2Z1JldDogMCwgdGFyZ2V0SGl0OiAwLCBzdG9wSGl0OiAwIH07CiAgICBjb25zdCBzdW1zID0geyA1OiAwLCAxMDogMCwgMjA6IDAgfSwgdXBzID0geyA1OiAwLCAxMDogMCwgMjA6IDAgfSwgdGggPSB7IDU6IDAsIDEwOiAwLCAyMDogMCB9LCBzaCA9IHsgNTogMCwgMTA6IDAsIDIwOiAwIH07CiAgICBmb3IgKGxldCBlbmQgPSAxMjU7IGVuZCA8IGIuY2xvc2UubGVuZ3RoOyBlbmQrKykgewogICAgICBjb25zdCBzdWIgPSB0cmltQmFycyh7IGRhdGVzOiBiLmRhdGVzLnNsaWNlKDAsIGVuZCArIDEpLCBvcGVuOiBiLm9wZW4uc2xpY2UoMCwgZW5kICsgMSksIGhpZ2g6IGIuaGlnaC5zbGljZSgwLCBlbmQgKyAxKSwgbG93OiBiLmxvdy5zbGljZSgwLCBlbmQgKyAxKSwgY2xvc2U6IGIuY2xvc2Uuc2xpY2UoMCwgZW5kICsgMSksIHZvbHVtZTogYi52b2x1bWUuc2xpY2UoMCwgZW5kICsgMSksIGFtb3VudDogKGIuYW1vdW50IHx8IFtdKS5zbGljZSgwLCBlbmQgKyAxKSB9LCAzNjApOwogICAgICBsZXQgYSA9IG51bGw7IHRyeSB7IGEgPSBhbmFseXplKHsgY29kZTogc3RvY2suY29kZSwgbmFtZTogc3RvY2submFtZSwgbWFya2V0OiBzdG9jay5tYXJrZXQsIGJhcnM6IHN1YiB9LCAn6Ieq5YuV5Yik5pa3Jyk7IH0gY2F0Y2ggKGUpIHsgfQogICAgICBpZiAoIWEgfHwgYS50ZWNoU2NvcmUgPCA3MCkgY29udGludWU7IC8vICMyNDIKICAgICAgZm9yIChjb25zdCBoIG9mIGhvcml6b25zKSB7CiAgICAgICAgaWYgKGVuZCArIGggPj0gYi5jbG9zZS5sZW5ndGgpIGNvbnRpbnVlOwogICAgICAgIGNvbnN0IHJldCA9IChiLmNsb3NlW2VuZCArIGhdIC8gYi5jbG9zZVtlbmRdIC0gMSkgLSBjb3N0UmF0ZSAtIHNsaXBwYWdlOyAvLyAjMjQ3CiAgICAgICAgb3V0W2hdLmNvdW50Kys7IHN1bXNbaF0gKz0gcmV0ICogMTAwOyBpZiAocmV0ID4gMCkgdXBzW2hdKys7CiAgICAgICAgbGV0IGhpdFQgPSBmYWxzZSwgaGl0UyA9IGZhbHNlOwogICAgICAgIGZvciAobGV0IGogPSBlbmQgKyAxOyBqIDw9IGVuZCArIGg7IGorKykgeyBpZiAoYi5oaWdoW2pdID49IGEuc3RyYXQudGFyZ2V0MSkgaGl0VCA9IHRydWU7IGlmIChiLmxvd1tqXSA8PSBhLnN0cmF0LnN0b3ApIGhpdFMgPSB0cnVlOyB9CiAgICAgICAgaWYgKGhpdFQpIHRoW2hdKys7IGlmIChoaXRTKSBzaFtoXSsrOwogICAgICB9CiAgICB9CiAgICBmb3IgKGNvbnN0IGggb2YgaG9yaXpvbnMpIGlmIChvdXRbaF0uY291bnQpIHsgb3V0W2hdLnVwUmF0aW8gPSB1cHNbaF0gLyBvdXRbaF0uY291bnQgKiAxMDA7IG91dFtoXS5hdmdSZXQgPSBzdW1zW2hdIC8gb3V0W2hdLmNvdW50OyBvdXRbaF0udGFyZ2V0SGl0ID0gdGhbaF0gLyBvdXRbaF0uY291bnQgKiAxMDA7IG91dFtoXS5zdG9wSGl0ID0gc2hbaF0gLyBvdXRbaF0uY291bnQgKiAxMDA7IH0KICAgIHJldHVybiBvdXQ7CiAgfQoKICBjb25zdCBhcGkgPSB7IHNtYSwgZW1hLCB0aWNrU2l6ZSwgcm91bmRUaWNrLCBjb21wdXRlSW5kaWNhdG9ycywgc2NvcmVUZWNoLCBidWlsZFN0cmF0ZWd5LCBhbmFseXplLCBzY2FuLCBoaXN0b3J5U3RhdHMsIGlzRVRGLCB0cmltQmFycywgU0lHTkFMX0RFRlMgfTsKICBnbG9iYWwuVFdDb3JlID0gYXBpOwogIGlmICh0eXBlb2YgbW9kdWxlICE9PSAndW5kZWZpbmVkJyAmJiBtb2R1bGUuZXhwb3J0cykgbW9kdWxlLmV4cG9ydHMgPSBhcGk7Cn0pKHR5cGVvZiB3aW5kb3cgIT09ICd1bmRlZmluZWQnID8gd2luZG93IDogZ2xvYmFsVGhpcyk7Cg==
+/* 台股 AI 智慧選股工作台 V2.0（網頁版）核心引擎
+ * 技術指標 / 13 項 100 分計分 / 策略價位 / 進場適合度 / 掃描篩選
+ * 規則全部由本檔計算；AI（Gemini）只做文字解讀，不得改價位（規格 #12）。
+ * 同時支援瀏覽器（window.TWCore）與 Node 測試（module.exports）。 */
+(function (global) {
+  'use strict';
+
+  // ---------- 工具 ----------
+  function sma(v, p) {
+    const out = new Array(v.length).fill(null); let s = 0;
+    for (let i = 0; i < v.length; i++) {
+      s += v[i]; if (i >= p) s -= v[i - p];
+      if (i >= p - 1) out[i] = s / p;
+    } return out;
+  }
+  function ema(v, p) {
+    const out = new Array(v.length).fill(null);
+    if (v.length < p) return out;
+    const k = 2 / (p + 1);
+    let prev = v.slice(0, p).reduce((a, b) => a + b, 0) / p;
+    out[p - 1] = prev;
+    for (let i = p; i < v.length; i++) { prev = v[i] * k + prev * (1 - k); out[i] = prev; }
+    return out;
+  }
+  function tickSize(price) { // #118 台股升降單位
+    if (price < 10) return 0.01; if (price < 50) return 0.05; if (price < 100) return 0.1;
+    if (price < 500) return 0.5; if (price < 1000) return 1; return 5;
+  }
+  function roundTick(price) { const t = tickSize(price); return Math.round(Math.round(price / t) * t * 100) / 100; }
+  const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
+
+  // ---------- 指標 (#95) ----------
+  function computeIndicators(b) {
+    const n = b.close.length, c = b.close, ind = { bars: b };
+    ind.ma5 = sma(c, 5); ind.ma10 = sma(c, 10); ind.ma20 = sma(c, 20);
+    ind.ma60 = sma(c, 60); ind.ma120 = sma(c, 120);
+    ind.ema12 = ema(c, 12); ind.ema26 = ema(c, 26);
+    ind.macd = ind.ema12.map((a, i) => (a != null && ind.ema26[i] != null) ? a - ind.ema26[i] : null);
+    const vals = []; ind.macd.forEach((v, i) => { if (v != null) vals.push([i, v]); });
+    ind.macdSignal = new Array(n).fill(null);
+    if (vals.length >= 9) {
+      const es = ema(vals.map(x => x[1]), 9);
+      vals.forEach((x, j) => { ind.macdSignal[x[0]] = es[j]; });
+    }
+    ind.macdHist = ind.macd.map((a, i) => (a != null && ind.macdSignal[i] != null) ? a - ind.macdSignal[i] : null);
+    // RSI14 (Wilder)
+    ind.rsi14 = new Array(n).fill(null);
+    if (n > 14) {
+      let ag = 0, al = 0;
+      for (let i = 1; i <= 14; i++) { const d = c[i] - c[i - 1]; ag += Math.max(d, 0); al += Math.max(-d, 0); }
+      ag /= 14; al /= 14;
+      ind.rsi14[14] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+      for (let i = 15; i < n; i++) {
+        const d = c[i] - c[i - 1];
+        ag = (ag * 13 + Math.max(d, 0)) / 14; al = (al * 13 + Math.max(-d, 0)) / 14;
+        ind.rsi14[i] = al === 0 ? 100 : 100 - 100 / (1 + ag / al);
+      }
+    }
+    // KD (RSV 9，1/3 平滑)
+    const rsv = new Array(n).fill(null);
+    for (let i = 8; i < n; i++) {
+      const hh = Math.max(...b.high.slice(i - 8, i + 1)), ll = Math.min(...b.low.slice(i - 8, i + 1));
+      rsv[i] = hh === ll ? 50 : (c[i] - ll) / (hh - ll) * 100;
+    }
+    ind.k = new Array(n).fill(null); ind.d = new Array(n).fill(null);
+    let pk = 50, pd = 50;
+    for (let i = 0; i < n; i++) if (rsv[i] != null) { pk = pk * 2 / 3 + rsv[i] / 3; ind.k[i] = pk; pd = pd * 2 / 3 + pk / 3; ind.d[i] = pd; }
+    // 布林 MA20 ± 2σ
+    ind.bollMid = ind.ma20; ind.bollUpper = new Array(n).fill(null); ind.bollLower = new Array(n).fill(null);
+    for (let i = 19; i < n; i++) {
+      const w = c.slice(i - 19, i + 1), m = ind.ma20[i];
+      const sd = Math.sqrt(w.reduce((s, x) => s + (x - m) ** 2, 0) / 20);
+      ind.bollUpper[i] = m + 2 * sd; ind.bollLower[i] = m - 2 * sd;
+    }
+    // ATR14 (Wilder)
+    const tr = b.close.map((_, i) => i === 0 ? b.high[0] - b.low[0] :
+      Math.max(b.high[i] - b.low[i], Math.abs(b.high[i] - c[i - 1]), Math.abs(b.low[i] - c[i - 1])));
+    ind.atr14 = new Array(n).fill(null);
+    if (n > 14) {
+      let prev = tr.slice(1, 15).reduce((a, x) => a + x, 0) / 14; ind.atr14[14] = prev;
+      for (let i = 15; i < n; i++) { prev = (prev * 13 + tr[i]) / 14; ind.atr14[i] = prev; }
+    }
+    // ADX / +DI / -DI (Wilder)
+    ind.adx = new Array(n).fill(null); ind.plusDi = new Array(n).fill(null); ind.minusDi = new Array(n).fill(null);
+    {
+      const pdm = new Array(n).fill(0), mdm = new Array(n).fill(0);
+      for (let i = 1; i < n; i++) {
+        const up = b.high[i] - b.high[i - 1], dn = b.low[i - 1] - b.low[i];
+        pdm[i] = (up > dn && up > 0) ? up : 0; mdm[i] = (dn > up && dn > 0) ? dn : 0;
+      }
+      const smooth = x => { const o = new Array(n).fill(0); if (n > 14) { o[14] = x.slice(1, 15).reduce((a, v) => a + v, 0); for (let i = 15; i < n; i++) o[i] = o[i - 1] - o[i - 1] / 14 + x[i]; } return o; };
+      const sTr = smooth(tr), sP = smooth(pdm), sM = smooth(mdm), dx = new Array(n).fill(null);
+      for (let i = 14; i < n; i++) if (sTr[i] > 0) {
+        ind.plusDi[i] = sP[i] / sTr[i] * 100; ind.minusDi[i] = sM[i] / sTr[i] * 100;
+        const den = ind.plusDi[i] + ind.minusDi[i];
+        dx[i] = den ? Math.abs(ind.plusDi[i] - ind.minusDi[i]) / den * 100 : 0;
+      }
+      const vi = dx.map((v, i) => v != null ? i : -1).filter(i => i >= 0);
+      if (vi.length > 14) {
+        let prev = vi.slice(0, 14).reduce((s, i) => s + dx[i], 0) / 14;
+        ind.adx[vi[13]] = prev;
+        for (let j = 14; j < vi.length; j++) { prev = (prev * 13 + dx[vi[j]]) / 14; ind.adx[vi[j]] = prev; }
+      }
+    }
+    // MFI14
+    ind.mfi14 = new Array(n).fill(null);
+    { const tp = b.close.map((_, i) => (b.high[i] + b.low[i] + c[i]) / 3);
+      for (let i = 14; i < n; i++) { let pos = 0, neg = 0;
+        for (let j = i - 13; j <= i; j++) { const f = tp[j] * b.volume[j]; if (tp[j] > tp[j - 1]) pos += f; else if (tp[j] < tp[j - 1]) neg += f; }
+        ind.mfi14[i] = neg === 0 ? 100 : 100 - 100 / (1 + pos / neg); } }
+    // OBV
+    ind.obv = [0]; for (let i = 1; i < n; i++) ind.obv.push(ind.obv[i - 1] + (c[i] > c[i - 1] ? b.volume[i] : c[i] < c[i - 1] ? -b.volume[i] : 0));
+    // Supertrend (10, 3)
+    ind.stBull = new Array(n).fill(null); ind.stLine = new Array(n).fill(null);
+    { let fU = null, fL = null, prevBull = true;
+      for (let i = 0; i < n; i++) { if (ind.atr14[i] == null) continue;
+        const mid = (b.high[i] + b.low[i]) / 2;
+        let up = mid + 3 * ind.atr14[i], lo = mid - 3 * ind.atr14[i];
+        if (fU != null) { up = (up < fU || c[i - 1] > fU) ? up : fU; lo = (lo > fL || c[i - 1] < fL) ? lo : fL; }
+        let cur; if (fL == null) cur = true; else if (prevBull) cur = !(c[i] < fL); else cur = c[i] > fU;
+        ind.stBull[i] = cur; ind.stLine[i] = cur ? lo : up; fU = up; fL = lo; prevBull = cur; } }
+    // 一目均衡表
+    const midP = (p, i) => i < p - 1 ? null : (Math.max(...b.high.slice(i - p + 1, i + 1)) + Math.min(...b.low.slice(i - p + 1, i + 1))) / 2;
+    ind.tenkan = c.map((_, i) => midP(9, i)); ind.kijun = c.map((_, i) => midP(26, i));
+    ind.senkouA = ind.tenkan.map((t, i) => (t != null && ind.kijun[i] != null) ? (t + ind.kijun[i]) / 2 : null);
+    ind.senkouB = c.map((_, i) => midP(52, i));
+    // 衍生量
+    ind.volRatio = n >= 21 ? (b.volume[n - 1] / (b.volume.slice(n - 21, n - 1).reduce((a, x) => a + x, 0) / 20)) : null; // #96
+    ind.avgAmount20M = n >= 20 ? b.close.slice(n - 20).reduce((s, _, j) => { // #97（百萬元）
+      const i = n - 20 + j; const amt = (b.amount && b.amount[i]) ? b.amount[i] : b.volume[i] * b.close[i]; return s + amt; }, 0) / 20 / 1e6 : null;
+    ind.prev20High = n >= 21 ? Math.max(...b.high.slice(n - 21, n - 1)) : null;
+    ind.low20 = Math.min(...b.low.slice(-20)); ind.low60 = Math.min(...b.low.slice(-60));
+    return ind;
+  }
+  const last = seq => seq && seq.length ? seq[seq.length - 1] : null;
+  const prev = seq => seq && seq.length >= 2 ? seq[seq.length - 2] : null;
+  const crossedUp = (a, b) => prev(a) != null && prev(b) != null && last(a) != null && last(b) != null && prev(a) <= prev(b) && last(a) > last(b);
+
+  // ---------- 13 項計分 (#81-94，滿分 100) ----------
+  const SIGNAL_DEFS = [
+    ['MA多頭排列', 10, ind => last(ind.ma5) > last(ind.ma20) && last(ind.ma20) > last(ind.ma60)],
+    ['均線黃金交叉', 8, ind => crossedUp(ind.ma5, ind.ma20)],
+    ['MACD翻多', 10, ind => crossedUp(ind.macd, ind.macdSignal)],
+    ['RSI偏多', 8, ind => last(ind.rsi14) >= 50 && last(ind.rsi14) <= 75],
+    ['KD黃金交叉', 6, ind => crossedUp(ind.k, ind.d)],
+    ['布林偏多', 6, ind => last(ind.bars.close) > last(ind.ma20) && last(ind.bars.close) <= last(ind.bollUpper) * 1.02],
+    ['成交量放大', 10, ind => ind.volRatio != null && ind.volRatio >= 1.5],
+    ['OBV偏多', 6, ind => last(ind.obv) > Math.max(...ind.obv.slice(-21, -1))],
+    ['ADX強勢', 6, ind => last(ind.adx) >= 25 && last(ind.plusDi) > last(ind.minusDi)],
+    ['突破前高', 10, ind => ind.prev20High != null && last(ind.bars.close) > ind.prev20High],
+    ['Supertrend翻多', 8, ind => last(ind.stBull) === true],
+    ['一目均衡表偏多', 6, ind => {
+      const i = ind.bars.close.length - 1, a = ind.senkouA[i - 26], bb = ind.senkouB[i - 26], cl = ind.bars.close[i];
+      return a != null && bb != null && cl > a && cl > bb && last(ind.tenkan) > last(ind.kijun);
+    }],
+    ['MFI偏多', 6, ind => last(ind.mfi14) >= 50],
+  ];
+  function scoreTech(ind) {
+    const hit = [], miss = []; let score = 0;
+    for (const [name, pts, fn] of SIGNAL_DEFS) {
+      let ok = false; try { ok = !!fn(ind); } catch (e) { ok = false; }
+      if (ok) { score += pts; hit.push({ name, pts }); } else miss.push({ name, pts });
+    }
+    return { score, hit, miss };
+  }
+
+  // ---------- 策略與價位 (#103-123) ----------
+  function buildStrategy(ind, techScore, periodMode) {
+    const b = ind.bars, close = last(b.close), atr = last(ind.atr14);
+    if (close == null || atr == null || atr <= 0) return null;
+    let period = periodMode && periodMode !== '自動判斷' ? periodMode : null;
+    if (!period) period = (close > last(ind.ma60) && last(ind.ma20) > last(ind.ma60) && techScore >= 65) ? '中線' : '短線'; // #103
+    const holding = period === '短線' ? '3～15 個交易日' : period === '長線' ? '1～6 個月（技術趨勢觀察）' : '3～8 週'; // #104-107
+    const baseMa = period === '長線' ? last(ind.ma60) : last(ind.ma20);
+    if (baseMa == null) return null;
+    const isBreakout = ind.prev20High != null && close > ind.prev20High && ind.volRatio != null && ind.volRatio >= 1.2; // #109
+    const type = isBreakout ? '突破進場' : '回檔進場'; // #108
+    let entryLow = Math.min(close - 0.45 * atr, baseMa + 0.25 * atr);   // #110
+    let entryHigh = Math.min(close, baseMa + 0.65 * atr);               // #111
+    if (entryLow >= entryHigh) entryLow = entryHigh - tickSize(entryHigh);
+    const entryMid = roundTick((entryLow + entryHigh) / 2);            // #112
+    const support = Math.min(ind.low20, ind.low60, baseMa);             // #113（前低以近20日低代表，與60日低/基準均線取最低）
+    let stop = Math.min(entryLow - 1.25 * atr, support - 0.15 * atr);   // #114
+    if (stop >= entryLow) stop = entryLow - tickSize(entryLow);
+    stop = roundTick(stop);
+    const risk = entryMid - stop;
+    if (risk <= 0) return null;
+    const pressure = ind.prev20High != null && ind.prev20High > entryMid ? ind.prev20High : 0;
+    const target1 = roundTick(Math.max(entryMid + 1.8 * risk, pressure)); // #115
+    const target2 = roundTick(Math.max(target1 + tickSize(target1), entryMid + 3 * risk)); // #116
+    const rr = (target1 - entryMid) / risk;                              // #117
+    const distPct = Math.max(0, close - entryHigh) / entryHigh * 100;    // #119
+    // 進場狀態 (#133-137)
+    let status;
+    if (close < entryLow - 0.5 * atr) status = '條件失效';
+    else if (close >= entryLow && close <= entryHigh) status = '接近進場';
+    else if (isBreakout && close <= entryHigh + 0.8 * atr) status = '突破觀察';
+    else if (close > entryHigh + 0.8 * atr) status = '暫不追價';
+    else status = '等待回檔';
+    // 進場適合度 (#124-132)
+    const parts = {
+      base: 45,
+      distPenalty: -Math.min(45, distPct * 2.2),
+      techBonus: Math.min(20, Math.max(0, (techScore - 50) * 0.45)),
+      volBonus: Math.min(15, Math.max(0, ((ind.volRatio ?? 0) - 0.8) * 10)),
+      rrBonus: Math.min(15, Math.max(0, (rr - 1) * 7)),
+      atrPenalty: -Math.min(15, Math.max(0, atr / close * 100 * 1.5)),
+    };
+    let entryScore = Math.round(parts.base + parts.distPenalty + parts.techBonus + parts.volBonus + parts.rrBonus + parts.atrPenalty);
+    entryScore = status === '條件失效' ? 0 : clamp(entryScore, 0, 100);
+    return {
+      period, holding, type, baseMa, entryLow: roundTick(entryLow), entryHigh: roundTick(entryHigh),
+      entryMid, stop, target1, target2, rr, distPct, status, entryScore, parts, support,
+      basis: `基準均線 ${period === '長線' ? 'MA60' : 'MA20'}=${baseMa.toFixed(2)}｜ATR14=${atr.toFixed(2)}｜支撐參考=${support.toFixed(2)}`,
+      trigger: `股價進入進場區間 ${roundTick(entryLow).toFixed(2)}～${roundTick(entryHigh).toFixed(2)}，且量價未轉弱`,
+      invalid: `跌破停損 ${stop.toFixed(2)}、進場條件失效或重大基本面利空時須重新評估`,
+    };
+  }
+
+  function analyze(stock, periodMode) {
+    const ind = computeIndicators(stock.bars);
+    const { score, hit, miss } = scoreTech(ind);
+    const strat = buildStrategy(ind, score, periodMode);
+    if (!strat) return null;
+    const c = stock.bars.close, n = c.length;
+    const chg = n >= 2 ? c[n - 1] - c[n - 2] : 0;
+    return {
+      code: stock.code, name: stock.name, market: stock.market, isDemo: !!stock.isDemo,
+      date: stock.bars.dates[n - 1], close: c[n - 1], change: chg,
+      changePct: n >= 2 && c[n - 2] ? chg / c[n - 2] * 100 : 0,
+      techScore: score, hit, miss, ind, strat,
+      entryScore: strat.entryScore, status: strat.status, period: strat.period, type: strat.type,
+      avgAmount20M: ind.avgAmount20M, volRatio: ind.volRatio,
+      reason: '',
+    };
+  }
+
+  function isETF(code) { return /^00/.test(code); } // #47 粗略估算
+
+  // ---------- 全市場掃描 (#98-99, #138-147) ----------
+  function scan(stocks, opts) {
+    const o = Object.assign({ topN: 10, minTech: 65, minAvgAmountM: 10, minEntry: 45, includeETF: false, periodMode: '自動判斷', sortMode: '綜合模式' }, opts);
+    const stats = { scanned: 0, typeExcluded: 0, historyShort: 0, qualityBad: 0, amountLow: 0, techLow: 0, stratFail: 0, entryFail: 0 };
+    let latestDate = '';
+    for (const s of stocks) if (s.bars.dates.length) { const d = s.bars.dates[s.bars.dates.length - 1]; if (d > latestDate) latestDate = d; }
+    const candidates = [], watch = [], seen = new Set();
+    for (const s of stocks) {
+      if (seen.has(s.code)) continue; seen.add(s.code);
+      if (!o.includeETF && isETF(s.code)) { stats.typeExcluded++; continue; }
+      const b = s.bars;
+      if (b.close.length < 125) { stats.historyShort++; continue; } // #98
+      // 資料品質 (#146)：日期重複/逆序、OHLCV 無效、最新兩筆相隔 >12 日
+      let bad = false;
+      for (let i = 1; i < b.dates.length; i++) if (b.dates[i] <= b.dates[i - 1]) { bad = true; break; }
+      if (!bad && b.dates.length >= 2) {
+        const gap = (new Date(b.dates[b.dates.length - 1]) - new Date(b.dates[b.dates.length - 2])) / 86400000;
+        if (gap > 12) bad = true;
+      }
+      if (!bad) for (let i = 0; i < b.close.length; i++) {
+        if (!(b.high[i] >= b.low[i] && b.high[i] >= b.open[i] && b.high[i] >= b.close[i] && b.low[i] <= b.open[i] && b.low[i] <= b.close[i] && b.volume[i] >= 0)) { bad = true; break; }
+      }
+      if (bad) { stats.qualityBad++; continue; }
+      if (b.dates[b.dates.length - 1] !== latestDate) { stats.qualityBad++; continue; } // #145 日期一致性
+      stats.scanned++;
+      let a = null;
+      try { a = analyze({ code: s.code, name: s.name, market: s.market, isDemo: s.isDemo, bars: trimBars(b, 360) }, o.periodMode); } catch (e) { a = null; }
+      if (!a) { stats.stratFail++; continue; }
+      if (a.avgAmount20M == null || a.avgAmount20M < o.minAvgAmountM) { stats.amountLow++; continue; }
+      if (a.techScore < o.minTech) { stats.techLow++; continue; }
+      const priceOk = a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
+      const ok = a.entryScore >= o.minEntry && a.status !== '條件失效' && a.status !== '暫不追價' && priceOk && a.strat.rr >= 1.5; // #138-139
+      if (ok) { a.reason = `技術 ${a.techScore} 分、進場適合度 ${a.entryScore} 分、風報 1:${a.strat.rr.toFixed(2)}，狀態「${a.status}」`; candidates.push(a); }
+      else { a.reason = `技術強勢（${a.techScore} 分），但${a.entryScore < o.minEntry ? '進場適合度 ' + a.entryScore + ' 未達 ' + o.minEntry : a.strat.rr < 1.5 ? '風報比 1:' + a.strat.rr.toFixed(2) + ' 未達 1.5' : '狀態「' + a.status + '」待觀察'}`; watch.push(a); stats.entryFail++; }
+    }
+    const liqScore = a => Math.min(100, Math.max(0, Math.log10(Math.max(a.avgAmount20M || 1, 1)) * 50));
+    const rrScore = a => Math.min(100, a.strat.rr / 3 * 100);
+    const composite = a => a.techScore * 0.42 + a.entryScore * 0.38 + liqScore(a) * 0.10 + rrScore(a) * 0.10; // #142
+    if (o.sortMode === '技術強勢優先') candidates.sort((x, y) => y.techScore - x.techScore || y.entryScore - x.entryScore || (y.avgAmount20M || 0) - (x.avgAmount20M || 0)); // #143
+    else if (o.sortMode === '近期進場優先') candidates.sort((x, y) => y.entryScore - x.entryScore || x.strat.distPct - y.strat.distPct || y.techScore - x.techScore); // #144
+    else candidates.sort((x, y) => composite(y) - composite(x));
+    watch.sort((x, y) => y.techScore - x.techScore || y.entryScore - x.entryScore);
+    return { candidates: candidates.slice(0, o.topN), allCandidates: candidates, watch, stats, latestDate }; // #66 門檻嚴格，不湊數
+  }
+  function trimBars(b, max) {
+    if (b.close.length <= max) return b;
+    const s = b.close.length - max;
+    return { dates: b.dates.slice(s), open: b.open.slice(s), high: b.high.slice(s), low: b.low.slice(s), close: b.close.slice(s), volume: b.volume.slice(s), amount: (b.amount || []).slice(s) };
+  }
+
+  // ---------- 歷史訊號觀察 (#240-250) ----------
+  function historyStats(stock, costRate = 0.004, slippage = 0.001) {
+    const b = stock.bars, horizons = [5, 10, 20], out = {};
+    for (const h of horizons) out[h] = { count: 0, upRatio: 0, avgRet: 0, targetHit: 0, stopHit: 0 };
+    const sums = { 5: 0, 10: 0, 20: 0 }, ups = { 5: 0, 10: 0, 20: 0 }, th = { 5: 0, 10: 0, 20: 0 }, sh = { 5: 0, 10: 0, 20: 0 };
+    for (let end = 125; end < b.close.length; end++) {
+      const sub = trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
+      let a = null; try { a = analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, '自動判斷'); } catch (e) { }
+      if (!a || a.techScore < 70) continue; // #242
+      for (const h of horizons) {
+        if (end + h >= b.close.length) continue;
+        const ret = (b.close[end + h] / b.close[end] - 1) - costRate - slippage; // #247
+        out[h].count++; sums[h] += ret * 100; if (ret > 0) ups[h]++;
+        let hitT = false, hitS = false;
+        for (let j = end + 1; j <= end + h; j++) { if (b.high[j] >= a.strat.target1) hitT = true; if (b.low[j] <= a.strat.stop) hitS = true; }
+        if (hitT) th[h]++; if (hitS) sh[h]++;
+      }
+    }
+    for (const h of horizons) if (out[h].count) { out[h].upRatio = ups[h] / out[h].count * 100; out[h].avgRet = sums[h] / out[h].count; out[h].targetHit = th[h] / out[h].count * 100; out[h].stopHit = sh[h] / out[h].count * 100; }
+    return out;
+  }
+
+  const api = { sma, ema, tickSize, roundTick, computeIndicators, scoreTech, buildStrategy, analyze, scan, historyStats, isETF, trimBars, SIGNAL_DEFS };
+  global.TWCore = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
