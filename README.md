@@ -1,1 +1,107 @@
-IyDlj7DogqEgQUkg5pm65oWn6YG46IKh5bel5L2c5Y+wIFYyLjDvvZzntrLpoIHniYgKCuaJi+apn+WwseiDveaWueS+v+S9v+eUqOeahOmdnOaFi+e2sumggeeJiO+8jOaPkOS+m+WPsOeBo+S4iuW4guOAgeS4iuarg+iCoeelqOWPiiBFVEYg55qEKirnm6TlvowqKuihjOaDheWIhuaekOOAgeaKgOihk+mBuOiCoeOAgemAsuWgtOetlueVpeimj+WKg+OAgeaWsOiBnuafpeipouOAgUdlbWluaSBBSSDop6PoroDoiIfmrbflj7LoqIromZ/ntbHoqIjjgILntJTliY3nq6/vvIhIVE1ML0NTUy9KU++8ie+8jCoq5Y+v55u05o6l6YOo572y5ZyoIEdpdEh1YiBQYWdlcyoq77yM5LiN6ZyA6KaB5Ly65pyN5Zmo44CB5LiN6ZyA6KaB6LOH5paZ5bqr5Li75qmf44CCCgo+IOacrOW3peWFt+WDheS+m+eglOeptuWtuOe/ku+8jOS4jeS/neitiemgkOa4rOOAgeS4jeaPkOS+m+iHquWLleS4i+WWruOAguebpOW+jOWDueS4jeetieaWvOWNs+aZguWDueOAggoKIyMg5p625qeL77yaR2l0SHViIEFjdGlvbnMg5bCx5piv5b6M56uv77yI5YWN5Ly65pyN5Zmo44CB5YWN5LuY6LK777yJCgpgYGAKRmluTWluZCBBUEkg4pSA4pSA4pa6IEdpdEh1YiBBY3Rpb25zIOW+jOerr++8iGJhY2tlbmQvdXBkYXRlX2RhdGEucHnvvIkKICAgICAgICAgICAgICAgIOKUnOKUgCDmr4/ml6XmjpLnqIvvvIjpgLHkuIDoh7PkupQgMTg6MzAg5Y+w54Gj5pmC6ZaT77yJ77ya5aKe6YeP5pu05paw5pyA6L+RIDE0IOWkqQogICAgICAgICAgICAgICAg4pSU4pSAIOaJi+WLleWbnuijnO+8iOWIhuaJueOAgeWPr+e6jOi3ke+8ie+8muavj+aqlOWujOaVtCAxMCDlubTmrbflj7IKICAgICAgICAgICAgICAgICAgICAg4pSCIGNvbW1pdCDlm54gcmVwbwogICAgICAgICAgICAgICAgICAgICDilrwKICAgICAgICAgICAgICAgIGRhdGEvIOmdnOaFi+izh+aWme+8iGhpc3RvcnkvPOS7o+iZnz4uanNvbi5neiDmr4/mqpTntIQgNTFLQuOAgQogICAgICAgICAgICAgICAgICAgICBzY2FuLmpzb24uZ3og5YWo5biC5aC05pyA6L+RIDM3MCDml6XmjoPmj4/ljIXjgIFtYW5pZmVzdC5qc29u77yJCiAgICAgICAgICAgICAgICAgICAgIOKUgiBHaXRIdWIgUGFnZXMg6Ieq5YuV6YOo572yCiAgICAgICAgICAgICAgICAgICAgIOKWvAogICAgICAgICAgICAgICAg5omL5qmfL+mbu+iFpueAj+imveWZqO+8mumWi+ermeiHquWLleS4i+i8ieizh+aWmeWMhSDihpIg5pys5qmf6KiI5YiG5o6D5o+PCmBgYAoKLSDkvb/nlKjogIUqKuS4jemcgOimgeWBmuS7u+S9leabtOaWsOWLleS9nCoq77ya6ZaL56uZ5Y2z6Ieq5YuV6LyJ5YWl5b6M56uv5pyA5paw6LOH5paZ77yM5Lim6Ieq5YuV6LeR5LiA5qyh5o6D5o+P44CCCi0g5YWo5biC5aC05o6D5o+P5YyF77yI5pyA6L+RIDM3MCDml6XvvInpppbmrKHkuIvovInntIQgMTZNQu+8iOWFqOW4guWgtOWbnuijnOWujOaIkOW+jO+8ie+8jOS5i+W+jOeAj+imveWZqOacg+W/q+WPlu+8m+WAi+iCoeWujOaVtCAxMCDlubTmrbflj7LlnKjmn6XnnIvoqbLogqHjgIzmrbflj7LoqIromZ/op4Dlr5/jgI3mmYLmiY3pgJDmqpTovInlhaXvvIjmr4/mqpTntIQgNTFLQu+8ieOAggotIHJlcG8g55uu5YmN5bey5YWn5ZCrIDUg5qqU56iu5a2Q6LOH5paZ77yIMjMzMOOAgTIzMTfjgIEyNDU044CBNjQ4OOOAgTAwNTDvvIzlkIQgMiw0MzArIOethuOAgTIwMTYg6Iez5LuK5a6M5pW0IDEwIOW5tO+8ieWPr+eri+WNs+mpl+itie+8m+WFtumkmOiCoeelqOeUseWbnuijnCB3b3JrZmxvdyDliIbmibnoo5zpvYrjgIIKCiMjIOmDqOe9suWIsCBHaXRIdWIgUGFnZXPvvIjntIQgMiDliIbpkJjvvIkKCjEuIOWcqCBHaXRIdWIg5paw5bu65LiA5YCLIHJlcG/vvIjkvovlpoIgYHR3c3RvY2stYWlg77yJ77yM5oqK5pys6LOH5paZ5aS+5omA5pyJ5qqU5qGI5LiK5YKz5YiwIHJlcG8g5qC555uu6YyE77yIYGluZGV4Lmh0bWxgIOW/hemgiOWcqOagueebrumMhO+8ieOAggoyLiBSZXBvIOKGkiBTZXR0aW5ncyDihpIgUGFnZXMg4oaSIEJ1aWxkIGFuZCBkZXBsb3ltZW50IOKGkiBTb3VyY2Ug6YG4ICoqR2l0SHViIEFjdGlvbnMqKu+8iOacrCByZXBvIOW3sumZhCBgLmdpdGh1Yi93b3JrZmxvd3MvcGFnZXMueW1sYO+8ieOAggozLiBQdXNoIOWIsCBgbWFpbmAg5b6MIEFjdGlvbnMg5pyD6Ieq5YuV6YOo572y77yM5a6M5oiQ5b6M57ay5Z2A54K6IGBodHRwczovLzzkvaDnmoTluLPomZ8+LmdpdGh1Yi5pby88cmVwbyDlkI3nqLE+L2DjgIIKNC4g5omL5qmf6ZaL5ZWf6Kmy57ay5Z2A5Y2z5Y+v5L2/55So77yb5Lmf5Y+v44CM5Yqg5YWl5Li755Wr6Z2i44CN55W2IEFwcCDnlKjvvIjlt7LpmYQgUFdBIG1hbmlmZXN077yJ44CCCgojIyMg5LiA5qyh5oCn5Zue6KOcIDEwIOW5tOatt+WPsu+8iOmDqOe9suW+jOWBmuS4gOasoe+8iQoKMS4gUmVwbyDihpIgQWN0aW9ucyDihpLjgIzmrbflj7Llm57oo5zvvIgxMCDlubTvvIzlj6/nuozot5HvvInjgI3ihpIgUnVuIHdvcmtmbG9377yI6aCQ6Kit5q+P5om5IDMwMCDmqpTvvInjgIIKMi4g6YCy5bqm5L+d5a2Y5ZyoIGBkYXRhL3N0YXRlLmpzb25gIOS4puiHquWLlSBjb21taXTvvJvph43opIfop7jnmbznm7TliLAgbG9nIOmhr+ekuuOAjOWwmumkmCAwIOaqlOOAjeOAguWFqOW4guWgtOe0hCAyLDcwMCDmqpTku6PomZ/vvIjlkKvlt7LkuIvluILvvIzmnIPoh6rli5XnlaXpgY7vvInvvIzntIQgOe+9njEwIOaJueOAggozLiDkuYvlvozkuI3pnIDopoHlho3nrqHvvJrmr4/ml6XmjpLnqIvvvIjpgLHkuIDoh7PkupQgMTg6MzDvvInoh6rli5Xlop7ph4/mm7TmlrDkuKbph43mlrDpg6jnvbLjgIIKNC4g77yI6YG455So77yJ5YiwIFtGaW5NaW5kXShodHRwczovL2Zpbm1pbmR0cmFkZS5jb20vKSDlhY3osrvoqLvlhorlj5blvpcgVG9rZW7vvIzlrZjliLAgcmVwbyDnmoQgU2V0dGluZ3Mg4oaSIFNlY3JldHMg4oaSIEFjdGlvbnPvvIzlkI3nqLEgYEZJTk1JTkRfVE9LRU5g77yM5Y+v5o+Q6auYIEFQSSDphY3poY3jgIHliqDlv6vlm57oo5zvvJvkuI3oqK3lrprkuZ/og73ot5HvvIjmnKrnmbvlhaXphY3poY3vvIzmibnmrKHplpPmnIPoh6rli5Xnr4DmtYHvvIzooqvpmZDmtYHmmYLoqbLmibnmnIPkv53lrZjpgLLluqblvozlgZzmraLvvIzkuIvmrKHnuozot5HvvInjgIIKCiMjIOS9v+eUqOa1geeoiwoK5LiL6LyJ77yP5Yyv5YWl6KGM5oOFIOKGkiDoqK3lrprpgbjogqHmop3ku7Yg4oaSIOmWi+Wni+aOg+aPjyDihpIg6bue6YG46IKh56WoIOKGkiDnnIvotbDli6LjgIHmioDooZPmjIfmqJnoiIfnrZbnlaUg4oaSIOafpeaWsOiBnuaIliBHZW1pbmkg6Kej6K6AIOKGkiDljK/lh7ogRXhjZWzjgIIKCuesrOS4gOasoeS9v+eUqOW7uuitsOWFiOaMieW3puWBtOOAjCoq6LyJ5YWl6Zui57ea56S656+E6LOH5paZKirjgI3vvJrlhaflu7ogMTgg5qqU6Jmb5qeL6IKh56Wo77yI5Zu65a6a56iu5a2Q44CB5Y+v6YeN54++77yJ77yM5a6M5pW06LeR6YCa5o6D5o+P4oaS5o6o6Jam4oaS562W55Wl4oaS5q235Y+y57Wx6KiI5rWB56iL77yM5pGY6KaB5pyD5qiZ56S644CM6Jmb5qeL56S656+E6LOH5paZ772c5Yu/55So5pa85oqV6LOH44CN44CCCgojIyDos4fmlpnkvobmupDoiIfntrLpoIHniYjnmoTlj5bmjajvvIjph43opoHvvIkKCkdpdEh1YiBQYWdlcyDmmK/pnZzmhYvmiZjnrqHjgIHngI/opr3lmajmnIkgQ09SUyDpmZDliLbvvIzlm6DmraTos4fmlpnlsaToiIfmoYzpnaLniYjopo/moLzmnInku6XkuIvlsI3mh4noqr/mlbTvvJoKCnwg5Yqf6IO9IHwg57ay6aCB54mI5YGa5rOVIHwKfC0tLXwtLS18Cnwg5YWo5biC5aC05q235Y+y5o6D5o+PIHwgKirlvoznq6/os4fmlpnljIXoh6rli5XovInlhaUqKu+8iOimi+S4iuaWueaetuani++8ie+8m0NTViDljK/lhaXku43kv53nlZnngrroo5zlhYXkvobmupDvvIzljK/lhaXlvozlrZjlhaXngI/opr3lmaggSW5kZXhlZERCIHwKfCDlrpjmlrnmnIDmlrDml6Xnt5ogfCDlvoznq6/mr4/ml6XmjpLnqIvoh6rli5Xmm7TmlrDngrrkuLvvvJvpoIHpnaLkuIrnmoTjgIzmm7TmlrDlrpjmlrnmnIDmlrDml6Xnt5rjgI3mjInpiJXngrrovJTliqnvvIhUV1NF77yPVFBFeCBPcGVuQVBJIOacgOaWsOS4gOaXpeW/q+eFp++8iSB8Cnwg5YCL6IKh5q235Y+y6KOc5oqTIHwg5YSq5YWI6K6A5b6M56uvIGBkYXRhL2hpc3RvcnkvPOS7o+iZnz4uanNvbi5nemAg5a6M5pW0IDEwIOW5tOatt+WPsu+8m+eEoeatpOaqlOaZguaJjeWQkSBUV1NFIOmAkOaciOijnOaKk++8iOS4iuW4guiCoe+8jOWPr+iDveWPlyBDT1JTIOmYu+aTi++8iSB8Cnwg56S656+E6LOH5paZIHwg55Si55Sf5Zmo5Y2z5pmC55Si55Sf77yM5LiN5L2U5YSy5a2Y56m66ZaT77yM6IiH5q2j5byP6LOH5paZ5Lul5qih5byP5peX5qiZ6ZqU6ZuiIHwKfCDos4fmlpnluqsgfCDku6UgSW5kZXhlZERCIOWPluS7oyBTUUxpdGXvvIjmnKzmqZ/jgIHlhY3mnrboqK3kvLrmnI3lmajnmoTlrprkvY3kuI3ororvvIkgfAp8IOimlueql+eLgOaFi+iomOaGtiB8IOS7pSBsb2NhbFN0b3JhZ2Ug5L+d5a2Y6YG46IKh6Kit5a6a77ybR2VtaW5pIEFQSSBLZXkgKirmsLjkuI3kv53lrZgqKu+8jOWPquS+m+eVtuasoeS9v+eUqCB8Cnwg6Ieq5YuV5o6S56iLIHwg5pS555SxICoqR2l0SHViIEFjdGlvbnMg5o6S56iLKirlj5bku6MgV2luZG93cyDlt6XkvZzmjpLnqIvvvJrpgLHplpMgMTg6MzDvvIjlj7DngaPmmYLplpPvvInoh6rli5Xmm7TmlrDooYzmg4XkuKbph43mlrDpg6jnvbIgfAp8IEV4Y2VsIOWMr+WHuiB8IOmAj+mBjiBTaGVldEpT77yIQ0RO77yJ55Si55SfIC54bHN477yI6YG46IKh5o6S6KGM77yP5oqA6KGT5by35Yui6KeA5a+f77yP5oyH5qiZ5piO57Sw77yP5paw6IGe57Si5byV77yPR2VtaW5p5YiG5p6Q77yP5L2/55So6Kqq5piO77yJ77ybQ0ROIOacqui8ieWFpeaZguiHquWLlemAgOWbniBDU1YgfAp8IOaWsOiBniB8IEdvb2dsZSBOZXdzIFJTUyDnm7TpgKPvvJvooqsgQ09SUyDpmLvmk4vmmYLoh6rli5XmlLnmj5DkvpsgR29vZ2xlIOaWsOiBnuaQnOWwi+mAo+e1kO+8jOS4jeacg+WBh+mAoOaWsOiBniB8CgojIyMgQ1NWIOagvOW8jwoK56ys5LiA5YiX54K65qyE5ZCN77yI5Lit6Iux5paH55qG5Y+v77yJ77yaYGNvZGUsbmFtZSxtYXJrZXQsZGF0ZSxvcGVuLGhpZ2gsbG93LGNsb3NlLHZvbHVtZSxhbW91bnRgCgpgYGAKY29kZSxuYW1lLG1hcmtldCxkYXRlLG9wZW4saGlnaCxsb3csY2xvc2Usdm9sdW1lLGFtb3VudAoyMzMwLOWPsOepjembuyxUV1NFLDIwMjYtMTEtMTEsMTAwMCwxMDE1LDk5NSwxMDEwLDI1MDAwMDAwLDI1MjUwMDAwMDAwCmBgYAoK5Luj6Jmf5pyD5Lul5a2X5Liy6JmV55CG77yM5YmN5bCO6Zu277yI5aaCIDAwNTDvvInmnIPkv53nlZnjgILmr4/mqpToh7PlsJEgMTI1IOWAi+S6pOaYk+aXpeaJjeiDvee0jeWFpeaOg+aPj+OAggoKIyMg6KiI566X6KaP5YmH77yI6IiH6KaP5qC85pu45LiA6Ie077yM5YWo6YOo55SxIGBqcy9jb3JlLmpzYCDopo/liYflvJXmk47oqIjnrpfvvIkKCi0gKirmioDooZPliIYgMTAwIOWIhioq77yaMTMg6aCF6KiK6Jmf5ZCE5pyJ5Zu65a6a5qyK6YeN77yITUEg5aSa6aCt5o6S5YiXIDEw44CB5Z2H57ea6buD6YeR5Lqk5Y+JIDjjgIFNQUNEIOe/u+WkmiAxMOOAgVJTSSDlgY/lpJogOOOAgUtEIOm7g+mHkeS6pOWPiSA244CB5biD5p6X5YGP5aSaIDbjgIHmiJDkuqTph4/mlL7lpKcgMTDjgIFPQlYg5YGP5aSaIDbjgIFBRFgg5by35YuiIDbjgIHnqoHnoLTliY3pq5ggMTDjgIFTdXBlcnRyZW5kIOe/u+WkmiA444CB5LiA55uu5Z2H6KGh6KGo5YGP5aSaIDbjgIFNRkkg5YGP5aSaIDbvvInvvIzmiJDnq4vmiY3liqDliIbjgIIKLSAqKuetlueVpeWDueS9jSoq77ya6YCx5pyf6Ieq5YuV5Yik5pa377yI55+t57ea77yP5Lit57ea77yP5Lit6ZW357ea77yP6ZW357ea77yJ44CB5Zue5qqU77yP56qB56C06YCy5aC044CB6YCy5aC05Y2A6ZaT77yIQVRSIOWFrOW8j++8ieOAgeWBnOaQje+8iOaUr+aSkOiIhyBBVFIg5Y+W5L2O77yJ44CB55uu5qiZ5LiA77yI4omlMS44IOWAjemiqOmaqu+8ieOAgeebruaomeS6jO+8iOKJpTMg5YCN6aKo6Zqq77yJ44CB6aKo6Zqq5aCx6YWs5q+U44CB5Y+w6IKh5Y2H6ZmN5Zau5L2N5Y+W5pW044CCCi0gKirpgLLloLTpganlkIjluqYqKu+8muWfuuekjiA0NSDliIbvvIzot53pm6LmiaPliIbjgIHmioDooZPvvI/ph4/og73vvI/poqjloLHliqDliIbjgIFBVFIg5rOi5YuV5omj5YiG77yM5qKd5Lu25aSx5pWI55u05o6lIDAg5YiG77yb5YCL6IKh6aCB5YiX5Ye65a6M5pW05ouG6Kej44CCCi0gKirmjqjolqbmop3ku7YqKu+8muaKgOihk+WIhuOAgei/kSAyMCDml6XlnYfmiJDkuqTpoY3jgIHpgLLloLTpganlkIjluqbkuInploDmqrvvvIvni4DmhYvmjpLpmaTvvIjmop3ku7blpLHmlYjjgIHmmqvkuI3ov73lg7nvvInvvIvpoqjpmqrloLHphawg4omlIDEuNe+8myoq6ZaA5qq75Zq05qC85Z+36KGM77yM5LiN5rmK5pW4KirjgIIKLSAqKuaOkuW6j+aooeW8jyoq77ya57ac5ZCI77yI5oqA6KGTIDQyJe+8i+mBqeWQiOW6piAzOCXvvIvmtYHli5XmgKcgMTAl77yL6aKo5aCxIDEwJe+8ieOAgeaKgOihk+W8t+WLouWEquWFiOOAgei/keacn+mAsuWgtOWEquWFiOOAggotICoqR2VtaW5pKirvvJrlj6rnlKjml6LmnInmlbjmk5rnlKLnlJ/mloflrZfop6PoroDvvIh0ZW1wZXJhdHVyZSAwLjLjgIFKU09OIOe1kOani+WMlui8uOWHuu+8ie+8jOemgeatouaNj+mAoOWDueagvOaIluaUueWvq+WDueS9je+8m+aJueasoemBhyBIVFRQIDQwMC80MDEvNDAzLzQyOSDljbPlgZzmraLjgIIKLSAqKuatt+WPsuioiuiZn+ingOWvnyoq77ya5q235Y+y5q+P5pel6YeN566X44CB5oqA6KGT5YiGIOKJpSA3MCDnmoToqIromZ/vvIzntbHoqIggNe+8jzEw77yPMjAg5pel5b6M5aCx6YWs77yI5omj5oiQ5pysIDAuNCXvvIvmu5Hlg7kgMC4xJe+8ieOAgeS4iua8suavlOS+i+OAgeebruaome+8j+WBnOaQjeinuOWPiuavlOS+i+OAguWxrOioiuiZn+e1seioiO+8jOmdnuWujOaVtOWbnua4rOOAggoKIyMg5pys5qmf5ris6KmmCgpgYGAKbm9kZSB0ZXN0cy9jb3JlLnRlc3QubWpzICAgIyDmoLjlv4PlvJXmk47muKzoqabvvIg5OSDpoIXmlrfoqIDvvIkKYGBgCgrnm7TmjqXnlKjngI/opr3lmajplovllZ8gYGluZGV4Lmh0bWxgIOS5n+iDvemBi+S9nO+8iOmDqOWIhueAj+imveWZqOWwjSBgZmlsZTovL2Ag55qEIEluZGV4ZWREQu+8j2ZldGNoIOaciemZkOWItu+8jOW7uuitsOeUqCBHaXRIdWIgUGFnZXMg5oiW5pys5qmfIGBweXRob24zIC1tIGh0dHAuc2VydmVyYCDplovllZ/vvInjgIIKCiMjIOaqlOahiOe1kOaniwoKYGBgCmluZGV4Lmh0bWwgICAgICAgICAgICDpoIHpnaLpqqjmnrbvvIjmqJnpoYzliJfjgIHlt6blgbToqK3lrprjgIHlj7PlgbTooajmoLzoiIflha3lpKfliIbpoIHvvIkKY3NzL3N0eWxlLmNzcyAgICAgICAgIOa3seiJsumHkeiejeW3peS9nOWPsOaoo+W8j++8iCMwZDE3Mjgg57SF5ryy57ag6LeM77yM5omL5qmf54mI6KGo5qC86L2J5Y2h54mH77yJCmpzL2NvcmUuanMgICAgICAgICAgICDmjIfmqJnvvI/oqIjliIbvvI/nrZbnlaXvvI/pganlkIjluqbvvI/mjoPmj4/vvI/mrbflj7LntbHoqIjvvIjopo/liYflvJXmk47vvIzlj6/nlKggTm9kZSDmuKzoqabvvIkKanMvZGVtby5qcyAgICAgICAgICAgIOiZm+ani+ekuuevhOizh+aWmeeUoueUn+WZqO+8iOWbuuWumueoruWtkO+8jOeoruWtkOe2k+mboue3muagoea6lu+8iQpqcy9hcHAuanMgICAgICAgICAgICAgVUnjgIHlvoznq6/os4fmlpnljIXoh6rli5XovInlhaXjgIFDU1Yg5Yyv5YWl44CB5paw6IGe44CBR2VtaW5p44CBRXhjZWwg5Yyv5Ye6CmJhY2tlbmQvdXBkYXRlX2RhdGEucHkgIOizh+aWmeW+jOerr++8iEZpbk1pbmQg5oqT5Y+W44CB5Zue6KOcL+avj+aXpeWinumHj+OAgeaOg+aPj+WMheW7uue9ru+8m+WDheeUqCBQeXRob24g5qiZ5rqW5bqr77yJCmRhdGEvICAgICAgICAgICAgICAgICDlvoznq6/nlKLlh7rnmoTpnZzmhYvos4fmlpnvvIhtYW5pZmVzdC5qc29u44CBc2Nhbi5qc29uLmd644CBaGlzdG9yeS8qLmpzb24uZ3rjgIFzdGF0ZS5qc29u77yJCm1hbmlmZXN0LndlYm1hbmlmZXN0ICBQV0Eg6Kit5a6aCi5naXRodWIvd29ya2Zsb3dzL3BhZ2VzLnltbCAgICAgICAgR2l0SHViIFBhZ2VzIOiHquWLlemDqOe9sgouZ2l0aHViL3dvcmtmbG93cy9kYXRhLWRhaWx5LnltbCAgIOavj+aXpeihjOaDheiHquWLleabtOaWsO+8iOmAsemWkyAxODozMCDlj7DngaPmmYLplpPvvIkKLmdpdGh1Yi93b3JrZmxvd3MvZGF0YS1iYWNrZmlsbC55bWwgMTAg5bm05q235Y+y5Zue6KOc77yI5omL5YuV6Ke455m844CB5YiG5om557qM6LeR77yJCmBgYAoK5b6M56uv6Zui57ea6Ieq5oiR5ris6Kmm77yaYHB5dGhvbjMgYmFja2VuZC91cGRhdGVfZGF0YS5weSBzZWxmdGVzdCAtLWRhdGEtZGlyIC90bXAveGAK
+# 台股 AI 智慧選股工作台 V2.0｜網頁版
+
+手機就能方便使用的靜態網頁版，提供台灣上市、上櫃股票及 ETF 的**盤後**行情分析、技術選股、進場策略規劃、新聞查詢、Gemini AI 解讀與歷史訊號統計。純前端（HTML/CSS/JS），**可直接部署在 GitHub Pages**，不需要伺服器、不需要資料庫主機。
+
+> 本工具僅供研究學習，不保證預測、不提供自動下單。盤後價不等於即時價。
+
+## 架構：GitHub Actions 就是後端（免伺服器、免付費）
+
+```
+FinMind API ──► GitHub Actions 後端（backend/update_data.py）
+                ├─ 每日排程（週一至五 18:30 台灣時間）：增量更新最近 14 天
+                └─ 手動回補（分批、可續跑）：每檔完整 10 年歷史
+                     │ commit 回 repo
+                     ▼
+                data/ 靜態資料（history/<代號>.json.gz 每檔約 51KB、
+                     scan.json.gz 全市場最近 370 日掃描包、manifest.json）
+                     │ GitHub Pages 自動部署
+                     ▼
+                手機/電腦瀏覽器：開站自動下載資料包 → 本機計分掃描
+```
+
+- 使用者**不需要做任何更新動作**：開站即自動載入後端最新資料，並自動跑一次掃描。
+- 全市場掃描包（最近 370 日）首次下載約 16MB（全市場回補完成後），之後瀏覽器會快取；個股完整 10 年歷史在查看該股「歷史訊號觀察」時才逐檔載入（每檔約 51KB）。
+- repo 目前已內含 5 檔種子資料（2330、2317、2454、6488、0050，各 2,430+ 筆、2016 至今完整 10 年）可立即驗證；其餘股票由回補 workflow 分批補齊。
+
+## 部署到 GitHub Pages（約 2 分鐘）
+
+1. 在 GitHub 新建一個 repo（例如 `twstock-ai`），把本資料夾所有檔案上傳到 repo 根目錄（`index.html` 必須在根目錄）。
+2. Repo → Settings → Pages → Build and deployment → Source 選 **GitHub Actions**（本 repo 已附 `.github/workflows/pages.yml`）。
+3. Push 到 `main` 後 Actions 會自動部署，完成後網址為 `https://<你的帳號>.github.io/<repo 名稱>/`。
+4. 手機開啟該網址即可使用；也可「加入主畫面」當 App 用（已附 PWA manifest）。
+
+### 一次性回補 10 年歷史（部署後做一次）
+
+1. Repo → Actions →「歷史回補（10 年，可續跑）」→ Run workflow（預設每批 300 檔）。
+2. 進度保存在 `data/state.json` 並自動 commit；重複觸發直到 log 顯示「尚餘 0 檔」。全市場約 2,700 檔代號（含已下市，會自動略過），約 9～10 批。
+3. 之後不需要再管：每日排程（週一至五 18:30）自動增量更新並重新部署。
+4. （選用）到 [FinMind](https://finmindtrade.com/) 免費註冊取得 Token，存到 repo 的 Settings → Secrets → Actions，名稱 `FINMIND_TOKEN`，可提高 API 配額、加快回補；不設定也能跑（未登入配額，批次間會自動節流，被限流時該批會保存進度後停止，下次續跑）。
+
+## 使用流程
+
+下載／匯入行情 → 設定選股條件 → 開始掃描 → 點選股票 → 看走勢、技術指標與策略 → 查新聞或 Gemini 解讀 → 匯出 Excel。
+
+第一次使用建議先按左側「**載入離線示範資料**」：內建 18 檔虛構股票（固定種子、可重現），完整跑通掃描→推薦→策略→歷史統計流程，摘要會標示「虛構示範資料｜勿用於投資」。
+
+## 資料來源與網頁版的取捨（重要）
+
+GitHub Pages 是靜態托管、瀏覽器有 CORS 限制，因此資料層與桌面版規格有以下對應調整：
+
+| 功能 | 網頁版做法 |
+|---|---|
+| 全市場歷史掃描 | **後端資料包自動載入**（見上方架構）；CSV 匯入仍保留為補充來源，匯入後存入瀏覽器 IndexedDB |
+| 官方最新日線 | 後端每日排程自動更新為主；頁面上的「更新官方最新日線」按鈕為輔助（TWSE／TPEx OpenAPI 最新一日快照） |
+| 個股歷史補抓 | 優先讀後端 `data/history/<代號>.json.gz` 完整 10 年歷史；無此檔時才向 TWSE 逐月補抓（上市股，可能受 CORS 阻擋） |
+| 示範資料 | 產生器即時產生，不佔儲存空間，與正式資料以模式旗標隔離 |
+| 資料庫 | 以 IndexedDB 取代 SQLite（本機、免架設伺服器的定位不變） |
+| 視窗狀態記憶 | 以 localStorage 保存選股設定；Gemini API Key **永不保存**，只供當次使用 |
+| 自動排程 | 改由 **GitHub Actions 排程**取代 Windows 工作排程：週間 18:30（台灣時間）自動更新行情並重新部署 |
+| Excel 匯出 | 透過 SheetJS（CDN）產生 .xlsx（選股排行／技術強勢觀察／指標明細／新聞索引／Gemini分析／使用說明）；CDN 未載入時自動退回 CSV |
+| 新聞 | Google News RSS 直連；被 CORS 阻擋時自動改提供 Google 新聞搜尋連結，不會假造新聞 |
+
+### CSV 格式
+
+第一列為欄名（中英文皆可）：`code,name,market,date,open,high,low,close,volume,amount`
+
+```
+code,name,market,date,open,high,low,close,volume,amount
+2330,台積電,TWSE,2026-11-11,1000,1015,995,1010,25000000,25250000000
+```
+
+代號會以字串處理，前導零（如 0050）會保留。每檔至少 125 個交易日才能納入掃描。
+
+## 計算規則（與規格書一致，全部由 `js/core.js` 規則引擎計算）
+
+- **技術分 100 分**：13 項訊號各有固定權重（MA 多頭排列 10、均線黃金交叉 8、MACD 翻多 10、RSI 偏多 8、KD 黃金交叉 6、布林偏多 6、成交量放大 10、OBV 偏多 6、ADX 強勢 6、突破前高 10、Supertrend 翻多 8、一目均衡表偏多 6、MFI 偏多 6），成立才加分。
+- **策略價位**：週期自動判斷（短線／中線／中長線／長線）、回檔／突破進場、進場區間（ATR 公式）、停損（支撐與 ATR 取低）、目標一（≥1.8 倍風險）、目標二（≥3 倍風險）、風險報酬比、台股升降單位取整。
+- **進場適合度**：基礎 45 分，距離扣分、技術／量能／風報加分、ATR 波動扣分，條件失效直接 0 分；個股頁列出完整拆解。
+- **推薦條件**：技術分、近 20 日均成交額、進場適合度三門檻＋狀態排除（條件失效、暫不追價）＋風險報酬 ≥ 1.5；**門檻嚴格執行，不湊數**。
+- **排序模式**：綜合（技術 42%＋適合度 38%＋流動性 10%＋風報 10%）、技術強勢優先、近期進場優先。
+- **Gemini**：只用既有數據產生文字解讀（temperature 0.2、JSON 結構化輸出），禁止捏造價格或改寫價位；批次遇 HTTP 400/401/403/429 即停止。
+- **歷史訊號觀察**：歷史每日重算、技術分 ≥ 70 的訊號，統計 5／10／20 日後報酬（扣成本 0.4%＋滑價 0.1%）、上漲比例、目標／停損觸及比例。屬訊號統計，非完整回測。
+
+## 本機測試
+
+```
+node tests/core.test.mjs   # 核心引擎測試（99 項斷言）
+```
+
+直接用瀏覽器開啟 `index.html` 也能運作（部分瀏覽器對 `file://` 的 IndexedDB／fetch 有限制，建議用 GitHub Pages 或本機 `python3 -m http.server` 開啟）。
+
+## 檔案結構
+
+```
+index.html            頁面骨架（標題列、左側設定、右側表格與六大分頁）
+css/style.css         深色金融工作台樣式（#0d1728 紅漲綠跌，手機版表格轉卡片）
+js/core.js            指標／計分／策略／適合度／掃描／歷史統計（規則引擎，可用 Node 測試）
+js/demo.js            虛構示範資料產生器（固定種子，種子經離線校準）
+js/app.js             UI、後端資料包自動載入、CSV 匯入、新聞、Gemini、Excel 匯出
+backend/update_data.py  資料後端（FinMind 抓取、回補/每日增量、掃描包建置；僅用 Python 標準庫）
+data/                 後端產出的靜態資料（manifest.json、scan.json.gz、history/*.json.gz、state.json）
+manifest.webmanifest  PWA 設定
+.github/workflows/pages.yml        GitHub Pages 自動部署
+.github/workflows/data-daily.yml   每日行情自動更新（週間 18:30 台灣時間）
+.github/workflows/data-backfill.yml 10 年歷史回補（手動觸發、分批續跑）
+```
+
+後端離線自我測試：`python3 backend/update_data.py selftest --data-dir /tmp/x`
