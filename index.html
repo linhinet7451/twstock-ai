@@ -25,6 +25,14 @@
   </div>
 </header>
 
+<!-- 主要操作列：獨立於設定區，手機版會置頂固定，更新／掃描進度隨時看得到 -->
+<div class="run-box panel action-bar">
+  <button id="btnScan" class="btn primary big">▶ 開始掃描及產生推薦</button>
+  <button id="btnStop" class="btn danger" disabled>■ 停止目前工作</button>
+  <div class="progress"><div id="progBar"></div></div>
+  <div id="progMsg" class="prog-msg">就緒</div>
+</div>
+
 <main class="layout">
   <!-- 左側設定（手機版在上方，可折疊） -->
   <aside class="panel left">
@@ -82,12 +90,6 @@
       </div>
     </details>
 
-    <div class="run-box">
-      <button id="btnScan" class="btn primary big">▶ 開始掃描及產生推薦</button>
-      <button id="btnStop" class="btn danger" disabled>■ 停止目前工作</button>
-      <div class="progress"><div id="progBar"></div></div>
-      <div id="progMsg" class="prog-msg">就緒</div>
-    </div>
   </aside>
 
   <!-- 右側結果 -->
