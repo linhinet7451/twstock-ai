@@ -25,10 +25,21 @@
   </div>
 </header>
 
-<!-- 主要操作列：獨立於設定區，手機版會置頂固定，更新／掃描進度隨時看得到 -->
+<!-- 選股控制台：風格＋掃描＋進度同一組，手機版置頂固定，流程連貫 -->
 <div class="run-box panel action-bar">
-  <button id="btnScan" class="btn primary big">▶ 開始掃描及產生推薦</button>
-  <button id="btnStop" class="btn danger" disabled>■ 停止目前工作</button>
+  <div class="preset-bar">
+    <div class="btn-row preset-btns" id="presetRow">
+      <button class="btn small preset" data-preset="strict">嚴選強勢</button>
+      <button class="btn small preset" data-preset="steady">穩健推薦</button>
+      <button class="btn small preset" data-preset="active">積極進場</button>
+      <button class="btn small preset" data-preset="all">全部探索</button>
+    </div>
+    <p class="hint" id="presetHint"></p>
+  </div>
+  <div class="scan-row">
+    <button id="btnScan" class="btn primary big">▶ 開始掃描及產生推薦</button>
+    <button id="btnStop" class="btn danger" disabled>■ 停止</button>
+  </div>
   <div class="progress"><div id="progBar"></div></div>
   <div id="progMsg" class="prog-msg">就緒</div>
 </div>
@@ -39,33 +50,29 @@
     <details open class="block"><summary>① 資料取得</summary>
       <div class="block-body">
         <p class="hint" id="backendStatus">後端資料：尚未載入（開站會自動載入後端排程更新的資料包）</p>
-        <button id="btnReloadData" class="btn accent">重新載入後端最新資料</button>
-        <button id="btnOfficial" class="btn">更新最新資料（後端排程線路）</button>
-        <label>下載天數（個股補抓用，120～3650）
-          <input type="number" id="inpDays" min="120" max="3650" step="1" value="365"></label>
-        <div class="btn-row">
-          <button class="btn small" data-days="365">1年</button><button class="btn small" data-days="1095">3年</button>
-          <button class="btn small" data-days="1825">5年</button><button class="btn small" data-days="3650">10年</button>
-        </div>
-        <button id="btnIntegrity" class="btn">檢查行情資料完整性</button>
-        <label class="file-label">匯入本機 OHLCV CSV
-          <input type="file" id="fileCsv" accept=".csv,text/csv"></label>
-        <button id="btnDemo" class="btn accent">載入離線示範資料</button>
-        <button id="btnReal" class="btn">切回正式資料模式</button>
-        <p class="hint">官方介面僅提供最新一日全市場行情；完整歷史掃描請用 CSV 匯入，或用「個股查詢」逐檔補抓官方歷史。歷史資料可能因休市、限流或格式變動而不完整。</p>
+        <button id="btnReloadData" class="btn accent">更新最新資料</button>
+        <details class="more-tools"><summary>更多工具（補抓／匯入／檢查／示範）</summary>
+          <div class="mt-body">
+            <label>下載天數（個股補抓用，120～3650）
+              <input type="number" id="inpDays" min="120" max="3650" step="1" value="365"></label>
+            <div class="btn-row">
+              <button class="btn small" data-days="365">1年</button><button class="btn small" data-days="1095">3年</button>
+              <button class="btn small" data-days="1825">5年</button><button class="btn small" data-days="3650">10年</button>
+            </div>
+            <button id="btnIntegrity" class="btn">檢查行情資料完整性</button>
+            <label class="file-label">匯入本機 OHLCV CSV
+              <input type="file" id="fileCsv" accept=".csv,text/csv"></label>
+            <button id="btnDemo" class="btn accent">載入離線示範資料</button>
+            <button id="btnReal" class="btn">切回正式資料模式</button>
+            <p class="hint">官方介面僅提供最新一日全市場行情；完整歷史掃描請用 CSV 匯入，或用「個股查詢」逐檔補抓官方歷史。歷史資料可能因休市、限流或格式變動而不完整。</p>
+          </div>
+        </details>
       </div>
     </details>
 
     <details open class="block"><summary>② 選股設定</summary>
       <div class="block-body">
-        <label>選股風格（點一下就套用，不用懂分數）</label>
-        <div class="btn-row" id="presetRow">
-          <button class="btn small preset" data-preset="strict">嚴選強勢</button>
-          <button class="btn small preset" data-preset="steady">穩健推薦</button>
-          <button class="btn small preset" data-preset="active">積極進場</button>
-          <button class="btn small preset" data-preset="all">全部探索</button>
-        </div>
-        <p class="hint" id="presetHint"></p>
+        <p class="hint">選股風格按鈕在頁面上方的操作列（跟「開始掃描」在一起，點了就套用並重掃）；這裡只留進階微調。</p>
         <label>推薦最多幾檔（1～9999）<input type="number" id="inpTopN" min="1" max="9999" value="10"></label>
         <label>最低技術分（進階微調，0～100）<input type="number" id="inpMinTech" min="0" max="100" value="65"></label>
         <label>近20日均成交額（百萬元，0～2000）<input type="number" id="inpMinAmount" min="0" max="2000" value="10"></label>
@@ -95,7 +102,7 @@
   <!-- 右側結果 -->
   <section class="panel right">
     <div class="toolbar">
-      <input type="search" id="inpFilter" placeholder="搜尋目前名單（代號或名稱）">
+      <input type="search" id="inpFilter" placeholder="搜尋代號或名稱">
       <select id="selList">
         <option value="candidates">可進場候選</option>
         <option value="watch">技術強勢觀察</option>
@@ -103,10 +110,6 @@
       </select>
       <label class="check"><input type="checkbox" id="chkNear"> 只看接近進場</label>
       <button id="btnExport" class="btn">匯出 Excel</button>
-    </div>
-    <div class="toolbar">
-      <input type="text" id="inpQuery" placeholder="個股查詢：輸入代號（如 2330、0050）或名稱">
-      <button id="btnQuery" class="btn accent">查詢個股＋技術策略＋新聞</button>
     </div>
     <div id="emptyHint" class="empty hidden"></div>
     <div class="table-wrap">
@@ -119,6 +122,12 @@
         </tr></thead>
         <tbody id="resultBody"></tbody>
       </table>
+    </div>
+
+    <div class="toolbar query-bar">
+      <input type="text" id="inpQuery" placeholder="個股查詢：輸入代號（如 2330、0050）或名稱">
+      <button id="btnClearQuery" class="btn small" title="清除查詢內容">✕</button>
+      <button id="btnQuery" class="btn accent">查詢個股＋技術策略＋新聞</button>
     </div>
 
     <nav class="tabs" id="detailTabs">
