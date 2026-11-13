@@ -14,10 +14,17 @@ h1{font-size:19px;margin:0}
 .subtitle{color:var(--muted);font-size:12.5px}
 .status-row{margin-top:6px;font-size:13px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
 .warn{color:var(--warn)} .hidden{display:none!important}
-.summary-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.summary-row span{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px}
+.summary-row{margin-top:8px;font-size:13.5px;color:var(--muted);line-height:1.55}
 .summary-row b{color:var(--good)}
-.layout{display:grid;grid-template-columns:390px 1fr;gap:12px;padding:12px;align-items:start}
+.compact-row{display:none}
+.preset-btns .btn .p-name{display:block}
+.preset-btns .btn .p-sub{display:block;font-size:10.5px;font-weight:400;opacity:.78;margin-top:1px}
+.btn.preset.active .p-sub{opacity:1}
+.tech-head{font-size:15px;font-weight:700;margin-bottom:2px}
+.tech-sub{border:1px solid var(--line);border-radius:8px;margin-top:8px;padding:7px 10px;background:#0d1a2c}
+.tech-sub summary{cursor:pointer;font-weight:700;font-size:14px}
+.tech-sub .ts-body{white-space:pre-wrap;line-height:1.7;margin-top:6px;font-size:14px}
+.layout{display:grid;grid-template-columns:390px minmax(0,1fr);gap:12px;padding:12px;align-items:start}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px}
 .left{max-height:calc(100vh - 150px);overflow-y:auto}
 .block{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;background:var(--panel2)}
@@ -103,17 +110,29 @@ dialog td,dialog th{white-space:normal;text-align:left}
   .topbar{position:static;padding:8px 12px}
   .subtitle{display:none} /* 頂部瘦身：副標在手機上拿掉，第一屏盡早露出推薦 */
   .status-row{font-size:12px;margin-top:4px}
-  .summary-row{flex-wrap:nowrap;overflow-x:auto;gap:6px;margin-top:6px;padding-bottom:2px}
-  .summary-row span{white-space:nowrap;padding:2px 8px;font-size:12px}
-  .layout{display:flex;flex-direction:column;padding:8px}
-  .right{order:-1} /* 手機先看結果，設定區排後面 */
-  .left{max-height:none;overflow:visible}
+  .summary-row{margin-top:6px;font-size:12.5px}
+  .layout{display:grid;grid-template-columns:minmax(0,1fr);padding:8px}
+  .right{order:-1;min-width:0} /* 手機先看結果，設定區排後面；min-width:0 讓橫滑分頁列不撐寬版面 */
+  .left{max-height:none;overflow:visible;display:flex;flex-direction:column}
+  /* 手機資訊流程：進階設定（②）→ Gemini（③）→ 資料取得（①） */
+  .b-set{order:1}.b-gem{order:2}.b-data{order:3}
   /* 選股控制台置頂固定：風格＋掃描＋進度永遠在同一個視野 */
   .action-bar{position:sticky;top:0;z-index:30;margin:8px 8px 0;padding:8px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
   .preset-btns .btn{padding:9px 2px;font-size:14.5px}
   #presetHint{font-size:12px;line-height:1.45}
   .scan-row .btn.big{padding:11px 8px;font-size:15.5px}
   .scan-row .btn.danger{flex:0 0 84px;padding:11px 4px;font-size:14px}
+  /* 滑動後置頂列精簡：只留目前模式＋推薦數＋重新掃描 */
+  .action-bar{transition:padding .18s ease}
+  .action-bar.compact{padding:6px 8px}
+  .action-bar.compact .preset-bar,.action-bar.compact .scan-row,.action-bar.compact .progress,.action-bar.compact .prog-msg{display:none}
+  .action-bar.compact .compact-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  #compactInfo{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #btnScanCompact{flex:0 0 auto;padding:8px 14px}
+  /* 明細分頁：手機水平滑動，六個分頁都滑得到 */
+  .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:0 0 auto;white-space:nowrap}
   .action-bar .prog-msg{min-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .toolbar .check{padding:8px 8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px}
   #btnExport{padding:7px 10px;font-size:13.5px}
