@@ -27,6 +27,7 @@ function log(msg) {
   box.scrollTop = box.scrollHeight;
 }
 function setProgress(pct, msg) { $('progBar').style.width = pct + '%'; if (msg) $('progMsg').textContent = msg; }
+function fmtUpd(iso) { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }); }
 function setBusy(b) {
   state.busy = b;
   $('btnScan').disabled = b; $('btnStop').disabled = !b;
@@ -171,7 +172,7 @@ async function loadBackendData(autoScanAfter) {
     state.realStocks = backendStocks.concat(csvOnly);
     state.mode = 'real'; backendLoaded = true;
     state.backendUpdatedAt = man.updatedAt; state.backendLatest = man.latestDate;
-    statusEl.textContent = `後端資料：${man.scanStocks} 檔可掃描（共 ${man.stockCount} 檔含完整歷史）｜最新行情 ${man.latestDate}｜更新於 ${man.updatedAt}（每日盤後由後端排程自動更新）`;
+    statusEl.textContent = `後端資料：${man.scanStocks} 檔可掃描（共 ${man.stockCount} 檔含完整歷史）｜最新行情 ${man.latestDate}｜更新於 ${fmtUpd(man.updatedAt)}（每日盤後由後端排程自動更新）`;
     log(`後端資料載入完成：${backendStocks.length} 檔，最新 ${man.latestDate}`);
     refreshStatus(); setProgress(100, '後端資料載入完成');
     if (autoScanAfter) runScan();
@@ -211,7 +212,7 @@ async function updateToLatest() {
     const okLoad = await loadBackendData(false);
     if (!okLoad) throw new Error('後端資料載入失敗');
     setProgress(100, isNewer
-      ? `已更新到最新資料：行情 ${man.latestDate}、${man.scanStocks} 檔可掃描（後端更新於 ${man.updatedAt}）`
+      ? `已更新到最新資料：行情 ${man.latestDate}、${man.scanStocks} 檔可掃描（後端更新於 ${fmtUpd(man.updatedAt)}）`
       : `目前已是最新資料：行情 ${man.latestDate}、${man.scanStocks} 檔（後端每日 18:30 自動更新，有新版時按此鈕即可取得）`);
     runScan();
   } catch (e) {
@@ -284,7 +285,8 @@ function currentList() {
   if ($('chkNear').checked) list = list.filter(a => a.status === '接近進場');
   return list;
 }
-const CARD_KEY = [0, 1, 2, 5, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18]; // 手機卡片預設顯示的關鍵欄位，其餘收進「展開全部欄位」
+const CARD_KEY = [0, 1, 2, 5, 7, 8, 9, 10, 11, 14, 15, 16, 17]; // 手機卡片預設顯示的關鍵欄位，其餘（含原因）收進「展開全部欄位」
+const statusBadgeCls = s => s === '接近進場' ? 'b-ok' : s === '等待回檔' ? 'b-wait' : s === '突破觀察' ? 'b-info' : 'b-mut';
 function renderList() {
   const list = currentList();
   const body = $('resultBody');
@@ -299,7 +301,7 @@ function renderList() {
       ['漲跌幅', `<span class="${a.changePct >= 0 ? 'up' : 'down'}">${fmtSign(a.changePct)}%</span>`],
       ['技術分', `<span class="${scoreCls(a.techScore)}">${a.techScore}</span>`],
       ['進場適合度', `<span class="${scoreCls(a.entryScore)}">${a.entryScore}</span>`],
-      ['距離進場%', fmtSign(a.strat.distPct) + '%'], ['狀態', a.status], ['週期', a.period], ['策略', a.type],
+      ['距離進場%', fmtSign(a.strat.distPct) + '%'], ['狀態', `<span class="badge ${statusBadgeCls(a.status)}">${a.status}</span>`], ['週期', a.period], ['策略', a.type],
       ['進場區間', `${fmt(a.strat.entryLow)}～${fmt(a.strat.entryHigh)}`], ['停損', fmt(a.strat.stop)],
       ['目標1 / 目標2', `${fmt(a.strat.target1)} / ${fmt(a.strat.target2)}`],
       ['風險報酬', '1 : ' + fmt(a.strat.rr)], ['推薦／觀察原因', a.reason],
@@ -340,6 +342,12 @@ renderTech(a);
 if (state.aiByCode[a.code]) renderAI(a.code); else $('aiResult').textContent = '尚未進行 AI 分析。AI 只解讀既有數據，不得捏造價格或改寫交易價位。';
 $('historyResult').textContent = a._history? renderHistoryText(a): '尚未計算。這是固定交易日後的歷史訊號統計（技術分 ≥70），不是完整逐筆回測。';
 renderNews(a.code);
+// 手機：點卡片／查詢後把明細帶到眼前（扣掉置頂操作列高度）
+if (scroll && window.innerWidth <= 900) {
+  const tabs = $('detailTabs'), bar = document.querySelector('.action-bar');
+  const y = tabs.getBoundingClientRect().top + window.scrollY - ((bar ? bar.offsetHeight : 0) + 10);
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
 }
 function drawChart(a) {
 const cv = $('chart');
@@ -355,15 +363,25 @@ if (!stock) { ctx.fillText('請先選擇有歷史行情的股票', 8, 40); retur
 const n = Math.min(100, stock.bars.close.length);
 const closes = stock.bars.close.slice(-n), dates = stock.bars.dates.slice(-n);
 const s = a.strat;
-let lo = Math.min(...closes, s.stop, s.entryLow), hi = Math.max(...closes, s.target2, s.entryHigh);
-const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+// 刻度以股價本身的區間為主（±18% 留白），避免遠處的停損／目標把價格線壓扁、上方留大片空白
+let lo = Math.min(...closes), hi = Math.max(...closes);
+const pad = (hi - lo) * 0.18 || 1; lo -= pad; hi += pad;
 const X = i => 34 + (W - 44) * i / (n - 1), Y = v => 24 + (H - 52) * (1 - (v - lo) / (hi - lo));
 ctx.strokeStyle = '#24497c'; ctx.fillStyle = '#9db8d8';
 for (let g = 0; g < 5; g++) { const v = lo + (hi - lo) * g / 4, y = Y(v); ctx.beginPath(); ctx.moveTo(34, y); ctx.lineTo(W - 10, y); ctx.stroke(); ctx.fillText(v.toFixed(1), 2, y + 4);}
-for (let g = 0; g < 5; g++) { const i = Math.round((n - 1) * g / 4); ctx.fillText(dates[i].slice(5), X(i) - 14, H - 6);}
+for (let g = 0; g < 5; g++) { const i = Math.round((n - 1) * g / 4); const label = dates[i].slice(5); ctx.fillText(label, Math.max(34, Math.min(X(i) - 14, W - 10 - label.length * 7)), H - 6);}
 const lines = [[s.entryLow, '#38bdf8', '進場下緣'], [s.entryHigh, '#38bdf8', '進場上緣'], [s.stop, '#ff5252', '停損'], [s.target1, '#35c759', '目標1'], [s.target2, '#a3e635', '目標2']];
 ctx.setLineDash([5, 4]);
-for (const [v, color] of lines) { if (v < lo || v > hi) continue; ctx.strokeStyle = color; ctx.beginPath(); ctx.moveTo(34, Y(v)); ctx.lineTo(W - 10, Y(v)); ctx.stroke();}
+let edgeTop = 0, edgeBot = 0;
+for (const [v, color, name] of lines) {
+  ctx.strokeStyle = color;
+  if (v >= lo && v <= hi) { ctx.beginPath(); ctx.moveTo(34, Y(v)); ctx.lineTo(W - 10, Y(v)); ctx.stroke(); }
+  else { // 超出圖表範圍：在邊緣畫短線＋標籤（同側多條時逐條錯開避免重疊），資訊不消失、刻度不被拉歪
+    const yEdge = v > hi ? 30 + (edgeTop++) * 14 : H - 36 - (edgeBot++) * 14;
+    ctx.beginPath(); ctx.moveTo(34, yEdge); ctx.lineTo(W - 10, yEdge); ctx.stroke();
+    ctx.fillStyle = color; ctx.fillText(`${name} ${v.toFixed(1)}`, W - 108, yEdge + (v > hi ? 12 : -4)); ctx.fillStyle = '#9db8d8';
+  }
+}
 ctx.setLineDash([]);
 ctx.strokeStyle = closes.at(-1) >= closes[0]? '#2dd4bf': '#ff8a80'; ctx.lineWidth = 1.8; ctx.beginPath();
 closes.forEach((v, i) => i? ctx.lineTo(X(i), Y(v)): ctx.moveTo(X(i), Y(v))); ctx.stroke(); ctx.lineWidth = 1;
@@ -374,19 +392,23 @@ ctx.fillText(closes.at(-1).toFixed(2), Math.max(34, lx - 44), ly - 8);
 function renderStrategyCard(a) {
 const s = a.strat, demo = a.isDemo? '虛構示範資料｜勿用於投資\n': '';
 $('strategyCard').innerHTML =
-`${demo}${a.code} ${a.name}｜技術 ${a.techScore} / 100｜進場適合度 ${a.entryScore} / 100
-市場行情：${a.date}｜收盤 ${fmt(a.close)}｜當日漲跌 ${fmtSign(a.change)}（${fmtSign(a.changePct)}%）
-操作策略：${s.period}｜估計觀察持有期間 ${s.holding}
-進場區間：<span class="entry-txt">${fmt(s.entryLow)} ～ ${fmt(s.entryHigh)}</span>（中間價 ${fmt(s.entryMid)}）
-停損價位：<span class="stop-txt">${fmt(s.stop)}</span>
-目標一／目標二：<span class="target-txt">${fmt(s.target1)} / ${fmt(s.target2)}</span>
-進場狀態：<span class="status-txt">${s.status}</span>｜進場策略類型：${s.type}
-距離進場區：${fmt(s.distPct)}%｜風險報酬比：1: ${fmt(s.rr)}
-策略計算依據：${s.basis}
+`${demo ? `<div class="sc-demo">${demo.trim()}</div>` : ''}<div class="sc-title">${a.code} ${a.name}｜技術 ${a.techScore} / 100｜進場適合度 ${a.entryScore} / 100</div>
+<div class="kv-grid">
+<div><span>收盤（${a.date}）</span><b>${fmt(a.close)}（${fmtSign(a.changePct)}%）</b></div>
+<div><span>進場狀態</span><b class="status-txt">${s.status}</b></div>
+<div><span>進場區間</span><b class="entry-txt">${fmt(s.entryLow)} ～ ${fmt(s.entryHigh)}</b></div>
+<div><span>停損價位</span><b class="stop-txt">${fmt(s.stop)}</b></div>
+<div><span>目標一／目標二</span><b class="target-txt">${fmt(s.target1)} / ${fmt(s.target2)}</b></div>
+<div><span>距離進場區</span><b>${fmt(s.distPct)}%</b></div>
+<div><span>風險報酬比</span><b>1 : ${fmt(s.rr)}</b></div>
+<div><span>操作策略／持有期間</span><b>${s.period}／${s.holding}</b></div>
+<div><span>進場策略類型</span><b>${s.type}</b></div>
+</div>
+<div class="sc-notes">策略計算依據：${s.basis}
 進場觸發條件：${s.trigger}
 策略失效條件：${s.invalid}
 指標快覽：RSI ${fmt(a.ind.rsi14.at(-1), 1)}｜K ${fmt(a.ind.k.at(-1), 1)}／D ${fmt(a.ind.d.at(-1), 1)}｜量比 ${fmt(a.volRatio)}｜ATR ${fmt(a.ind.atr14.at(-1))}
-策略提醒：歷史價位不保證成交，停損與目標價皆屬技術情境推導；量能轉弱或追高過度時請重新評估。`;
+策略提醒：歷史價位不保證成交，停損與目標價皆屬技術情境推導；量能轉弱或追高過度時請重新評估。</div>`;
 }
 function renderTech(a) {
 const ind = a.ind, p = a.strat.parts;
@@ -447,6 +469,7 @@ state.results.custom = [a];
 $('selList').value = 'custom';
 renderList(); selectAnalysis(a, true);
 switchTab('tabStrategy');
+setProgress(100, `已載入 ${a.code} ${a.name}｜技術 ${a.techScore} 分｜進場適合度 ${a.entryScore} 分 — 明細在下方`);
 fetchNews(a); // #173 自動取得新聞（不自動呼叫 Gemini #174）
 }
 
@@ -639,7 +662,6 @@ document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', ()
 ['inpMinTech', 'inpMinEntry'].forEach(id => $(id).addEventListener('change', markPreset));
 markPreset();
 document.querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { $('inpDays').value = b.dataset.days; saveSettings();}));
-$('btnOfficial').addEventListener('click', updateToLatest);
 $('btnIntegrity').addEventListener('click', showIntegrity);
 $('btnDemo').addEventListener('click', () => { state.mode = 'demo'; if (!state.demoStocks.length) state.demoStocks = TWDemo.generateDemoStocks(); refreshStatus(); log('已載入離線示範資料（虛構）'); runScan();});
 $('btnReal').addEventListener('click', () => { state.mode = 'real'; refreshStatus(); log('已切回正式資料模式');});
@@ -678,7 +700,8 @@ $('btnHistory').addEventListener('click', runHistory);
 $('btnExport').addEventListener('click', exportExcel);
 document.querySelectorAll('#detailTabs button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 window.addEventListener('resize', () => { if (state.selected) drawChart(state.selected);});
-$('btnReloadData').addEventListener('click', () => loadBackendData(false));
+$('btnReloadData').addEventListener('click', updateToLatest);
+$('btnClearQuery').addEventListener('click', () => { $('inpQuery').value = ''; $('inpQuery').focus(); });
 idb.open().then(async () => { const saved = await idb.get('realStocks'); if (Array.isArray(saved) && saved.length) { state.realStocks = saved; log(`已還原先前匯入資料 ${saved.length} 檔`);} refreshStatus(); loadBackendData(true); }).catch(() => { refreshStatus(); loadBackendData(true); });
 refreshStatus();
 log('台股 AI 智慧選股工作台 V2.0（網頁版）就緒。建議先按「載入離線示範資料」體驗完整流程。');
