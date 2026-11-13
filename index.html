@@ -19,10 +19,7 @@
     <span id="dataStatus">正式／匯入資料｜0 檔｜最新資料：—</span>
     <span id="staleWarn" class="warn hidden">⚠ 行情可能過期（最新日期距今達 5 天）</span>
   </div>
-  <div class="summary-row" id="scanSummary">
-    <span>掃描 <b id="sumScanned">0</b> 檔</span><span>符合進場 <b id="sumCandidate">0</b> 檔</span>
-    <span>技術強勢觀察 <b id="sumWatch">0</b> 檔</span><span>實際推薦 <b id="sumShown">0</b> 檔</span>
-  </div>
+  <div class="summary-row" id="scanSummary"><span id="sumLine">已掃描 0 檔｜推薦 0 檔｜觀察 0 檔</span></div>
 </header>
 
 <!-- 選股控制台：風格＋掃描＋進度同一組，手機版置頂固定，流程連貫 -->
@@ -38,7 +35,11 @@
   </div>
   <div class="scan-row">
     <button id="btnScan" class="btn primary big">▶ 開始掃描及產生推薦</button>
-    <button id="btnStop" class="btn danger" disabled>■ 停止</button>
+    <button id="btnStop" class="btn danger hidden" disabled>■ 停止</button>
+  </div>
+  <div class="compact-row">
+    <span id="compactInfo">—</span>
+    <button id="btnScanCompact" class="btn primary small">↻ 重新掃描</button>
   </div>
   <div class="progress"><div id="progBar"></div></div>
   <div id="progMsg" class="prog-msg">就緒</div>
@@ -47,7 +48,7 @@
 <main class="layout">
   <!-- 左側設定（手機版在上方，可折疊） -->
   <aside class="panel left">
-    <details open class="block"><summary>① 資料取得</summary>
+    <details open class="block b-data"><summary>① 資料取得</summary>
       <div class="block-body">
         <p class="hint" id="backendStatus">後端資料：尚未載入（開站會自動載入後端排程更新的資料包）</p>
         <button id="btnReloadData" class="btn accent">更新最新資料</button>
@@ -64,13 +65,14 @@
               <input type="file" id="fileCsv" accept=".csv,text/csv"></label>
             <button id="btnDemo" class="btn accent">載入離線示範資料</button>
             <button id="btnReal" class="btn">切回正式資料模式</button>
+            <button id="btnExport" class="btn">匯出 Excel（目前推薦／觀察名單）</button>
             <p class="hint">官方介面僅提供最新一日全市場行情；完整歷史掃描請用 CSV 匯入，或用「個股查詢」逐檔補抓官方歷史。歷史資料可能因休市、限流或格式變動而不完整。</p>
           </div>
         </details>
       </div>
     </details>
 
-    <details open class="block"><summary>② 選股設定</summary>
+    <details class="block b-set"><summary id="settingsSummary">② 選股設定</summary>
       <div class="block-body">
         <p class="hint">選股風格按鈕在頁面上方的操作列（跟「開始掃描」在一起，點了就套用並重掃）；這裡只留進階微調。</p>
         <label>推薦最多幾檔（1～9999）<input type="number" id="inpTopN" min="1" max="9999" value="10"></label>
@@ -86,7 +88,7 @@
       </div>
     </details>
 
-    <details class="block"><summary>③ Gemini 設定（選用）</summary>
+    <details class="block b-gem"><summary>③ Gemini 設定（選用）</summary>
       <div class="block-body">
         <label>Gemini API Key（只供本次使用，不保存）
           <input type="password" id="inpApiKey" autocomplete="off" placeholder="AIza..."></label>
@@ -109,7 +111,6 @@
         <option value="custom">個股查詢結果</option>
       </select>
       <label class="check"><input type="checkbox" id="chkNear"> 只看接近進場</label>
-      <button id="btnExport" class="btn">匯出 Excel</button>
     </div>
     <div id="emptyHint" class="empty hidden"></div>
     <div class="table-wrap">
