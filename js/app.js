@@ -16,6 +16,9 @@ const state = {
   stopFlag: false,
   busy: false,
   failedDates: [],
+  scanDone: false,         // 掃描完成後「開始掃描」改顯示「重新掃描」
+  pendingPresetMsg: '',    // 套用預設後，掃描起始訊息顯示「已套用…正在重新掃描」
+  presetLabel: '',         // 目前套用的選股模式名稱（精簡列／②標題用）
 };
 const stocksNow = () => state.mode === 'demo' ? state.demoStocks : state.realStocks;
 
@@ -31,6 +34,13 @@ function fmtUpd(iso) { const d = new Date(iso); return isNaN(d) ? iso : d.toLoca
 function setBusy(b) {
   state.busy = b;
   $('btnScan').disabled = b; $('btnStop').disabled = !b;
+  $('btnStop').classList.toggle('hidden', !b); // 停止鈕只在掃描／背景工作進行中顯示
+  const cb = $('btnScanCompact'); if (cb) cb.disabled = b;
+}
+function updateScanLabel() { $('btnScan').textContent = state.scanDone ? '↻ 重新掃描' : '▶ 開始掃描及產生推薦'; }
+function updateCompactInfo() {
+  const c = $('compactInfo'); if (!c) return;
+  c.textContent = `${state.presetLabel || '穩健推薦'}｜推薦 ${state.results.candidates.length} 檔`;
 }
 
 // ---------- 設定保存 (#65；不含 API Key #68) ----------
@@ -57,15 +67,25 @@ function markPreset() {
   const t = +$('inpMinTech').value || 0, e = +$('inpMinEntry').value || 0;
   let active = '';
   for (const k in PRESETS) if (PRESETS[k].tech === t && PRESETS[k].entry === e) active = k;
-  document.querySelectorAll('.preset').forEach(b => b.classList.toggle('active', b.dataset.preset === active));
+  state.presetLabel = active ? PRESETS[active].label : '自訂';
+  document.querySelectorAll('.preset').forEach(b => {
+    const p = PRESETS[b.dataset.preset], isA = b.dataset.preset === active;
+    b.classList.toggle('active', isA);
+    b.innerHTML = `<span class="p-name">${p.label}</span><span class="p-sub">${isA ? '✓ 使用中' : '套用並重掃'}</span>`;
+  });
+  const ss = $('settingsSummary');
+  if (ss) ss.textContent = `② 選股設定（目前：${state.presetLabel}）`;
   const hint = $('presetHint');
   if (hint) hint.textContent = active ? PRESETS[active].desc : '自訂門檻：你已手動微調下面的分數，不屬於任何預設風格。';
+  updateCompactInfo();
 }
 async function applyPreset(k) {
   const p = PRESETS[k]; if (!p) return;
   $('inpMinTech').value = p.tech; $('inpMinEntry').value = p.entry;
   saveSettings(); markPreset();
   log(`已套用選股風格「${p.label}」（技術分 ≥ ${p.tech}、進場適合度 ≥ ${p.entry}）`);
+  state.pendingPresetMsg = `已套用「${p.label}」，正在重新掃描…`;
+  setProgress(5, state.pendingPresetMsg);
   if (stocksNow().length) {
     const y = window.scrollY;         // 掃描會重繪上方結果區、改變頁面高度，先記住位置
     await runScan();
@@ -248,12 +268,13 @@ async function runScan() {
   const stocks = stocksNow();
   if (!stocks.length) { alert('目前沒有可掃描的資料，請先載入示範資料、匯入 CSV，或查詢個股補抓歷史。'); return; }
   setBusy(true); state.stopFlag = false;
-  setProgress(0, '掃描中…');
+  const apMsg = state.pendingPresetMsg; state.pendingPresetMsg = '';
+  setProgress(0, apMsg || '掃描中…');
   // 分段執行以更新進度並允許停止：TWCore.scan 為同步全量計算，這裡先做逐檔預檢統計進度，實際計分仍由 TWCore.scan 一次完成（規則一致）
   const total = stocks.length;
   for (let i = 0; i < total; i += 40) {
     if (state.stopFlag) { setProgress(0, '已停止'); setBusy(false); log('掃描被使用者停止'); return; }
-    setProgress(Math.round(i / total * 90), `掃描中 ${Math.min(i + 40, total)}/${total} 檔…`);
+    setProgress(Math.round(i / total * 90), apMsg || `掃描中 ${Math.min(i + 40, total)}/${total} 檔…`);
     await new Promise(r => setTimeout(r, 0));
   }
   try {
@@ -261,10 +282,9 @@ async function runScan() {
     state.lastStats = res.stats;
     state.results.candidates = res.allCandidates.slice(0, scanOpts().topN);
     state.results.watch = res.watch;
-    $('sumScanned').textContent = res.stats.scanned;
-    $('sumCandidate').textContent = res.allCandidates.length;
-    $('sumWatch').textContent = res.watch.length;
-    $('sumShown').textContent = state.results.candidates.length;
+    // 頂端統計改一句摘要：已掃描＝實際計分檔數、推薦＝實際推薦（topN 截斷後）、觀察＝技術強勢觀察名單
+    $('sumLine').textContent = `已掃描 ${res.stats.scanned} 檔｜推薦 ${state.results.candidates.length} 檔｜觀察 ${res.watch.length} 檔`;
+    state.scanDone = true; updateScanLabel(); updateCompactInfo();
     log(`掃描完成｜掃描 ${res.stats.scanned} 檔，排除統計：代號類型 ${res.stats.typeExcluded}、歷史不足 ${res.stats.historyShort}、資料品質 ${res.stats.qualityBad}、成交額不足 ${res.stats.amountLow}、技術分不足 ${res.stats.techLow}、策略失敗 ${res.stats.stratFail}、進場未達 ${res.stats.entryFail}`);
     setProgress(100, `掃描完成：推薦 ${state.results.candidates.length} 檔、觀察 ${res.watch.length} 檔（最新日期 ${res.latestDate}）`);
     $('selList').value = 'candidates';
@@ -285,7 +305,7 @@ function currentList() {
   if ($('chkNear').checked) list = list.filter(a => a.status === '接近進場');
   return list;
 }
-const CARD_KEY = [0, 1, 2, 5, 7, 8, 9, 10, 11, 14, 15, 16, 17]; // 手機卡片預設顯示的關鍵欄位，其餘（含原因）收進「展開全部欄位」
+const CARD_KEY = [1, 2, 5, 8, 9, 11, 14]; // 手機卡片第一層只顯示七項：代號、名稱、收盤、技術分、進場適合度、狀態、進場區間；停損／目標／風報／原因等其餘欄位收進「展開全部欄位」
 const statusBadgeCls = s => s === '接近進場' ? 'b-ok' : s === '等待回檔' ? 'b-wait' : s === '突破觀察' ? 'b-info' : 'b-mut';
 function renderList() {
   const list = currentList();
@@ -413,18 +433,18 @@ $('strategyCard').innerHTML =
 function renderTech(a) {
 const ind = a.ind, p = a.strat.parts;
 const row = (k, v) => `${k}：${v == null || (typeof v === 'number' && isNaN(v))? '—': typeof v === 'number'? fmt(v): v}`;
-$('techDetail').textContent =
-`技術分：${a.techScore} / 100
-成立訊號（${a.hit.length}）：${a.hit.map(h => `${h.name} +${h.pts}`).join('、') || '無'}
-未成立訊號（${a.miss.length}）：${a.miss.map(h => `${h.name}（${h.pts} 分）`).join('、') || '無'}
-
-進場適合度拆解（#132）：基礎 ${p.base}｜距離扣分 ${fmt(p.distPenalty, 1)}｜技術加分 +${fmt(p.techBonus, 1)}｜成交量加分 +${fmt(p.volBonus, 1)}｜風報加分 +${fmt(p.rrBonus, 1)}｜波動扣分 ${fmt(p.atrPenalty, 1)} → ${a.entryScore} 分
-
-${row('MA5', ind.ma5.at(-1))}｜${row('MA10', ind.ma10.at(-1))}｜${row('MA20', ind.ma20.at(-1))}｜${row('MA60', ind.ma60.at(-1))}｜${row('MA120', ind.ma120.at(-1))}
+const sub = (title, body) => `<details class="tech-sub"><summary>${title}</summary><div class="ts-body">${body}</div></details>`;
+// 預設只顯示技術分與進場適合度；訊號／拆解／均線指標各自收合，點開才看
+$('techDetail').innerHTML =
+`<div class="tech-head">技術分 ${a.techScore} / 100｜進場適合度 ${a.entryScore} / 100</div>` +
+sub(`成立訊號（${a.hit.length}）`, escapeHtml(a.hit.map(h => `${h.name} +${h.pts}`).join('、') || '無')) +
+sub(`未成立訊號（${a.miss.length}）`, escapeHtml(a.miss.map(h => `${h.name}（${h.pts} 分）`).join('、') || '無')) +
+sub('進場適合度拆解', `基礎 ${p.base}｜距離扣分 ${fmt(p.distPenalty, 1)}｜技術加分 +${fmt(p.techBonus, 1)}｜成交量加分 +${fmt(p.volBonus, 1)}｜風報加分 +${fmt(p.rrBonus, 1)}｜波動扣分 ${fmt(p.atrPenalty, 1)} → ${a.entryScore} 分`) +
+sub('均線與指標', `${row('MA5', ind.ma5.at(-1))}｜${row('MA10', ind.ma10.at(-1))}｜${row('MA20', ind.ma20.at(-1))}｜${row('MA60', ind.ma60.at(-1))}｜${row('MA120', ind.ma120.at(-1))}
 ${row('MACD', ind.macd.at(-1))}｜${row('訊號線', ind.macdSignal.at(-1))}｜${row('RSI14', ind.rsi14.at(-1))}｜${row('K', ind.k.at(-1))}｜${row('D', ind.d.at(-1))}
 ${row('布林上緣', ind.bollUpper.at(-1))}｜${row('布林下緣', ind.bollLower.at(-1))}｜${row('ATR14', ind.atr14.at(-1))}
 ${row('ADX', ind.adx.at(-1))}｜${row('+DI', ind.plusDi.at(-1))}｜${row('-DI', ind.minusDi.at(-1))}｜${row('MFI14', ind.mfi14.at(-1))}
-${row('量比', ind.volRatio)}｜${row('近20日均成交額(百萬元)', ind.avgAmount20M)}｜${row('前20日最高', ind.prev20High)}`;
+${row('量比', ind.volRatio)}｜${row('近20日均成交額(百萬元)', ind.avgAmount20M)}｜${row('前20日最高', ind.prev20High)}`);
 }
 
 // ---------- 個股查詢 (#162-174) ----------
@@ -678,6 +698,11 @@ log(`CSV 匯入完成：${stocks.length} 檔`); setProgress(100, `CSV 匯入完�
 e.target.value = '';
 });
 $('btnScan').addEventListener('click', runScan);
+$('btnScanCompact').addEventListener('click', runScan);
+{ // 滑過標題區後，置頂操作列切精簡模式（只留模式＋推薦數＋重新掃描）
+const barEl = document.querySelector('.action-bar'), topEl = document.querySelector('.topbar');
+window.addEventListener('scroll', () => { barEl.classList.toggle('compact', window.scrollY > (topEl ? topEl.offsetHeight : 100) + 10); }, { passive: true });
+}
 $('btnStop').addEventListener('click', () => { state.stopFlag = true;});
 $('btnExplain').addEventListener('click', () => {
 $('explainBody').innerHTML = '<table><tr><th>項目</th><th>加分</th><th>成立條件</th></tr>' +
