@@ -323,17 +323,32 @@
   }
 
   // ---------- 歷史訊號觀察 (#240-250) ----------
-  function historyStats(stock, costRate = 0.004, slippage = 0.001) {
-    const b = stock.bars, horizons = [5, 10, 20], out = {};
+  // 訊號定義（2026-11-14 改版）：逐日重算，當天達到「目前所選風格的推薦條件」才算達標，
+  // 與 scan 的候選條件一致——techScore ≥ minTech、entryScore ≥ minEntry、
+  // avgAmount20M ≥ minAvgAmountM、status 不是「暫不追價」/「條件失效」、
+  // strat.rr ≥ 1.5、priceOk（stop < entryLow < target1）且 stop > 0。門檻由呼叫端傳入。
+  // 連續達標只算第一天（前一天未達標、今天達標才計一次訊號），避免同一波行情重複計次。
+  // horizons 由呼叫端依週期傳入（短線 [5,10,20]、中線 [10,20,40]、長線 [20,60,120]）。
+  function historyStats(stock, opts = {}) {
+    const o = Object.assign({ minTech: 65, minEntry: 45, minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001 }, opts);
+    const b = stock.bars, horizons = o.horizons, out = {};
     for (const h of horizons) out[h] = { count: 0, upRatio: 0, avgRet: 0, targetHit: 0, stopHit: 0 };
-    const sums = { 5: 0, 10: 0, 20: 0 }, ups = { 5: 0, 10: 0, 20: 0 }, th = { 5: 0, 10: 0, 20: 0 }, sh = { 5: 0, 10: 0, 20: 0 };
+    const sums = {}, ups = {}, th = {}, sh = {};
+    for (const h of horizons) { sums[h] = 0; ups[h] = 0; th[h] = 0; sh[h] = 0; }
+    let prevOk = false;
     for (let end = 125; end < b.close.length; end++) {
       const sub = trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
-      let a = null; try { a = analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, '自動判斷'); } catch (e) { }
-      if (!a || a.techScore < 70) continue; // #242
+      let a = null; try { a = analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, o.periodMode); } catch (e) { }
+      const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
+      const okDay = !!a && a.techScore >= o.minTech && a.entryScore >= o.minEntry
+        && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM
+        && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk;
+      const isSignal = okDay && !prevOk; // 連續達標只取第一天
+      prevOk = okDay;
+      if (!isSignal) continue;
       for (const h of horizons) {
         if (end + h >= b.close.length) continue;
-        const ret = (b.close[end + h] / b.close[end] - 1) - costRate - slippage; // #247
+        const ret = (b.close[end + h] / b.close[end] - 1) - o.costRate - o.slippage; // #247
         out[h].count++; sums[h] += ret * 100; if (ret > 0) ups[h]++;
         let hitT = false, hitS = false;
         for (let j = end + 1; j <= end + h; j++) { if (b.high[j] >= a.strat.target1) hitT = true; if (b.low[j] <= a.strat.stop) hitS = true; }

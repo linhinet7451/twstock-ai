@@ -52,9 +52,47 @@ ok(mixedRes.latestDate === '2026-11-12', 'mode date is majority date');
 ok(mixedRes.stats.scanned === 3, 'mode date scans majority stocks');
 ok(mixedRes.stats.qualityBad === 1, 'mode date excludes minority ahead stock');
 
-// 歷史訊號
-const h = core.historyStats(stocks[0]);
+// 歷史訊號（新 API：門檻與 horizons 由呼叫端傳入；訊號＝達到所選風格推薦條件）
+const h = core.historyStats(stocks[0], { minTech: 0, minEntry: 0, minAvgAmountM: 0, horizons: [5, 10, 20] });
 ok([5, 10, 20].every(k => h[k] && typeof h[k].count === 'number'), 'history stats shape');
+const hDef = core.historyStats(stocks[0]);
+ok([5, 10, 20].every(k => hDef[k] && typeof hDef[k].count === 'number'), 'history stats default opts shape');
+
+// (a) 連續達標只計一次：獨立重算達標日，訊號數應等於「波段起始日」數、且小於達標日總數
+function qualifyingDays(stock, o) {
+  const b = stock.bars, days = [];
+  for (let end = 125; end < b.close.length; end++) {
+    const sub = core.trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
+    let a = null; try { a = core.analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, '自動判斷'); } catch (e) { }
+    const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
+    if (!!a && a.techScore >= o.minTech && a.entryScore >= o.minEntry && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk) days.push(end);
+  }
+  return days;
+}
+{
+  const s0 = stocks[0], loose = { minTech: 0, minEntry: 0, minAvgAmountM: 0 };
+  const days = qualifyingDays(s0, loose);
+  const starts = days.filter((d, i) => i === 0 || days[i - 1] !== d - 1);
+  const hh = core.historyStats(s0, { ...loose, horizons: [5] });
+  ok(days.length > starts.length, 'dedup test data has consecutive qualifying runs');
+  ok(hh[5].count === starts.filter(d => d + 5 < s0.bars.close.length).length, 'consecutive qualifying days counted once');
+  ok(hh[5].count < days.length, 'signal count is less than raw qualifying days');
+}
+
+// (b) 門檻越嚴，訊號次數不增
+{
+  const looseC = core.historyStats(stocks[0], { minTech: 0, minEntry: 0, minAvgAmountM: 0, horizons: [5, 20] });
+  const strictC = core.historyStats(stocks[0], { minTech: 75, minEntry: 60, minAvgAmountM: 10, horizons: [5, 20] });
+  ok(strictC[5].count <= looseC[5].count && strictC[20].count <= looseC[20].count, 'stricter thresholds give no more signals');
+  ok(looseC[5].count > 0, 'loose thresholds find signals');
+}
+
+// (c) horizons 依傳入參數回傳對應 key
+{
+  const hz = core.historyStats(stocks[0], { minTech: 0, minEntry: 0, minAvgAmountM: 0, horizons: [20, 60, 120] });
+  ok(JSON.stringify(Object.keys(hz).sort((x, y) => x - y)) === JSON.stringify(['20', '60', '120']), 'history horizons keys follow opts');
+  ok([20, 60, 120].every(k => typeof hz[k].count === 'number' && typeof hz[k].avgRet === 'number'), 'history horizons values shaped');
+}
 
 // filterBars：移除 close<=0 的無成交佔位列，各陣列同步過濾
 ok(typeof core.filterBars === 'function', 'filterBars exported');
