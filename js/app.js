@@ -409,7 +409,7 @@ drawChart(a);
 renderStrategyCard(a);
 renderTech(a);
 if (state.aiByCode[a.code]) renderAI(a.code); else $('aiResult').textContent = '尚未進行 AI 分析。AI 只解讀既有數據，不得捏造價格或改寫交易價位。';
-$('historyResult').textContent = a._history? renderHistoryText(a): '尚未計算。這是固定交易日後的歷史訊號統計（技術分 ≥70），不是完整逐筆回測。';
+$('historyResult').textContent = a._history? renderHistoryText(a): '還沒算過。按上面的按鈕，看這檔以前出現強勢訊號時，後來通常漲還是跌。';
 renderNews(a.code);
 if (!state.newsStatus[a.code]) fetchNews(a); // 首次選到就自動嘗試載入新聞（失敗會顯示外部搜尋連結，不再假裝查無）
 // 手機：點卡片／查詢後把明細帶到眼前（扣掉置頂操作列高度）
@@ -717,8 +717,9 @@ log(`Gemini 測試：可用模型 ${models.length} 個（${models.slice(0, 8).ma
 // ---------- 歷史訊號觀察 (#240-250) ----------
 function renderHistoryText(a) {
 const h = a._history;
-return [5, 10, 20].map(k => `${k} 日｜訊號次數 ${h[k].count}｜上漲比例 ${fmt(h[k].upRatio, 1)}%｜平均報酬 ${fmtSign(h[k].avgRet)}%｜目標達成 ${fmt(h[k].targetHit, 1)}%｜停損比例 ${fmt(h[k].stopHit, 1)}%`).join('\n')
-+ '\n（成本率 0.4%＋滑價 0.1% 已計入報酬；此為固定持有天數的訊號統計，不是完整逐筆回測）';
+return '算法：翻這檔股票的完整歷史，每次「技術分達到 70 分以上」的那天，假設用收盤價買進、抱滿天數後用收盤價賣出。報酬已先扣交易成本約 0.5%。'
++ '\n' + [5, 10, 20].map(k => `抱 ${k} 天｜出現 ${h[k].count} 次｜賺錢 ${fmt(h[k].upRatio, 1)}%｜平均 ${fmtSign(h[k].avgRet)}%｜曾漲到目標價 ${fmt(h[k].targetHit, 1)}%｜曾跌到停損價 ${fmt(h[k].stopHit, 1)}%`).join('\n')
++ '\n「賺錢」指扣掉成本後報酬大於 0；「曾漲到目標價／曾跌到停損價」指持有期間盤中有碰到。這是簡單統計，不是照策略實際買賣的回測；出現次數少於 10 次時，參考價值低。';
 }
 async function runHistory() {
 if (!state.selected ||!state.selectedStock) { alert('請先選取股票'); return;}
@@ -726,8 +727,9 @@ if (state.busy) return noteBusy();
 const a = state.selected;
 if (a._history) { $('historyResult').textContent = renderHistoryText(a); return;}
 setBusy(true); setProgress(15, '載入完整 10 年歷史…');
+$('historyResult').textContent = '計算中…（會翻最長 10 年歷史，稍等一下）';
 state.selectedStock = await ensureFullHistory(state.selectedStock);
-setProgress(40, '計算歷史訊號統計…');
+setProgress(40, '計算中…（會翻最長 10 年歷史，稍等一下）');
 await new Promise(r => setTimeout(r, 30));
 try { a._history = TWCore.historyStats(state.selectedStock); $('historyResult').textContent = renderHistoryText(a); setProgress(100, '歷史統計完成'); log(`歷史訊號統計完成 ${a.code}（${state.selectedStock.bars.close.length} 筆日線）`);}
 catch (e) { log('歷史統計失敗：' + e.message);}
