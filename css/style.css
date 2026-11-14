@@ -159,3 +159,35 @@ dialog td,dialog th{white-space:normal;text-align:left}
   td.lvrow{display:block;grid-column:1/-1;font-size:13px;line-height:1.25;padding:1px 8px;color:var(--muted)}
   .table-wrap{max-height:none;border:none}
 }
+/* 歷史訊號觀察：策略回測總覽（卡片式，數字同 historyStats 文字明細） */
+.bt-title{font-size:19px;font-weight:700;margin:2px 0 10px;line-height:1.4}
+.bt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bt-stat{background:#1b3357;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.bt-stat-label{font-size:13px;color:var(--muted)}
+.bt-stat-num{font-size:30px;font-weight:700;line-height:1.15;white-space:nowrap}
+.bt-stat-num.rate{font-size:24px}
+.bt-unit{font-size:15px;margin-left:1px}
+.bt-sec{background:#0d1a2c;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:12px}
+.bt-sec-title{font-size:16.5px;font-weight:700;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;line-height:1.4}
+.bt-sec-note{font-size:13px;color:var(--muted);font-weight:400}
+.bt-cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bt-cmp.one{grid-template-columns:1fr}
+.bt-cmp-card{background:#1b3357;border-radius:10px;padding:12px}
+.bt-cmp-name{font-size:14.5px;color:var(--muted)}
+.bt-cmp-num{font-size:34px;font-weight:700;line-height:1.2;margin:2px 0}
+.bt-cmp-cap{font-size:12.5px;color:var(--muted)}
+.bt-table{min-width:0;width:100%;font-size:15px;line-height:1.5;border-collapse:collapse}
+.bt-table thead{display:table-header-group}
+.bt-table thead th{background:transparent;position:static;cursor:default;color:var(--muted);font-weight:400;font-size:13.5px;padding:4px 6px;text-align:right;white-space:normal}
+.bt-table thead th.bt-l,.bt-table tbody td.bt-l{text-align:left}
+.bt-table tbody tr{display:table-row;background:transparent}
+.bt-table tbody td{display:table-cell;padding:8px 6px;text-align:right;border-top:1px solid #1d3557;white-space:normal;background:transparent}
+.bt-table tbody td::before{content:none}
+.bt-pos{color:#35c759;font-weight:700}
+.bt-neg{color:#ff8a80;font-weight:700}
+.bt-detail{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:#0d1a2c}
+.bt-detail summary{cursor:pointer;font-weight:700;font-size:15.5px;padding:11px 12px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.bt-detail summary::-webkit-details-marker{display:none}
+.bt-detail summary::after{content:'▾';color:var(--muted)}
+.bt-detail[open ] summary::after{content:'▴'}
+.bt-detail-text{padding:0 12px 12px;font-size:14px;line-height:1.7}

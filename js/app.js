@@ -409,7 +409,7 @@ drawChart(a);
 renderStrategyCard(a);
 renderTech(a);
 if (state.aiByCode[a.code]) renderAI(a.code); else $('aiResult').textContent = '尚未進行 AI 分析。AI 只解讀既有數據，不得捏造價格或改寫交易價位。';
-$('historyResult').textContent = a._history? renderHistoryText(a): '還沒算過。按上面的按鈕，看這檔以前出現強勢訊號時，後來通常漲還是跌。';
+if (a._history) renderHistory(a); else $('historyResult').textContent = '還沒算過。按上面的按鈕，看這檔以前出現強勢訊號時，後來通常漲還是跌。';
 renderNews(a.code);
 if (!state.newsStatus[a.code]) fetchNews(a); // 首次選到就自動嘗試載入新聞（失敗會顯示外部搜尋連結，不再假裝查無）
 // 手機：點卡片／查詢後把明細帶到眼前（扣掉置頂操作列高度）
@@ -734,6 +734,35 @@ if (h.direct.days) { s += `\n直接買（狀態：接近進場・突破觀察）
 if (h.wait.signalDays) { s += `\n等回檔才買（狀態：等待回檔）｜共 ${h.wait.signalDays} 個訊號日，等到 ${h.wait.filled} 個，成交率 ${fmt(h.wait.fillRate, 1)}%`; const r = rows('wait'); if (r.length) s += '\n' + r.join('\n'); }
 return s + '\n' + foot;
 }
+// 卡片式總覽：數字全取自同一份 historyStats 輸出；完整文字明細收進摺疊區（renderHistoryText 原樣）
+function renderHistory(a) {
+const el = $('historyResult');
+const h = a._history;
+if (!h.days) { el.textContent = '過去沒有達到過這套條件的紀錄（條件太嚴或歷史不足），可換較寬的風格再看。'; return; }
+const hs = a._historyHorizons || [5, 10, 20];
+const lastH = hs[hs.length - 1];
+// 成交率＝實際有買到的筆數（直接買日數＋等回檔成交數）／全部訊號日；無等回檔組時恆為 100%
+const fillRate = (h.direct.days + h.wait.filled) / h.days * 100;
+const bigPct = g => (h[g][lastH] && h[g][lastH].count > 0) ? fmt(h[g][lastH].upRatio, 1) + '%' : '—';
+let cmp = '';
+if (h.direct.days) cmp += `<div class="bt-cmp-card"><div class="bt-cmp-name">直接買進</div><div class="bt-cmp-num">${bigPct('direct')}</div><div class="bt-cmp-cap">${lastH} 日正報酬比例</div></div>`;
+if (h.wait.signalDays) cmp += h.wait.filled
+? `<div class="bt-cmp-card"><div class="bt-cmp-name">等待回檔</div><div class="bt-cmp-num">${bigPct('wait')}</div><div class="bt-cmp-cap">${lastH} 日正報酬比例</div></div>`
+: `<div class="bt-cmp-card"><div class="bt-cmp-name">等待回檔</div><div class="bt-cmp-num">—</div><div class="bt-cmp-cap">無成交</div></div>`;
+const cmpCls = (h.direct.days ? 1 : 0) + (h.wait.signalDays ? 1 : 0) === 1 ? 'bt-cmp one' : 'bt-cmp';
+const cell = (g, k) => { const s = h[g][k]; if (!s || !s.count) return '<td>—</td>'; const cls = s.avgRet > 0 ? 'bt-pos' : s.avgRet < 0 ? 'bt-neg' : ''; return `<td class="${cls}">${fmtSign(s.avgRet)}%</td>`; };
+const rowsHtml = hs.map(k => `<tr><td class="bt-l">${k} 天</td>${cell('direct', k)}${cell('wait', k)}</tr>`).join('');
+el.innerHTML =
+`<div class="bt-title">策略回測總覽</div>`
++ `<div class="bt-stats"><div class="bt-stat"><span class="bt-stat-label">訊號波次</span><span class="bt-stat-num">${h.waves}</span></div>`
++ `<div class="bt-stat"><span class="bt-stat-label">進場日</span><span class="bt-stat-num">${h.days}</span></div>`
++ `<div class="bt-stat"><span class="bt-stat-label">成交率</span><span class="bt-stat-num rate">${fmt(fillRate, 1)}<span class="bt-unit">%</span></span></div></div>`
++ `<div class="bt-sec"><div class="bt-sec-title">不同進場方式比較</div><div class="${cmpCls}">${cmp}</div></div>`
++ `<div class="bt-sec"><div class="bt-sec-title">持有期間比較<span class="bt-sec-note">平均報酬率</span></div>`
++ `<table class="bt-table"><thead><tr><th class="bt-l">持有</th><th>直接買進</th><th>等待回檔</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`
++ `<details class="bt-detail"><summary>完整統計明細</summary><div class="bt-detail-text"></div></details>`;
+el.querySelector('.bt-detail-text').textContent = renderHistoryText(a);
+}
 async function runHistory() {
 if (!state.selected ||!state.selectedStock) { alert('請先選取股票'); return;}
 if (state.busy) return noteBusy();
@@ -744,7 +773,7 @@ const period = (a.strat && a.strat.period) || a.period || '短線';
 const horizons = HISTORY_HORIZONS[period] || [5, 10, 20];
 // 記下本次計算用的條件；門檻或週期變了就重算，避免拿舊條件的結果誤讀
 const sig = [condName, o.minTech, o.minEntry, o.minAvgAmountM, period, o.periodMode].join('|');
-if (a._history && a._historySig === sig) { $('historyResult').textContent = renderHistoryText(a); return;}
+if (a._history && a._historySig === sig) { renderHistory(a); return;}
 setBusy(true); setProgress(15, '載入完整 10 年歷史…');
 $('historyResult').textContent = '計算中…（會翻最長 10 年歷史，稍等一下）';
 state.selectedStock = await ensureFullHistory(state.selectedStock);
@@ -753,7 +782,7 @@ await new Promise(r => setTimeout(r, 30));
 try { a._history = TWCore.historyStats(state.selectedStock, { minTech: o.minTech, minEntry: o.minEntry, minAvgAmountM: o.minAvgAmountM, horizons, periodMode: o.periodMode });
 a._historyCond = { name: condName, tech: o.minTech, entry: o.minEntry, period };
 a._historyHorizons = horizons; a._historySig = sig;
-$('historyResult').textContent = renderHistoryText(a); setProgress(100, '歷史統計完成'); log(`歷史訊號統計完成 ${a.code}（${state.selectedStock.bars.close.length} 筆日線，條件：${condName} 技術≥${o.minTech} 進場≥${o.minEntry}，週期 ${period}）`);}
+renderHistory(a); setProgress(100, '歷史統計完成'); log(`歷史訊號統計完成 ${a.code}（${state.selectedStock.bars.close.length} 筆日線，條件：${condName} 技術≥${o.minTech} 進場≥${o.minEntry}，週期 ${period}）`);}
 catch (e) { log('歷史統計失敗：' + e.message);}
 finally { setBusy(false);}
 }
