@@ -338,7 +338,9 @@ function renderList() {
   if (!list.length) {
     empty.classList.remove('hidden');
     const st = state.lastStats;
-    if (st && st.scanned === 0 && st.typeExcluded > 0) {
+    if (st && st.scanned === 0 && st.qualityBad > 0 && st.qualityBad >= st.typeExcluded && st.qualityBad >= st.historyShort) {
+      empty.textContent = '多數股票的資料日期不一致，今天的更新未完成，請稍後再試或等待今晚自動更新修復。';
+    } else if (st && st.scanned === 0 && st.typeExcluded > 0) {
       empty.textContent = `目前這批資料的 ${st.typeExcluded} 檔全是代號 00 開頭的 ETF／ETN，而你沒有勾選「納入 ETF 推薦」，所以實際掃描 0 檔、名單為空。勾選「納入 ETF」後重新掃描就會有結果；一般股票（代號 1101 起）會隨後端回補進度陸續加入（回補依代號順序進行中）。`;
     } else {
       empty.textContent = '目前名單是空的。可能原因：門檻過高、資料不足或最新日期不一致。可到「選股設定」改點「積極進場」或「全部探索」、放寬成交額、勾選納入 ETF，或先補齊歷史資料。系統不會為了湊數放寬標準。';

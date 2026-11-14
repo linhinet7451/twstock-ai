@@ -241,14 +241,25 @@
   function scan(stocks, opts) {
     const o = Object.assign({ topN: 10, minTech: 65, minAvgAmountM: 10, minEntry: 45, includeETF: false, periodMode: '自動判斷', sortMode: '綜合模式' }, opts);
     const stats = { scanned: 0, typeExcluded: 0, historyShort: 0, qualityBad: 0, amountLow: 0, techLow: 0, stratFail: 0, entryFail: 0 };
-    let latestDate = '';
-    for (const s of stocks) if (s.bars.dates.length) { const d = s.bars.dates[s.bars.dates.length - 1]; if (d > latestDate) latestDate = d; }
-    const candidates = [], watch = [], seen = new Set();
+    const candidates = [], watch = [], seen = new Set(), eligible = [];
     for (const s of stocks) {
       if (seen.has(s.code)) continue; seen.add(s.code);
       if (!o.includeETF && isETF(s.code)) { stats.typeExcluded++; continue; }
+      if (s.bars.close.length < 125) { stats.historyShort++; continue; } // #98
+      eligible.push(s);
+    }
+    // #145 日期一致性（2026-11-14 穩健化修正）：參考日期改採通過代號/歷史長度
+    // 關卡股票最後日期的眾數，不再用全體最大值。部分更新時，多數股票仍可正常
+    // 掃描；少數超前/落後者仍計入 qualityBad，保留資料一致性的檢查精神。
+    const dateCounts = new Map();
+    for (const s of eligible) {
+      const d = s.bars.dates[s.bars.dates.length - 1];
+      if (d) dateCounts.set(d, (dateCounts.get(d) || 0) + 1);
+    }
+    let latestDate = '', latestCount = -1;
+    for (const [d, n] of dateCounts) if (n > latestCount || (n === latestCount && d > latestDate)) { latestDate = d; latestCount = n; }
+    for (const s of eligible) {
       const b = s.bars;
-      if (b.close.length < 125) { stats.historyShort++; continue; } // #98
       // 資料品質 (#146)：日期重複/逆序、OHLCV 無效、最新兩筆相隔 >12 日
       let bad = false;
       for (let i = 1; i < b.dates.length; i++) if (b.dates[i] <= b.dates[i - 1]) { bad = true; break; }
