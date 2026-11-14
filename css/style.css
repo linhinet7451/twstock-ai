@@ -21,6 +21,10 @@ h1{font-size:19px;margin:0}
 .preset-btns .btn .p-sub{display:block;font-size:10.5px;font-weight:400;opacity:.78;margin-top:1px}
 .btn.preset.active .p-sub{opacity:1}
 .tech-head{font-size:15px;font-weight:700;margin-bottom:2px}
+.tech-legend{font-size:12.5px;color:var(--muted);margin-bottom:4px;line-height:1.5}
+td.lvrow{display:none}
+.vlag{font-size:12px;color:var(--warn);font-weight:400;white-space:normal}
+.vlag-note{color:var(--warn);font-size:13.5px;margin:2px 0 4px}
 .tech-sub{border:1px solid var(--line);border-radius:8px;margin-top:8px;padding:7px 10px;background:#0d1a2c}
 .tech-sub summary{cursor:pointer;font-weight:700;font-size:14px}
 .tech-sub .ts-body{white-space:pre-wrap;line-height:1.7;margin-top:6px;font-size:14px}
@@ -151,5 +155,7 @@ dialog td,dialog th{white-space:normal;text-align:left}
   td.tg::before{content:''}
   /* 卡片上的關鍵價位放大，一眼看到進場／停損／目標 */
   #resultBody td[data-label="進場區間"],#resultBody td[data-label="停損"],#resultBody td[data-label="目標1 / 目標2"]{font-size:16.5px;font-weight:700}
+  /* 卡片第一層加一整列小字停損・目標一（全寬不折行，高度只多一行） */
+  td.lvrow{display:block;grid-column:1/-1;font-size:13px;line-height:1.25;padding:1px 8px;color:var(--muted)}
   .table-wrap{max-height:none;border:none}
 }

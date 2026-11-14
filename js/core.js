@@ -22,6 +22,17 @@
     for (let i = p; i < v.length; i++) { prev = v[i] * k + prev * (1 - k); out[i] = prev; }
     return out;
   }
+  // 移除價格全 0 的無成交佔位列（close<=0）：避免污染 low60→支撐→停損/目標計算。
+  // 各陣列同步過濾；amount 可能不存在需防呆；無零列時直接回傳原物件。
+  function filterBars(b) {
+    if (!b || !b.close || !b.close.some(c => !(c > 0))) return b;
+    const keep = [];
+    for (let i = 0; i < b.close.length; i++) if (b.close[i] > 0) keep.push(i);
+    const pick = arr => arr ? keep.map(i => arr[i]) : arr;
+    const out = { dates: pick(b.dates), open: pick(b.open), high: pick(b.high), low: pick(b.low), close: pick(b.close), volume: pick(b.volume) };
+    if (b.amount) out.amount = pick(b.amount);
+    return out;
+  }
   function tickSize(price) { // #118 台股升降單位
     if (price < 10) return 0.01; if (price < 50) return 0.05; if (price < 100) return 0.1;
     if (price < 500) return 0.5; if (price < 1000) return 1; return 5;
@@ -229,6 +240,7 @@
       date: stock.bars.dates[n - 1], close: c[n - 1], change: chg,
       changePct: n >= 2 && c[n - 2] ? chg / c[n - 2] * 100 : 0,
       techScore: score, hit, miss, ind, strat,
+      vlag: strat.target1 > c[n - 1] * 1.5,
       entryScore: strat.entryScore, status: strat.status, period: strat.period, type: strat.type,
       avgAmount20M: ind.avgAmount20M, volRatio: ind.volRatio,
       reason: '',
@@ -245,8 +257,9 @@
     for (const s of stocks) {
       if (seen.has(s.code)) continue; seen.add(s.code);
       if (!o.includeETF && isETF(s.code)) { stats.typeExcluded++; continue; }
-      if (s.bars.close.length < 125) { stats.historyShort++; continue; } // #98
-      eligible.push(s);
+      const b = filterBars(s.bars);
+      if (b.close.length < 125) { stats.historyShort++; continue; } // #98（濾除零價佔位列後計）
+      eligible.push({ code: s.code, name: s.name, market: s.market, isDemo: s.isDemo, bars: b });
     }
     // #145 日期一致性（2026-11-14 穩健化修正）：參考日期改採通過代號/歷史長度
     // 關卡股票最後日期的眾數，不再用全體最大值。部分更新時，多數股票仍可正常
@@ -268,7 +281,7 @@
         if (gap > 12) bad = true;
       }
       if (!bad) for (let i = 0; i < b.close.length; i++) {
-        if (!(b.high[i] >= b.low[i] && b.high[i] >= b.open[i] && b.high[i] >= b.close[i] && b.low[i] <= b.open[i] && b.low[i] <= b.close[i] && b.volume[i] >= 0)) { bad = true; break; }
+        if (!(b.close[i] > 0 && b.high[i] >= b.low[i] && b.high[i] >= b.open[i] && b.high[i] >= b.close[i] && b.low[i] <= b.open[i] && b.low[i] <= b.close[i] && b.volume[i] >= 0)) { bad = true; break; }
       }
       if (bad) { stats.qualityBad++; continue; }
       if (b.dates[b.dates.length - 1] !== latestDate) { stats.qualityBad++; continue; } // #145 日期一致性
@@ -276,12 +289,23 @@
       let a = null;
       try { a = analyze({ code: s.code, name: s.name, market: s.market, isDemo: s.isDemo, bars: trimBars(b, 360) }, o.periodMode); } catch (e) { a = null; }
       if (!a) { stats.stratFail++; continue; }
+      // 策略防線：停損非正值或目標未高於進場下限者，視為資料/策略異常，不進候選也不進觀察
+      if (!(a.strat.stop > 0) || !(a.strat.target1 > a.strat.entryLow)) { stats.qualityBad++; continue; }
       if (a.avgAmount20M == null || a.avgAmount20M < o.minAvgAmountM) { stats.amountLow++; continue; }
       if (a.techScore < o.minTech) { stats.techLow++; continue; }
       const priceOk = a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
       const ok = a.entryScore >= o.minEntry && a.status !== '條件失效' && a.status !== '暫不追價' && priceOk && a.strat.rr >= 1.5; // #138-139
       if (ok) { a.reason = `技術 ${a.techScore} 分、進場適合度 ${a.entryScore} 分、風報 1:${a.strat.rr.toFixed(2)}，狀態「${a.status}」`; candidates.push(a); }
-      else { a.reason = `技術強勢（${a.techScore} 分），但${a.entryScore < o.minEntry ? '進場適合度 ' + a.entryScore + ' 未達 ' + o.minEntry : a.strat.rr < 1.5 ? '風報比 1:' + a.strat.rr.toFixed(2) + ' 未達 1.5' : '狀態「' + a.status + '」待觀察'}`; watch.push(a); stats.entryFail++; }
+      else {
+        let why;
+        if (a.entryScore < o.minEntry) why = `進場適合度 ${a.entryScore} 未達 ${o.minEntry}`;
+        else if (a.strat.rr < 1.5) why = `目標空間不足（風報比 1:${a.strat.rr.toFixed(2)} 未達 1.5）`;
+        else if (a.status === '暫不追價') why = '漲多離進場區太遠，先等回檔';
+        else if (a.status === '條件失效') why = '進場條件已失效';
+        else why = `狀態「${a.status}」，等進場區間到位`;
+        a.reason = '技術 ' + a.techScore + ' 分，' + why;
+        watch.push(a); stats.entryFail++;
+      }
     }
     const liqScore = a => Math.min(100, Math.max(0, Math.log10(Math.max(a.avgAmount20M || 1, 1)) * 50));
     const rrScore = a => Math.min(100, a.strat.rr / 3 * 100);
@@ -320,7 +344,7 @@
     return out;
   }
 
-  const api = { sma, ema, tickSize, roundTick, computeIndicators, scoreTech, buildStrategy, analyze, scan, historyStats, isETF, trimBars, SIGNAL_DEFS };
+  const api = { sma, ema, tickSize, roundTick, filterBars, computeIndicators, scoreTech, buildStrategy, analyze, scan, historyStats, isETF, trimBars, SIGNAL_DEFS };
   global.TWCore = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -85,14 +85,28 @@ def get_stock_list(token: str) -> list[dict]:
     return out
 
 
+def clean_rows(rows) -> list:
+    cleaned = []
+    for r in rows or []:
+        try:
+            if len(r) >= 5 and r[4] > 0:
+                cleaned.append(r)
+        except (TypeError, IndexError):
+            continue
+    return cleaned
+
+
 def rows_from_prices(data: list[dict]) -> list[list]:
     rows = []
     for r in data:
         try:
+            close = float(r["close"])
+            if close <= 0:
+                continue
             rows.append([
                 r["date"],
                 round(float(r["open"]), 2), round(float(r["max"]), 2),
-                round(float(r["min"]), 2), round(float(r["close"]), 2),
+                round(float(r["min"]), 2), round(close, 2),
                 int(float(r["Trading_Volume"])), int(float(r["Trading_money"])),
             ])
         except (KeyError, TypeError, ValueError):
@@ -104,7 +118,7 @@ def merge_rows(old: list[list], new: list[list]) -> list[list]:
     by_date = {r[0]: r for r in old}
     for r in new:
         by_date[r[0]] = r
-    return [by_date[d] for d in sorted(by_date)]
+    return clean_rows([by_date[d] for d in sorted(by_date)])
 
 
 def _num(value) -> float | None:
@@ -309,7 +323,7 @@ class Store:
             return None
 
     def write_stock(self, code: str, name: str, market: str, rows: list[list]):
-        payload = {"code": code, "name": name, "market": market, "rows": rows}
+        payload = {"code": code, "name": name, "market": market, "rows": clean_rows(rows)}
         raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         with gzip.open(self.stock_file(code), "wb", compresslevel=9) as f:
             f.write(raw)
@@ -485,9 +499,12 @@ def build_bundle(store: Store) -> dict:
     latest = ""
     for p in sorted(store.hist.glob("*.json.gz")):
         s = store.read_stock(p.name.replace(".json.gz", ""))
-        if not s or len(s.get("rows", [])) < MIN_SCAN_ROWS:
+        if not s:
             continue
-        rows = s["rows"][-SCAN_DAYS:]
+        cleaned = clean_rows(s.get("rows", []))
+        if len(cleaned) < MIN_SCAN_ROWS:
+            continue
+        rows = cleaned[-SCAN_DAYS:]
         stocks.append({"c": s["code"], "n": s["name"], "m": s["market"], "r": rows})
         if rows and rows[-1][0] > latest:
             latest = rows[-1][0]
@@ -542,11 +559,22 @@ def cmd_selftest(store: Store) -> int:
         return [[(base + timedelta(days=i)).isoformat(), 10, 10.5, 9.5, 10.2, 1000, 10200] for i in range(n)]
     store.write_stock("9999", "測試股", "TWSE", fake_rows(130))
     store.write_stock("9998", "短歷史", "TWSE", fake_rows(100))
+    # close=0 污染列應在寫入端被濾除：140 筆含 15 筆 close=0 → 回讀 125 筆且無 close<=0
+    dirty_rows = fake_rows(140)
+    for _idx in [i * 9 for i in range(15)]:
+        dirty_rows[_idx][4] = 0
+    assert len(dirty_rows) == 140 and sum(1 for r in dirty_rows if r[4] == 0) == 15
+    store.write_stock("9997", "污染測試股", "TWSE", dirty_rows)
+    back_9997 = store.read_stock("9997")
+    assert back_9997 is not None and len(back_9997["rows"]) == 125, back_9997 and len(back_9997["rows"])
+    assert all(r[4] > 0 for r in back_9997["rows"]), back_9997["rows"]
     man = build_bundle(store)
-    assert man["scanStocks"] == 1 and man["stockCount"] == 2, man
+    assert man["scanStocks"] == 2 and man["stockCount"] == 3, man
     with gzip.open(store.dir / "scan.json.gz", "rb") as f:
         payload = json.loads(f.read().decode("utf-8"))
-    assert payload["stocks"][0]["c"] == "9999" and len(payload["stocks"][0]["r"]) == 130
+    by_code = {s["c"]: s for s in payload["stocks"]}
+    assert by_code["9999"]["c"] == "9999" and len(by_code["9999"]["r"]) == 130
+    assert len(by_code["9997"]["r"]) == 125 and all(r[4] > 0 for r in by_code["9997"]["r"]), by_code.get("9997")
     log("selftest OK")
     return 0
 

@@ -12,6 +12,8 @@ const state = {
   selected: null,          // 目前選取的分析結果
   selectedStock: null,
   newsByCode: {},          // code -> [{title, source, date, link}]
+  newsStatus: {},          // code -> 'loading' | 'ok' | 'error'（區分「查到 0 篇」與「根本沒查成」）
+  backendLoading: false,   // 後端資料包載入中（此時鎖查詢，避免命中 IndexedDB 舊資料）
   aiByCode: {},            // code -> Gemini 結構化結果（僅記憶體, #239）
   stopFlag: false,
   busy: false,
@@ -164,14 +166,31 @@ function parseCSV(text) {
 }
 
 // ---------- 後端資料包自動載入（GitHub Actions 排程更新 → data/ 靜態檔案） ----------
-async function fetchGzipJson(url) {
+async function fetchGzipJson(url, onProgress) {
   const resp = await fetch(url, { cache: 'no-store' });
   if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + url);
-  if (typeof DecompressionStream !== 'undefined' && resp.body) {
-    const stream = resp.body.pipeThrough(new DecompressionStream('gzip'));
-    return JSON.parse(await new Response(stream).text());
+  if (typeof DecompressionStream === 'undefined' || !resp.body) {
+    throw new Error('瀏覽器不支援 gzip 解壓（DecompressionStream），請更新瀏覽器');
   }
-  throw new Error('瀏覽器不支援 gzip 解壓（DecompressionStream），請更新瀏覽器');
+  let stream = resp.body;
+  if (onProgress) { // 串流計量下載進度：Content-Length 拿不到總長時只報已下載 MB
+    const total = +resp.headers.get('Content-Length') || 0;
+    const reader = stream.getReader();
+    let loaded = 0, lastShown = -1;
+    stream = new ReadableStream({
+      async pull(ctrl) {
+        const { done, value } = await reader.read();
+        if (done) { ctrl.close(); return; }
+        loaded += value.byteLength;
+        const pct = total ? Math.floor(loaded / total * 100) : -1;
+        if (pct !== lastShown) { lastShown = pct; onProgress(loaded, total); }
+        ctrl.enqueue(value);
+      },
+      cancel(r) { reader.cancel(r); },
+    });
+  }
+  const pipe = stream.pipeThrough(new DecompressionStream('gzip'));
+  return JSON.parse(await new Response(pipe).text());
 }
 function rowsToStock(code, name, market, rows) {
   return { code, name, market, isDemo: false, bars: {
@@ -181,12 +200,19 @@ function rowsToStock(code, name, market, rows) {
 let backendLoaded = false;
 async function loadBackendData(autoScanAfter) {
   const statusEl = $('backendStatus');
+  state.backendLoading = true;
+  $('btnQuery').disabled = true; // 載入完成前鎖查詢，避免命中 IndexedDB 還原的舊資料
   try {
     statusEl.textContent = '後端資料：載入中…';
     const man = await (await fetch('data/manifest.json', { cache: 'no-store' })).json();
     if (!man || !man.scanFile) throw new Error('manifest 格式不正確');
-    setProgress(15, `下載後端掃描包（${man.scanStocks} 檔，${(man.scanBytes / 1048576).toFixed(1)} MB）…`);
-    const bundle = await fetchGzipJson('data/' + man.scanFile);
+    const totalMB = (man.scanBytes / 1048576).toFixed(1);
+    setProgress(15, `下載後端掃描包（${man.scanStocks} 檔，${totalMB} MB）…`);
+    const bundle = await fetchGzipJson('data/' + man.scanFile, (loaded, total) => {
+      const mb = (loaded / 1048576).toFixed(1);
+      if (total > 0) setProgress(15 + Math.round(loaded / total * 70), `下載後端掃描包：已下載 ${mb}／${totalMB} MB（${Math.round(loaded / total * 100)}%）`);
+      else setProgress(50, `下載後端掃描包：已下載 ${mb} MB…`);
+    });
     const backendStocks = bundle.stocks.map(s => rowsToStock(s.c, s.n, s.m, s.r));
     const csvOnly = state.realStocks.filter(s => !backendStocks.some(b => b.code === s.code));
     state.realStocks = backendStocks.concat(csvOnly);
@@ -201,6 +227,9 @@ async function loadBackendData(autoScanAfter) {
     statusEl.textContent = '後端資料：尚未產生（repo 尚未執行資料回補）— 可先用下方示範資料或 CSV 匯入。';
     log('後端資料載入失敗（可能尚未回補）：' + e.message);
     return false;
+  } finally {
+    state.backendLoading = false;
+    $('btnQuery').disabled = false;
   }
 }
 const fullHistoryCache = {};
@@ -283,10 +312,24 @@ async function runScan() {
     state.results.candidates = res.allCandidates.slice(0, scanOpts().topN);
     state.results.watch = res.watch;
     // 頂端統計改一句摘要：已掃描＝實際計分檔數、推薦＝實際推薦（topN 截斷後）、觀察＝技術強勢觀察名單
-    $('sumLine').textContent = `已掃描 ${res.stats.scanned} 檔｜推薦 ${state.results.candidates.length} 檔｜觀察 ${res.watch.length} 檔`;
+    // 有排除時同句補人話說明（保持一行）：未納入的 ETF 與資料不全檔數
+    const exclParts = [];
+    if (res.stats.typeExcluded) exclParts.push(`ETF ${res.stats.typeExcluded} 檔`);
+    if (res.stats.qualityBad + res.stats.historyShort) exclParts.push(`資料不全 ${res.stats.qualityBad + res.stats.historyShort} 檔`);
+    $('sumLine').textContent = `已掃描 ${res.stats.scanned} 檔｜推薦 ${state.results.candidates.length} 檔｜觀察 ${res.watch.length} 檔` +
+      (exclParts.length ? `（未納入：${exclParts.join('、')}）` : '');
     state.scanDone = true; updateScanLabel(); updateCompactInfo();
     log(`掃描完成｜掃描 ${res.stats.scanned} 檔，排除統計：代號類型 ${res.stats.typeExcluded}、歷史不足 ${res.stats.historyShort}、資料品質 ${res.stats.qualityBad}、成交額不足 ${res.stats.amountLow}、技術分不足 ${res.stats.techLow}、策略失敗 ${res.stats.stratFail}、進場未達 ${res.stats.entryFail}`);
-    setProgress(100, `掃描完成：推薦 ${state.results.candidates.length} 檔、觀察 ${res.watch.length} 檔（最新日期 ${res.latestDate}）`);
+    if (!res.allCandidates.length && res.stats.scanned > 0) {
+      // 推薦 0 檔：指名下一檔較寬的預設，讓使用者知道下一步點哪顆
+      const order = ['strict', 'steady', 'active', 'all'];
+      const curKey = Object.keys(PRESETS).find(k => PRESETS[k].label === state.presetLabel);
+      if (curKey && curKey !== 'all') setProgress(100, `「${state.presetLabel}」今天沒有符合的股票，可試試「${PRESETS[order[order.indexOf(curKey) + 1]].label}」`);
+      else if (curKey === 'all') setProgress(100, '今天沒有符合的股票；盤勢偏弱時這是正常現象，系統不會為了湊數放寬標準。');
+      else setProgress(100, '目前門檻下今天沒有符合的股票，可點上方選股風格放寬條件。');
+    } else {
+      setProgress(100, `掃描完成：推薦 ${state.results.candidates.length} 檔、觀察 ${res.watch.length} 檔（最新日期 ${res.latestDate}）`);
+    }
     $('selList').value = 'candidates';
     renderList();
   } catch (e) { log('掃描失敗：' + e.message); setProgress(0, '掃描失敗'); }
@@ -323,10 +366,14 @@ function renderList() {
       ['進場適合度', `<span class="${scoreCls(a.entryScore)}">${a.entryScore}</span>`],
       ['距離進場%', fmtSign(a.strat.distPct) + '%'], ['狀態', `<span class="badge ${statusBadgeCls(a.status)}">${a.status}</span>`], ['週期', a.period], ['策略', a.type],
       ['進場區間', `${fmt(a.strat.entryLow)}～${fmt(a.strat.entryHigh)}`], ['停損', fmt(a.strat.stop)],
-      ['目標1 / 目標2', `${fmt(a.strat.target1)} / ${fmt(a.strat.target2)}`],
+      ['目標1 / 目標2', `${fmt(a.strat.target1)} / ${fmt(a.strat.target2)}${a.vlag ? '<div class="vlag">波段大漲後回落，目標僅供參考</div>' : ''}`],
       ['風險報酬', '1 : ' + fmt(a.strat.rr)], ['推薦／觀察原因', a.reason],
     ];
     tr.innerHTML = cells.map(([label, v], ci) => `<td data-label="${label}" class="${ci === 18 ? 'reason ' : ''}${CARD_KEY.includes(ci) ? 'k' : 'x'}">${v}</td>`).join('');
+    const lv = document.createElement('td'); // 手機卡第一層一小列：停損・目標一（桌面隱藏，表格已有專欄）
+    lv.className = 'lvrow';
+    lv.innerHTML = `<span class="stop-txt">停損 ${fmt(a.strat.stop)}</span>・<span class="target-txt">目標一 ${fmt(a.strat.target1)}</span>`;
+    tr.appendChild(lv);
     const tg = document.createElement('td');
     tg.className = 'tg'; tg.textContent = '▾ 展開全部欄位';
     tg.addEventListener('click', ev => { ev.stopPropagation(); const open = tr.classList.toggle('open'); tg.textContent = open ? '▴ 收合欄位' : '▾ 展開全部欄位'; });
@@ -364,6 +411,7 @@ renderTech(a);
 if (state.aiByCode[a.code]) renderAI(a.code); else $('aiResult').textContent = '尚未進行 AI 分析。AI 只解讀既有數據，不得捏造價格或改寫交易價位。';
 $('historyResult').textContent = a._history? renderHistoryText(a): '尚未計算。這是固定交易日後的歷史訊號統計（技術分 ≥70），不是完整逐筆回測。';
 renderNews(a.code);
+if (!state.newsStatus[a.code]) fetchNews(a); // 首次選到就自動嘗試載入新聞（失敗會顯示外部搜尋連結，不再假裝查無）
 // 手機：點卡片／查詢後把明細帶到眼前（扣掉置頂操作列高度）
 if (scroll && window.innerWidth <= 900) {
   const tabs = $('detailTabs'), bar = document.querySelector('.action-bar');
@@ -394,22 +442,54 @@ for (let g = 0; g < 5; g++) { const v = lo + (hi - lo) * g / 4, y = Y(v); ctx.be
 for (let g = 0; g < 5; g++) { const i = Math.round((n - 1) * g / 4); const label = dates[i].slice(5); ctx.fillText(label, Math.max(34, Math.min(X(i) - 14, W - 10 - label.length * 7)), H - 6);}
 const lines = [[s.entryLow, '#38bdf8', '進場下緣'], [s.entryHigh, '#38bdf8', '進場上緣'], [s.stop, '#ff5252', '停損'], [s.target1, '#35c759', '目標1'], [s.target2, '#a3e635', '目標2']];
 ctx.setLineDash([5, 4]);
-let edgeTop = 0, edgeBot = 0;
-for (const [v, color, name] of lines) {
-  ctx.strokeStyle = color;
-  if (v >= lo && v <= hi) { ctx.beginPath(); ctx.moveTo(34, Y(v)); ctx.lineTo(W - 10, Y(v)); ctx.stroke(); }
-  else { // 超出圖表範圍：在邊緣畫短線＋標籤（同側多條時逐條錯開避免重疊），資訊不消失、刻度不被拉歪
-    const yEdge = v > hi ? 30 + (edgeTop++) * 14 : H - 36 - (edgeBot++) * 14;
-    ctx.beginPath(); ctx.moveTo(34, yEdge); ctx.lineTo(W - 10, yEdge); ctx.stroke();
-    ctx.fillStyle = color; ctx.fillText(`${name} ${v.toFixed(1)}`, W - 108, yEdge + (v > hi ? 12 : -4)); ctx.fillStyle = '#9db8d8';
-  }
-}
+// 先決定每條價位線的 y：範圍內用實際位置；超出範圍在邊緣畫短線，同側多條逐條錯開
+let stubTop = 0, stubBot = 0;
+const jobs = lines.map(([v, color, name]) => {
+  const inR = v >= lo && v <= hi;
+  const yLine = inR ? Y(v) : (v > hi ? 28 + (stubTop++) * 7 : H - 34 - (stubBot++) * 7);
+  return { v, color, name, yLine, y: yLine };
+});
+for (const j of jobs) { ctx.strokeStyle = j.color; ctx.beginPath(); ctx.moveTo(34, j.yLine); ctx.lineTo(W - 10, j.yLine); ctx.stroke(); }
 ctx.setLineDash([]);
 ctx.strokeStyle = closes.at(-1) >= closes[0]? '#2dd4bf': '#ff8a80'; ctx.lineWidth = 1.8; ctx.beginPath();
 closes.forEach((v, i) => i? ctx.lineTo(X(i), Y(v)): ctx.moveTo(X(i), Y(v))); ctx.stroke(); ctx.lineWidth = 1;
+// 標籤防重疊布局：全部標籤右對齊畫布右緣，y 強制最小間距 13px 並夾回圖表區，被推離原位的加引導線指回價位線
+jobs.sort((a, b) => a.y - b.y);
+for (let i = 1; i < jobs.length; i++) if (jobs[i].y < jobs[i - 1].y + 13) jobs[i].y = jobs[i - 1].y + 13;
+const overBot = jobs[jobs.length - 1].y - (H - 28);
+if (overBot > 0) for (const j of jobs) j.y -= overBot;
+if (jobs[0].y < 26) { const sh = 26 - jobs[0].y; for (const j of jobs) j.y += sh; }
+ctx.textAlign = 'right';
+for (const j of jobs) {
+  const text = `${j.name} ${j.v.toFixed(1)}`;
+  const tw = ctx.measureText(text).width;
+  if (Math.abs(j.y - j.yLine) > 3) { // 被推離原位才畫引導線指回價位線
+    ctx.strokeStyle = j.color; ctx.setLineDash([2, 2]);
+    ctx.beginPath(); ctx.moveTo(W - 14 - tw, j.y); ctx.lineTo(W - 10, j.yLine); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.fillStyle = '#10223b'; // 標籤底襯：遮掉穿過文字的虛線/價格線，字才看得清
+  ctx.fillRect(W - 15 - tw, j.y - 6, tw + 5, 14);
+  ctx.fillStyle = j.color;
+  ctx.fillText(text, W - 12, j.y + 4);
+}
+ctx.textAlign = 'left';
 const lx = X(n - 1), ly = Y(closes.at(-1));
 ctx.fillStyle = '#ffd54f'; ctx.beginPath(); ctx.arc(lx - 2, ly, 4, 0, 7); ctx.fill();
-ctx.fillText(closes.at(-1).toFixed(2), Math.max(34, lx - 44), ly - 8);
+// 最新收盤標籤：在候選位置中挑第一個與所有價位標籤基線相距 ≥12px 的，都不行就挑最遠的
+const labelBase = jobs.map(j => j.y + 4);
+let closeY = ly - 8, closeScore = Math.min(...labelBase.map(b => Math.abs(b - closeY)));
+for (const cand of [ly - 8, ly + 16, ly - 22, ly + 28]) {
+  const d = Math.min(...labelBase.map(b => Math.abs(b - cand)));
+  if (d >= 12) { closeY = cand; closeScore = d; break; }
+  if (d > closeScore) { closeY = cand; closeScore = d; }
+}
+const closeText = closes.at(-1).toFixed(2);
+if (closeScore >= 8) { // 找不到乾淨位置就不畫：硬擠只會疊字，收盤價在下方策略卡有大字呈現
+  ctx.fillStyle = '#10223b';
+  ctx.fillRect(Math.max(34, lx - 46), closeY - 10, ctx.measureText(closeText).width + 4, 13);
+  ctx.fillStyle = '#ffd54f';
+  ctx.fillText(closeText, Math.max(34, lx - 44), closeY);
+}
 }
 function renderStrategyCard(a) {
 const s = a.strat, demo = a.isDemo? '虛構示範資料｜勿用於投資\n': '';
@@ -420,13 +500,13 @@ $('strategyCard').innerHTML =
 <div><span>進場狀態</span><b class="status-txt">${s.status}</b></div>
 <div><span>進場區間</span><b class="entry-txt">${fmt(s.entryLow)} ～ ${fmt(s.entryHigh)}</b></div>
 <div><span>停損價位</span><b class="stop-txt">${fmt(s.stop)}</b></div>
-<div><span>目標一／目標二</span><b class="target-txt">${fmt(s.target1)} / ${fmt(s.target2)}</b></div>
+<div><span>目標一／目標二</span><b class="target-txt">${fmt(s.target1)} / ${fmt(s.target2)}</b></div>${a.vlag ? '\n<div class="vlag-note">波段大漲後回落，目標僅供參考</div>' : ''}
 <div><span>距離進場區</span><b>${fmt(s.distPct)}%</b></div>
 <div><span>風險報酬比</span><b>1 : ${fmt(s.rr)}</b></div>
 <div><span>操作策略／持有期間</span><b>${s.period}／${s.holding}</b></div>
 <div><span>進場策略類型</span><b>${s.type}</b></div>
 </div>
-<div class="sc-notes">策略計算依據：${s.basis}
+<div class="sc-notes">策略計算依據：${s.basis}｜目標一以 1.8 倍風險估算，非預測
 進場觸發條件：${s.trigger}
 策略失效條件：${s.invalid}
 指標快覽：RSI ${fmt(a.ind.rsi14.at(-1), 1)}｜K ${fmt(a.ind.k.at(-1), 1)}／D ${fmt(a.ind.d.at(-1), 1)}｜量比 ${fmt(a.volRatio)}｜ATR ${fmt(a.ind.atr14.at(-1))}
@@ -438,6 +518,7 @@ const row = (k, v) => `${k}：${v == null || (typeof v === 'number' && isNaN(v))
 const sub = (title, body) => `<details class="tech-sub"><summary>${title}</summary><div class="ts-body">${body}</div></details>`;
 // 預設只顯示技術分與進場適合度；訊號／拆解／均線指標各自收合，點開才看
 $('techDetail').innerHTML =
+`<div class="tech-legend">MA＝均線（平均成本）・RSI＝熱度（70 以上偏熱）・ATR＝波動大小・乖離＝離均線遠近</div>` +
 `<div class="tech-head">技術分 ${a.techScore} / 100｜進場適合度 ${a.entryScore} / 100</div>` +
 sub(`成立訊號（${a.hit.length}）`, escapeHtml(a.hit.map(h => `${h.name} +${h.pts}`).join('、') || '無')) +
 sub(`未成立訊號（${a.miss.length}）`, escapeHtml(a.miss.map(h => `${h.name}（${h.pts} 分）`).join('、') || '無')) +
@@ -452,6 +533,7 @@ ${row('量比', ind.volRatio)}｜${row('近20日均成交額(百萬元)', ind.av
 // ---------- 個股查詢 (#162-174) ----------
 async function queryStock() {
 if (state.busy) return noteBusy();
+if (state.mode === 'real' && state.backendLoading) { setProgress(0, '後端資料載入中，請稍候再查詢'); return; }
 const q = $('inpQuery').value.trim();
 if (!q) { alert('請輸入股票代號或名稱'); return;}
 let pool = stocksNow();
@@ -467,21 +549,17 @@ const full = await ensureFullHistory({ code: q.padStart(4, '0'), isDemo: false }
 if (full && full.bars && full.bars.close.length) found = [full];
 }
 if (!found.length) {
-const market = confirm(`本機沒有「${q}」的資料。是否為上市（TWSE）股票並嘗試向官方補抓近期歷史？\n確定＝上市補抓／取消＝放棄（上櫃請改用 CSV 匯入）`);
-if (!market) return;
-const code = q.padStart(4, '0');
-setBusy(true); state.stopFlag = false;
-const months = Math.max(5, Math.ceil((+$('inpDays').value || 365) / 30));
-const rows = await fetchStockHistoryTWSE(code, months);
-setBusy(false);
-if (!rows) { alert('官方補抓失敗或無資料（可能受 CORS、休市或代號錯誤影響），請改用 CSV 匯入。'); log(`個股 ${code} 補抓失敗`); return;}
-const stock = { code, name: code, market: 'TWSE', isDemo: false, bars: { dates: rows.map(r => r.date), open: rows.map(r => r.open), high: rows.map(r => r.high), low: rows.map(r => r.low), close: rows.map(r => r.close), volume: rows.map(r => r.volume), amount: rows.map(r => r.amount)}};
-state.realStocks = state.realStocks.filter(s => s.code!== code).concat(stock);
-state.mode = 'real'; await persistReal(); refreshStatus();
-found = [stock];
-log(`個股 ${code} 補抓完成：${rows.length} 筆日線`);
+// 查無此代號/名稱：明講查無，並清掉舊的查詢結果顯示、回到掃描名單（不再留著上一筆誤導）
+// （舊版官方逐檔補抓同樣受 CORS 限制多半失敗，一併移除，改以此訊息收尾）
+state.results.custom = [];
+$('selList').value = 'candidates';
+renderList();
+setProgress(0, `查無「${q}」，請確認代號或名稱`);
+log(`個股查詢查無「${q}」`);
+return;
 }
-const stock = found[0];
+const foundStock = found[0];
+const stock = (typeof TWCore.filterBars === 'function') ? { ...foundStock, bars: TWCore.filterBars(foundStock.bars) } : foundStock;
 if (stock.bars.close.length < 125) { alert(`「${stock.code} ${stock.name}」歷史行情僅 ${stock.bars.close.length} 日，不足 125 日，無法完成技術分析。`); return;}
 let a = null;
 try { a = TWCore.analyze(stock, $('selPeriod').value);} catch (e) {}
@@ -496,18 +574,47 @@ fetchNews(a); // #173 自動取得新聞（不自動呼叫 Gemini #174）
 }
 
 // ---------- 新聞 (#211-220) ----------
+// 查因（2026-11-14）：Google News RSS 沒有 CORS 標頭，瀏覽器直連 fetch 必被擋下；
+// 舊版 catch 把結果設成 []，與「真的查到 0 篇」無法區分，才會沒查成卻顯示「查無近期新聞」。
+// 改版：newsStatus 區分 loading／ok／error，失敗顯示真實原因；不論成敗都附外部新聞搜尋
+// 連結（免金鑰可用、新分頁開啟），只有直連真的成功且 0 篇時才說查無。
+function newsLinksHtml(a) {
+const q = encodeURIComponent(`${a.code} ${a.name} 股票`);
+const links = [
+['Google 新聞', `https://news.google.com/search?q=${q}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant`],
+['Yahoo 股市', `https://tw.stock.yahoo.com/quote/${a.code}.${a.market === 'TPEX' ? 'TWO' : 'TW'}`],
+['鉅亨網', `https://www.cnyes.com/search/news?keyword=${encodeURIComponent(a.code)}`],
+['MoneyDJ', `https://www.moneydj.com/z/zc/zca/zca_${a.code}.djhtm`],
+];
+return '外部新聞搜尋（新分頁開啟）：' + links.map(([t, u]) => `<a target="_blank" rel="noopener" href="${u}">${t}</a>`).join('｜');
+}
+function newsTarget(code) {
+if (state.selected && state.selected.code === code) return state.selected;
+const stock = stocksNow().find(s => s.code === code) || state.realStocks.find(s => s.code === code) || state.demoStocks.find(s => s.code === code);
+return stock ? { code: stock.code, name: stock.name, market: stock.market } : { code, name: code, market: 'TWSE' };
+}
 function renderNews(code) {
+const a = newsTarget(code);
 const list = state.newsByCode[code];
-if (!list) { $('newsList').textContent = '尚未查詢新聞'; return;}
-if (!list.length) { $('newsList').innerHTML = `查無近期新聞（不得自行創造新聞）。<br><a target="_blank" rel="noopener" href="${googleNewsUrl(state.selected.name)}">在 Google 新聞開啟搜尋</a>`; return;}
+const status = state.newsStatus[code];
+const links = newsLinksHtml(a);
+if (list && list.length) {
 $('newsList').innerHTML = list.map(n =>
-`• <a target="_blank" rel="noopener" href="${n.link}">${escapeHtml(n.title)}</a>\n ${escapeHtml(n.source || '')}｜${n.date || ''}`).join('\n');
+`• <a target="_blank" rel="noopener" href="${n.link}">${escapeHtml(n.title)}</a>\n ${escapeHtml(n.source || '')}｜${n.date || ''}`).join('\n') + `\n\n${links}`;
+return;
+}
+if (status === 'error') { $('newsList').innerHTML = `即時新聞清單無法直接載入（新聞來源不允許跨網域讀取），這不代表沒有新聞，請用外部搜尋查看：\n${links}`; return;}
+if (status === 'ok') { $('newsList').innerHTML = `查詢完成：近 14 天沒有「${escapeHtml(a.name)}」的相關新聞。\n${links}`; return;}
+if (status === 'loading') { $('newsList').innerHTML = `新聞載入中…\n${links}`; return;}
+$('newsList').innerHTML = `尚未查詢新聞。\n${links}`;
 }
 function googleNewsUrl(name) { return 'https://news.google.com/search?q=' + encodeURIComponent(name + ' 股票') + '&hl=zh-TW&gl=TW&ceid=TW:zh-Hant';}
 function escapeHtml(s) { return String(s?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));}
 async function fetchNews(a) {
 const count = Math.max(1, Math.min(30, +$('inpNewsCount').value || 10));
 const since = Date.now() - 14 * 86400000;
+state.newsStatus[a.code] = 'loading';
+renderNews(a.code);
 try {
 const url = 'https://news.google.com/rss/search?q=' + encodeURIComponent(a.name + ' 股票') + '&hl=zh-TW&gl=TW&ceid=TW:zh-Hant';
 const txt = await (await fetch(url)).text();
@@ -522,10 +629,11 @@ items.push({ title, source: it.querySelector('source')?.textContent || '', date:
 if (items.length >= count) break;
 }
 state.newsByCode[a.code] = items;
+state.newsStatus[a.code] = 'ok';
 log(`新聞查詢 ${a.code} ${a.name}：${items.length} 篇`);
 } catch (e) {
-state.newsByCode[a.code] = [];
-log('新聞 RSS 直連失敗（多為 CORS 限制），已改提供 Google 新聞搜尋連結：' + e.message);
+state.newsStatus[a.code] = 'error'; // 不寫入空陣列：失敗與「查到 0 篇」必須分得開
+log('新聞 RSS 直連失敗（新聞來源不允許跨網域讀取），已改提供外部新聞搜尋連結：' + e.message);
 }
 renderNews(a.code);
 }
@@ -568,26 +676,35 @@ async function runAI(batch) {
 if (state.busy) return noteBusy();
 const list = batch? (state.results.candidates.length? state.results.candidates: currentList()): (state.selected? [state.selected]: []);
 if (!list.length) { alert('沒有可分析的股票'); return;}
+if (!$('inpApiKey').value.trim()) { // 未填金鑰先明講，不進忙碌狀態、不假裝完成
+setProgress(0, '請先輸入 Gemini API Key（在左側「③ Gemini 設定」）');
+log('Gemini 未執行：尚未輸入 API Key');
+return;
+}
 if (batch &&!confirm(`批次分析將對 ${list.length} 檔股票分別呼叫 Gemini API，可能產生費用。確定開始？`)) return;
 setBusy(true); state.stopFlag = false;
+let okCount = 0, lastErr = '';
 try {
 for (let i = 0; i < list.length; i++) {
 if (state.stopFlag) { log('批次 AI 已停止'); break;}
 setProgress(Math.round(i / list.length * 100), `Gemini 分析 ${list[i].code}（${i + 1}/${list.length}）…`);
-try { state.aiByCode[list[i].code] = await callGemini(list[i]); log(`Gemini 完成 ${list[i].code}`);}
+try { state.aiByCode[list[i].code] = await callGemini(list[i]); okCount++; log(`Gemini 完成 ${list[i].code}`);}
 catch (e) {
+lastErr = e.message;
 log(`Gemini 失敗 ${list[i].code}：${e.message}`);
 if (batch && [400, 401, 403, 429].includes(e.status)) { log('遇到 ' + e.status + '，依規則停止後續批次呼叫'); break;}
 if (!batch) alert(e.message);
 }
 }
-setProgress(100, 'AI 分析完成');
+// 成功提示只在真的成功時出現；全部失敗就顯示真實錯誤，不再跳「AI 分析完成」
+if (okCount) setProgress(100, batch ? `AI 分析完成（成功 ${okCount}/${list.length} 檔）` : 'AI 分析完成');
+else if (lastErr) setProgress(0, `AI 分析失敗：${lastErr}`);
 if (state.selected && state.aiByCode[state.selected.code]) renderAI(state.selected.code);
 } finally { setBusy(false);}
 }
 async function testGemini() {
 const key = $('inpApiKey').value.trim(), model = $('inpModel').value.trim();
-if (!key) { alert('請先輸入 Gemini API Key'); return;}
+if (!key) { alert('請先輸入 Gemini API Key'); setProgress(0, '請先輸入 Gemini API Key'); log('Gemini 測試未執行：尚未輸入 API Key'); return;}
 try {
 const j = await (await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(key))).json();
 const models = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes('generateContent'));
@@ -629,7 +746,7 @@ const rows = [['代號', '名稱', '市場', '日期', '收盤', '技術分', '�
 ...rec.map(a => [a.code, a.name, a.market, a.date, a.close, a.techScore, a.entryScore, a.status, a.period, a.type, `${a.strat.entryLow}~${a.strat.entryHigh}`, a.strat.stop, a.strat.target1, a.strat.target2, a.strat.rr, a.reason])];
 const csv = '\uFEFF' + rows.map(r => r.map(x => `"${String(x?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
 download(new Blob([csv], { type: 'text/csv'}), fname.replace('.xlsx', '.csv'));
-log('Excel 套件未載入，已改匯出 CSV'); return;
+log('Excel 套件未載入，已改匯出 CSV'); setProgress(100, '已匯出 CSV（Excel 套件未載入，改存 CSV）'); return;
 }
 const wb = XLSX.utils.book_new();
 const head = ['代號', '名稱', '市場', '最新日期', '收盤', '當日漲跌', '漲跌幅%', '技術分', '進場適合度', '距離進場%', '狀態', '週期', '策略', '進場下緣', '進場上緣', '停損', '目標1', '目標2', '風險報酬', '進場觸發條件', '原因'];
@@ -648,6 +765,7 @@ sheet('Gemini分析', [['代號', '名稱', '技術結論', '進場解讀', '出
 sheet('使用說明', [['項目', '內容'], ['產生時間', new Date().toLocaleString('zh-TW')], ['行情日期', date], ['資料模式', state.mode === 'demo'? '離線示範（虛構）': '正式／匯入'], ['符合條件檔數', rec.length], ['資料來源', 'TWSE／TPEx 公開行情、CSV 匯入或示範資料'], ['使用限制', '盤後研究用途，非即時行情，不保證預測，不提供自動下單']]);
 XLSX.writeFile(wb, fname);
 log('已匯出 Excel：' + fname);
+setProgress(100, `已匯出 Excel：${fname}`);
 }
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);}
 
@@ -674,6 +792,7 @@ function switchTab(id) {
 document.querySelectorAll('.tab-page').forEach(p => p.classList.toggle('active', p.id === id));
 document.querySelectorAll('#detailTabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
 if (id === 'tabStrategy' && state.selected) drawChart(state.selected);
+if (id === 'tabNews' && state.selected && !state.newsStatus[state.selected.code]) fetchNews(state.selected);
 }
 
 // ---------- 事件綁定與init ----------
@@ -686,7 +805,12 @@ markPreset();
 document.querySelectorAll('[data-days]').forEach(b => b.addEventListener('click', () => { $('inpDays').value = b.dataset.days; saveSettings();}));
 $('btnIntegrity').addEventListener('click', showIntegrity);
 $('btnDemo').addEventListener('click', () => { state.mode = 'demo'; if (!state.demoStocks.length) state.demoStocks = TWDemo.generateDemoStocks(); refreshStatus(); log('已載入離線示範資料（虛構）'); runScan();});
-$('btnReal').addEventListener('click', () => { state.mode = 'real'; refreshStatus(); log('已切回正式資料模式');});
+$('btnReal').addEventListener('click', async () => {
+// 切回正式：重新載入後端資料並自動重掃，名單真的恢復正式資料（不再只改表頭文字）
+state.mode = 'real'; refreshStatus(); log('已切回正式資料模式，重新載入後端資料…');
+const okLoad = await loadBackendData(true);
+if (!okLoad) { refreshStatus(); if (state.realStocks.length) runScan(); }
+});
 $('fileCsv').addEventListener('change', async e => {
 const f = e.target.files[0]; if (!f) return;
 try {
@@ -728,7 +852,7 @@ $('btnExport').addEventListener('click', exportExcel);
 document.querySelectorAll('#detailTabs button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 window.addEventListener('resize', () => { if (state.selected) drawChart(state.selected);});
 $('btnReloadData').addEventListener('click', updateToLatest);
-$('btnClearQuery').addEventListener('click', () => { $('inpQuery').value = ''; $('inpQuery').focus(); });
+$('btnClearQuery').addEventListener('click', () => { $('inpQuery').value = ''; state.results.custom = []; $('selList').value = 'candidates'; renderList(); $('inpQuery').focus(); });
 idb.open().then(async () => { const saved = await idb.get('realStocks'); if (Array.isArray(saved) && saved.length) { state.realStocks = saved; log(`已還原先前匯入資料 ${saved.length} 檔`);} refreshStatus(); loadBackendData(true); }).catch(() => { refreshStatus(); loadBackendData(true); });
 refreshStatus();
 log('台股 AI 智慧選股工作台 V2.0（網頁版）就緒。建議先按「載入離線示範資料」體驗完整流程。');
