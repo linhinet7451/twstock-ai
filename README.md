@@ -105,3 +105,5 @@ manifest.webmanifest  PWA 設定
 ```
 
 後端離線自我測試：`python3 backend/update_data.py selftest --data-dir /tmp/x`
+
+更新紀錄：2026-11-14 優化批（零價資料列過濾、新聞改外部搜尋入口、手機卡補停損/目標一、走勢圖標籤防重疊）。
