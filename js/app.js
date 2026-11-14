@@ -723,14 +723,14 @@ return '自訂門檻';
 }
 function renderHistoryText(a) {
 const h = a._history;
-const c = a._historyCond || { name: '穩健推薦', tech: 65, entry: 45, period: (a.strat && a.strat.period) || a.period || '短線' };
+const c = a._historyCond || { period: (a.strat && a.strat.period) || a.period || '短線' };
 const hs = a._historyHorizons || [5, 10, 20];
-const head = `算法：翻這檔股票的完整歷史，每次達到『${c.name}』推薦條件（技術 ≥${c.tech}、進場 ≥${c.entry}、狀態可進場、風報比 ≥1.5）的第一天，假設用收盤價買進、抱滿天數後用收盤價賣出；連續多天達標只算第一天。天數依這檔的週期（${c.period}）給。報酬已先扣交易成本約 0.5%。`;
+const head = `算法：翻這檔股票的完整歷史，訊號＝股價站在多條均線之上、接近一年高點、又突破近 60 日高點的強勢日；每個訊號日都假設用收盤價買進、抱滿天數後用收盤價賣出，連續出現的訊號日合併算一波。天數依這檔的週期（${c.period}）給。報酬已先扣交易成本約 0.5%。`;
 const foot = '「賺錢」指扣掉成本後報酬大於 0；「曾漲到目標價／曾跌到停損價」指持有期間盤中有碰到。這是簡單統計，不是照策略實際買賣的回測；出現次數少於 10 次時，參考價值低。';
-const total = hs.reduce((s, k) => s + (h[k] ? h[k].count : 0), 0);
-if (!total) return head + '\n過去沒有達到過這套條件的紀錄（條件太嚴或歷史不足），可換較寬的風格再看。\n' + foot;
+if (!h.days) return head + '\n過去沒有出現過這種強勢日（新股或歷史未滿 240 天也算不出來）。\n' + foot;
 return head
-+ '\n' + hs.map(k => `抱 ${k} 天｜出現 ${h[k].count} 次｜賺錢 ${fmt(h[k].upRatio, 1)}%｜平均 ${fmtSign(h[k].avgRet)}%｜曾漲到目標價 ${fmt(h[k].targetHit, 1)}%｜曾跌到停損價 ${fmt(h[k].stopHit, 1)}%`).join('\n')
++ `\n出現 ${h.waves} 波・共 ${h.days} 個進場日`
++ '\n' + hs.map(k => `抱 ${k} 天｜賺錢 ${fmt(h[k].upRatio, 1)}%｜平均 ${fmtSign(h[k].avgRet)}%｜曾漲到目標價 ${fmt(h[k].targetHit, 1)}%｜曾跌到停損價 ${fmt(h[k].stopHit, 1)}%`).join('\n')
 + '\n' + foot;
 }
 async function runHistory() {
@@ -740,19 +740,18 @@ const a = state.selected;
 const o = scanOpts();
 const period = (a.strat && a.strat.period) || a.period || '短線';
 const horizons = HISTORY_HORIZONS[period] || [5, 10, 20];
-const condName = currentCondName();
-// 記下本次計算用的條件；門檻或週期變了就重算，避免拿舊條件的結果誤讀
-const sig = [condName, o.minTech, o.minEntry, o.minAvgAmountM, period, o.periodMode].join('|');
+// 訊號定義固定（C3 強勢日），不隨風格門檻變；只記週期與判定模式，變了才重算
+const sig = ['C3', period, o.periodMode].join('|');
 if (a._history && a._historySig === sig) { $('historyResult').textContent = renderHistoryText(a); return;}
 setBusy(true); setProgress(15, '載入完整 10 年歷史…');
 $('historyResult').textContent = '計算中…（會翻最長 10 年歷史，稍等一下）';
 state.selectedStock = await ensureFullHistory(state.selectedStock);
 setProgress(40, '計算中…（會翻最長 10 年歷史，稍等一下）');
 await new Promise(r => setTimeout(r, 30));
-try { a._history = TWCore.historyStats(state.selectedStock, { minTech: o.minTech, minEntry: o.minEntry, minAvgAmountM: o.minAvgAmountM, horizons, periodMode: o.periodMode });
-a._historyCond = { name: condName, tech: o.minTech, entry: o.minEntry, period };
+try { a._history = TWCore.historyStats(state.selectedStock, { horizons, periodMode: o.periodMode });
+a._historyCond = { period };
 a._historyHorizons = horizons; a._historySig = sig;
-$('historyResult').textContent = renderHistoryText(a); setProgress(100, '歷史統計完成'); log(`歷史訊號統計完成 ${a.code}（${state.selectedStock.bars.close.length} 筆日線，條件：${condName} 技術≥${o.minTech} 進場≥${o.minEntry}，週期 ${period}）`);}
+$('historyResult').textContent = renderHistoryText(a); setProgress(100, '歷史統計完成'); log(`歷史訊號統計完成 ${a.code}（${state.selectedStock.bars.close.length} 筆日線，訊號：強勢日固定定義，週期 ${period}）`);}
 catch (e) { log('歷史統計失敗：' + e.message);}
 finally { setBusy(false);}
 }

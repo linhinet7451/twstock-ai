@@ -323,37 +323,67 @@
   }
 
   // ---------- 歷史訊號觀察 (#240-250) ----------
-  // 訊號定義（2026-11-14 改版）：逐日重算，當天達到「目前所選風格的推薦條件」才算達標，
-  // 與 scan 的候選條件一致——techScore ≥ minTech、entryScore ≥ minEntry、
-  // avgAmount20M ≥ minAvgAmountM、status 不是「暫不追價」/「條件失效」、
-  // strat.rr ≥ 1.5、priceOk（stop < entryLow < target1）且 stop > 0。門檻由呼叫端傳入。
-  // 連續達標只算第一天（前一天未達標、今天達標才計一次訊號），避免同一波行情重複計次。
+  // 訊號定義（2026-11-14 改版，固定，不再跟隨所選風格）：研究 Round 2/3 的 C3 家族，
+  // 定義逐項對照 round2/PREREG.md 與 pass2.mjs/evaluate.mjs 實作移植——同日滿足
+  // (a) 趨勢模板：收盤 > MA50 > MA150 > MA200（收盤簡單移動平均）且收盤距 240 日高 ≤25%；
+  // (b) 收盤距 240 日高 ≤10%（240 日高＝含當日之 240 日內最高價 high）；
+  // (c) 收盤突破前 60 日最高價（不含當日，high 計）；
+  // 且訊號日 analyze 的 avgAmount20M ≥ minAvgAmountM（研究共同門檻，預設 10 百萬元）。
+  // 計次改回逐日：每個訊號日都算一筆進場（days＝進場日總數）；連續訊號日合併為一「波」（waves）。
+  // 報酬：訊號日收盤買、抱滿 h 天收盤賣、扣 costRate+slippage（預設共 0.5%）；
+  // 目標/停損觸及取訊號日 analyze 的 strat.target1/stop，持有期間以 high/low 判定。
   // horizons 由呼叫端依週期傳入（短線 [5,10,20]、中線 [10,20,40]、長線 [20,60,120]）。
+  // MA 與日高皆以整段 bars 一次預計算的滾動序列判定；analyze 只在訊號日呼叫（取停損/目標與金額）。
   function historyStats(stock, opts = {}) {
-    const o = Object.assign({ minTech: 65, minEntry: 45, minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001 }, opts);
-    const b = stock.bars, horizons = o.horizons, out = {};
+    const o = Object.assign({ minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001 }, opts);
+    const b = stock.bars, horizons = o.horizons, n = b.close.length;
+    const out = { waves: 0, days: 0, signalDays: [] };
     for (const h of horizons) out[h] = { count: 0, upRatio: 0, avgRet: 0, targetHit: 0, stopHit: 0 };
     const sums = {}, ups = {}, th = {}, sh = {};
     for (const h of horizons) { sums[h] = 0; ups[h] = 0; th[h] = 0; sh[h] = 0; }
-    let prevOk = false;
-    for (let end = 125; end < b.close.length; end++) {
-      const sub = trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
-      let a = null; try { a = analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, o.periodMode); } catch (e) { }
-      const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
-      const okDay = !!a && a.techScore >= o.minTech && a.entryScore >= o.minEntry
-        && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM
-        && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk;
-      const isSignal = okDay && !prevOk; // 連續達標只取第一天
-      prevOk = okDay;
-      if (!isSignal) continue;
-      for (const h of horizons) {
-        if (end + h >= b.close.length) continue;
-        const ret = (b.close[end + h] / b.close[end] - 1) - o.costRate - o.slippage; // #247
-        out[h].count++; sums[h] += ret * 100; if (ret > 0) ups[h]++;
-        let hitT = false, hitS = false;
-        for (let j = end + 1; j <= end + h; j++) { if (b.high[j] >= a.strat.target1) hitT = true; if (b.low[j] <= a.strat.stop) hitS = true; }
-        if (hitT) th[h]++; if (hitS) sh[h]++;
+    if (n < 240) return out; // 240 日高算不出來 → 無訊號
+    const cs = new Array(n); let run = 0;
+    for (let i = 0; i < n; i++) { run += b.close[i]; cs[i] = run; }
+    const smaAt = (p, i) => i < p - 1 ? null : (cs[i] - (i - p >= 0 ? cs[i - p] : 0)) / p; // 同 pass2 smaPre
+    const slideMax = (arr, w) => { // res[i] = max(arr[i-w+1..i])，i < w-1 時為 null
+      const res = new Array(n).fill(null), dq = [];
+      for (let i = 0; i < n; i++) {
+        while (dq.length && dq[0] <= i - w) dq.shift();
+        while (dq.length && arr[dq[dq.length - 1]] <= arr[i]) dq.pop();
+        dq.push(i);
+        if (i >= w - 1) res[i] = arr[dq[0]];
       }
+      return res;
+    };
+    const hi240 = slideMax(b.high, 240); // 含當日的 240 日最高價
+    const hi60 = slideMax(b.high, 60);   // hi60[end-1] = 前 60 日最高價（不含當日）
+    let prevSignal = false;
+    for (let end = 125; end < n; end++) {
+      let isSignal = false, sigA = null;
+      if (hi240[end] != null) {
+        const dh240 = b.close[end] / hi240[end] - 1;
+        const ma50 = smaAt(50, end), ma150 = smaAt(150, end), ma200 = smaAt(200, end);
+        const tmpl = ma200 != null && b.close[end] > ma50 && ma50 > ma150 && ma150 > ma200 && dh240 >= -0.25;
+        const brk60 = end >= 60 && hi60[end - 1] != null && b.close[end] > hi60[end - 1];
+        if (tmpl && dh240 >= -0.10 && brk60) {
+          const sub = trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
+          let a = null; try { a = analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, o.periodMode); } catch (e) { }
+          if (a && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM) { isSignal = true; sigA = a; }
+        }
+      }
+      if (isSignal) {
+        out.days++; out.signalDays.push(b.dates[end]);
+        if (!prevSignal) out.waves++;
+        for (const h of horizons) {
+          if (end + h >= n) continue;
+          const ret = (b.close[end + h] / b.close[end] - 1) - o.costRate - o.slippage; // #247
+          out[h].count++; sums[h] += ret * 100; if (ret > 0) ups[h]++;
+          let hitT = false, hitS = false;
+          for (let j = end + 1; j <= end + h; j++) { if (b.high[j] >= sigA.strat.target1) hitT = true; if (b.low[j] <= sigA.strat.stop) hitS = true; }
+          if (hitT) th[h]++; if (hitS) sh[h]++;
+        }
+      }
+      prevSignal = isSignal;
     }
     for (const h of horizons) if (out[h].count) { out[h].upRatio = ups[h] / out[h].count * 100; out[h].avgRet = sums[h] / out[h].count; out[h].targetHit = th[h] / out[h].count * 100; out[h].stopHit = sh[h] / out[h].count * 100; }
     return out;

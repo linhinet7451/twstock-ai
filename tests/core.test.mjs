@@ -52,46 +52,76 @@ ok(mixedRes.latestDate === '2026-11-12', 'mode date is majority date');
 ok(mixedRes.stats.scanned === 3, 'mode date scans majority stocks');
 ok(mixedRes.stats.qualityBad === 1, 'mode date excludes minority ahead stock');
 
-// 歷史訊號（新 API：門檻與 horizons 由呼叫端傳入；訊號＝達到所選風格推薦條件）
-const h = core.historyStats(stocks[0], { minTech: 0, minEntry: 0, minAvgAmountM: 0, horizons: [5, 10, 20] });
+// 歷史訊號（訊號定義固定為 C3 強勢日，逐日計次；horizons 由呼叫端依週期傳入）
+const h = core.historyStats(stocks[0], { horizons: [5, 10, 20] });
 ok([5, 10, 20].every(k => h[k] && typeof h[k].count === 'number'), 'history stats shape');
+ok(typeof h.days === 'number' && typeof h.waves === 'number' && Array.isArray(h.signalDays) && h.signalDays.length === h.days, 'history waves/days/signalDays shape');
 const hDef = core.historyStats(stocks[0]);
 ok([5, 10, 20].every(k => hDef[k] && typeof hDef[k].count === 'number'), 'history stats default opts shape');
 
-// (a) 連續達標只計一次：獨立重算達標日，訊號數應等於「波段起始日」數、且小於達標日總數
-function qualifyingDays(stock, o) {
-  const b = stock.bars, days = [];
-  for (let end = 125; end < b.close.length; end++) {
+// C3 定義的獨立重算（對照 round2 pass2/evaluate 的樸素窗格實作）：
+// 趨勢模板（收盤>MA50>MA150>MA200 且距 240 日高 ≤25%）∧ 距 240 日高 ≤10% ∧ 收盤突破前 60 日最高價，
+// 再以訊號日 analyze 的 avgAmount20M ≥ minAvgAmountM 把關。回傳訊號日的 bar index 陣列。
+function c3DaysBrute(stock, minAmt = 10) {
+  const b = stock.bars, n = b.close.length, days = [];
+  const sma = (p, i) => { if (i < p - 1) return null; let s = 0; for (let j = i - p + 1; j <= i; j++) s += b.close[j]; return s / p; };
+  const maxOf = (arr, x, y) => { let m = -Infinity; for (let j = x; j <= y; j++) if (arr[j] > m) m = arr[j]; return m; };
+  for (let end = 125; end < n; end++) {
+    const dh240 = end >= 239 ? b.close[end] / maxOf(b.high, end - 239, end) - 1 : null;
+    const ma50 = sma(50, end), ma150 = sma(150, end), ma200 = sma(200, end);
+    const tmpl = ma200 != null && dh240 != null && b.close[end] > ma50 && ma50 > ma150 && ma150 > ma200 && dh240 >= -0.25;
+    const brk60 = end >= 60 && b.close[end] > maxOf(b.high, end - 60, end - 1);
+    if (!(tmpl && dh240 >= -0.10 && brk60)) continue;
     const sub = core.trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
     let a = null; try { a = core.analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, '自動判斷'); } catch (e) { }
-    const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
-    if (!!a && a.techScore >= o.minTech && a.entryScore >= o.minEntry && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk) days.push(end);
+    if (a && a.avgAmount20M != null && a.avgAmount20M >= minAmt) days.push(end);
   }
   return days;
 }
-{
-  const s0 = stocks[0], loose = { minTech: 0, minEntry: 0, minAvgAmountM: 0 };
-  const days = qualifyingDays(s0, loose);
-  const starts = days.filter((d, i) => i === 0 || days[i - 1] !== d - 1);
-  const hh = core.historyStats(s0, { ...loose, horizons: [5] });
-  ok(days.length > starts.length, 'dedup test data has consecutive qualifying runs');
-  ok(hh[5].count === starts.filter(d => d + 5 < s0.bars.close.length).length, 'consecutive qualifying days counted once');
-  ok(hh[5].count < days.length, 'signal count is less than raw qualifying days');
+function synthStock(closes, amountPerDay) {
+  const n = closes.length, end = new Date('2026-11-13T00:00:00Z'), dates = [], open = [], high = [], low = [], volume = [], amount = [];
+  for (let i = 0; i < n; i++) { const d = new Date(end); d.setUTCDate(d.getUTCDate() - (n - 1 - i)); dates.push(d.toISOString().slice(0, 10)); }
+  closes.forEach((c, i) => { open.push(i ? closes[i - 1] : c); high.push(+(c + 0.02).toFixed(2)); low.push(+(c - 0.02).toFixed(2)); volume.push(3000000); amount.push(amountPerDay); });
+  return { code: '9999', name: '合成測試', market: 'TWSE', bars: { dates, open, high, low, close: closes, volume, amount } };
 }
 
-// (b) 門檻越嚴，訊號次數不增
+// (a) 線性上升合成序列：239 日後每天都是 C3 日（已知答案）＋ brute-force 逐日對照
 {
-  const looseC = core.historyStats(stocks[0], { minTech: 0, minEntry: 0, minAvgAmountM: 0, horizons: [5, 20] });
-  const strictC = core.historyStats(stocks[0], { minTech: 75, minEntry: 60, minAvgAmountM: 10, horizons: [5, 20] });
-  ok(strictC[5].count <= looseC[5].count && strictC[20].count <= looseC[20].count, 'stricter thresholds give no more signals');
-  ok(looseC[5].count > 0, 'loose thresholds find signals');
+  const closes = []; for (let i = 0; i < 300; i++) closes.push(+(100 + i * 0.3).toFixed(2));
+  const up = synthStock(closes, 300000000);
+  const hu = core.historyStats(up, { horizons: [5, 20] });
+  const brute = c3DaysBrute(up);
+  ok(brute.length === 61 && brute[0] === 239, 'brute-force C3 on uptrend = 61 days from idx 239');
+  ok(hu.days === 61 && hu.waves === 1, 'uptrend: 61 entry days, 1 wave');
+  ok(JSON.stringify(hu.signalDays) === JSON.stringify(brute.map(i => up.bars.dates[i])), 'core signalDays match brute-force set');
+  ok(hu[5].count === 56 && hu[20].count === 41, 'per-horizon counts exclude tail days without forward data');
+  ok(hu[5].upRatio > 90 && hu[5].avgRet > 0, 'uptrend forward returns positive');
+  // 中途一天小回檔（不破前高）→ 波數變 2、進場日少 1
+  const closes2 = closes.slice(); closes2[270] = +(closes2[269] - 0.05).toFixed(2);
+  const dip = synthStock(closes2, 300000000);
+  const hd = core.historyStats(dip, { horizons: [5] });
+  ok(JSON.stringify(hd.signalDays) === JSON.stringify(c3DaysBrute(dip).map(i => dip.bars.dates[i])), 'dip series signalDays match brute-force set');
+  ok(hd.days === 60 && hd.waves === 2, 'one non-signal day splits the run into 2 waves');
+}
+
+// (b) 下降序列 → 零訊號；金額不足 → 被共同門檻擋下（放寬門檻後恢復）
+{
+  const closes = []; for (let i = 0; i < 300; i++) closes.push(+(200 - i * 0.1).toFixed(2));
+  const hz0 = core.historyStats(synthStock(closes, 300000000), { horizons: [5, 10, 20] });
+  ok(hz0.days === 0 && hz0.waves === 0 && hz0.signalDays.length === 0, 'downtrend: zero signals');
+  ok([5, 10, 20].every(k => hz0[k].count === 0 && hz0[k].avgRet === 0), 'zero-signal horizons stay zeroed (no NaN rows)');
+  const upCloses = []; for (let i = 0; i < 300; i++) upCloses.push(+(100 + i * 0.3).toFixed(2));
+  const lowAmt = synthStock(upCloses, 5000000); // avgAmount20M = 5 < 10
+  ok(core.historyStats(lowAmt, { horizons: [5] }).days === 0, 'avgAmount20M below gate blocks signals');
+  ok(core.historyStats(lowAmt, { horizons: [5], minAvgAmountM: 0 }).days === 61, 'relaxing amount gate restores signals');
+  const short = synthStock(upCloses.slice(0, 200), 300000000); // 歷史 <240 日
+  ok(core.historyStats(short, { horizons: [5] }).days === 0, 'history shorter than 240 days: zero signals');
 }
 
 // (c) horizons 依傳入參數回傳對應 key
 {
-  const hz = core.historyStats(stocks[0], { minTech: 0, minEntry: 0, minAvgAmountM: 0, horizons: [20, 60, 120] });
-  ok(JSON.stringify(Object.keys(hz).sort((x, y) => x - y)) === JSON.stringify(['20', '60', '120']), 'history horizons keys follow opts');
-  ok([20, 60, 120].every(k => typeof hz[k].count === 'number' && typeof hz[k].avgRet === 'number'), 'history horizons values shaped');
+  const hz = core.historyStats(stocks[0], { horizons: [20, 60, 120] });
+  ok([20, 60, 120].every(k => hz[k] && typeof hz[k].count === 'number' && typeof hz[k].avgRet === 'number'), 'history horizons keys follow opts');
 }
 
 // filterBars：移除 close<=0 的無成交佔位列，各陣列同步過濾
@@ -144,7 +174,7 @@ function zeroOut(b, idxs) { for (const i of idxs) { b.open[i] = 0; b.high[i] = 0
 function spikeStock() {
   const n = 200, end = new Date('2026-11-12T00:00:00Z'), dates = [], closes = [];
   for (let i = n - 1; i >= 0; i--) { const d = new Date(end); d.setUTCDate(d.getUTCDate() - i); dates.push(d.toISOString().slice(0, 10)); }
-  for (let i = 0; i < n - 1; i++) closes.push(+(100 + i * 0.15).toFixed(2));
+  for (let i = 0; i < n - 1; i++) closes.push(+(100 + i * 0.35).toFixed(2));
   closes.push(+(closes[n - 2] * 1.15).toFixed(2)); // 末日大漲，收盤遠離進場區
   const open = [], high = [], low = [], volume = [], amount = [];
   closes.forEach((c, i) => { const o = i ? closes[i - 1] : c; open.push(o); high.push(Math.max(o, c) * 1.005); low.push(Math.min(o, c) * 0.995); const v = i === n - 1 ? 8000000 : 2000000; volume.push(v); amount.push(v * c); });
