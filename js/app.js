@@ -165,7 +165,36 @@ function parseCSV(text) {
   return stocks;
 }
 
-// ---------- 後端資料包自動載入（GitHub Actions 排程更新 → data/ 靜態檔案） ----------
+// ---------- 後端資料包自動載入（GitHub Actions 排程更新 → 靜態檔案） ----------
+// 資料來源（2026-11-15 起）：主要來源為專用資料 repo（linhinet7451/twstock-ai-data）的 Pages，
+// 主要來源失敗時自動改用本站 data/ 的凍結舊副本重試。manifest、掃描包、完整歷史三種抓取
+// 一律走 fetchDataJson / fetchDataGzip 單一入口；某來源成功後記住它，本次工作階段沿用。
+const DATA_BASES = [
+  'https://linhinet7451.github.io/twstock-ai-data/data/',
+  'data/',
+];
+let dataBaseIdx = 0;
+async function withDataBase(fn) {
+  let lastErr = null;
+  for (let i = dataBaseIdx; i < DATA_BASES.length; i++) {
+    try {
+      const r = await fn(DATA_BASES[i]);
+      dataBaseIdx = i;
+      return r;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('資料來源無回應');
+}
+async function fetchDataJson(path) {
+  return withDataBase(async base => {
+    const resp = await fetch(base + path, { cache: 'no-store' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + base + path);
+    return resp.json();
+  });
+}
+async function fetchDataGzip(path, onProgress) {
+  return withDataBase(base => fetchGzipJson(base + path, onProgress));
+}
 async function fetchGzipJson(url, onProgress) {
   const resp = await fetch(url, { cache: 'no-store' });
   if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + url);
@@ -204,11 +233,11 @@ async function loadBackendData(autoScanAfter) {
   $('btnQuery').disabled = true; // 載入完成前鎖查詢，避免命中 IndexedDB 還原的舊資料
   try {
     statusEl.textContent = '後端資料：載入中…';
-    const man = await (await fetch('data/manifest.json', { cache: 'no-store' })).json();
+    const man = await fetchDataJson('manifest.json');
     if (!man || !man.scanFile) throw new Error('manifest 格式不正確');
     const totalMB = (man.scanBytes / 1048576).toFixed(1);
     setProgress(15, `下載後端掃描包（${man.scanStocks} 檔，${totalMB} MB）…`);
-    const bundle = await fetchGzipJson('data/' + man.scanFile, (loaded, total) => {
+    const bundle = await fetchDataGzip(man.scanFile, (loaded, total) => {
       const mb = (loaded / 1048576).toFixed(1);
       if (total > 0) setProgress(15 + Math.round(loaded / total * 70), `下載後端掃描包：已下載 ${mb}／${totalMB} MB（${Math.round(loaded / total * 100)}%）`);
       else setProgress(50, `下載後端掃描包：已下載 ${mb} MB…`);
@@ -237,7 +266,7 @@ async function ensureFullHistory(stock) {
   if (!stock || stock.isDemo) return stock;
   if (fullHistoryCache[stock.code]) return fullHistoryCache[stock.code];
   try {
-    const data = await fetchGzipJson(`data/history/${stock.code}.json.gz`);
+    const data = await fetchDataGzip(`history/${stock.code}.json.gz`);
     const full = rowsToStock(data.code, data.name, data.market, data.rows);
     fullHistoryCache[stock.code] = full;
     const idx = state.realStocks.findIndex(s => s.code === stock.code);
@@ -255,7 +284,7 @@ async function updateToLatest() {
   if (state.busy) return noteBusy();
   setBusy(true); setProgress(10, '檢查後端最新資料…');
   try {
-    const man = await (await fetch('data/manifest.json', { cache: 'no-store' })).json();
+    const man = await fetchDataJson('manifest.json');
     if (!man || !man.scanFile) throw new Error('後端 manifest 格式不正確');
     const isNewer = !state.backendUpdatedAt || man.updatedAt !== state.backendUpdatedAt;
     const okLoad = await loadBackendData(false);

@@ -22,6 +22,7 @@ FinMind API ──► GitHub Actions 後端（backend/update_data.py）
 ```
 
 - 使用者**不需要做任何更新動作**：開站即自動載入後端最新資料，並自動跑一次掃描。
+- **資料存放位置（2026-11-15 起）**：資料改由專用 repo [linhinet7451/twstock-ai-data](https://github.com/linhinet7451/twstock-ai-data) 供應，前端主要來源指向該 repo 的 GitHub Pages；本 repo 的 `data/` 只保留凍結舊副本，作為主要來源失敗時的備援。
 - 全市場掃描包（最近 370 日）首次下載約 16MB（全市場回補完成後），之後瀏覽器會快取；個股完整 10 年歷史在查看該股「歷史訊號觀察」時才逐檔載入（每檔約 51KB）。
 - repo 目前已內含 5 檔種子資料（2330、2317、2454、6488、0050，各 2,430+ 筆、2016 至今完整 10 年）可立即驗證；其餘股票由回補 workflow 分批補齊。
 
