@@ -133,6 +133,7 @@
 
     <nav class="tabs" id="detailTabs">
       <button data-tab="tabStrategy" class="active">走勢＋策略摘要</button>
+      <button data-tab="tabKline">K線回顧</button>
       <button data-tab="tabTech">詳細技術指標</button>
       <button data-tab="tabNews">個股新聞</button>
       <button data-tab="tabAI">Gemini 深度解讀</button>
@@ -143,6 +144,19 @@
     <section id="tabStrategy" class="tab-page active">
       <canvas id="chart" height="260"></canvas>
       <div id="strategyCard" class="card selectable">請先選擇有歷史行情的股票</div>
+    </section>
+    <section id="tabKline" class="tab-page">
+      <div id="klineNote" class="kl-note" style="display:none">過去沒有這個風格的進場訊號</div>
+      <div class="kl-bar">
+        <div class="kl-chips" id="klineRange">
+          <button type="button" data-range="3">3個月</button><button type="button" data-range="6">6個月</button><button type="button" data-range="12" class="active">1年</button><button type="button" data-range="36">3年</button><button type="button" data-range="60">5年</button><button type="button" data-range="0">全部</button>
+        </div>
+        <div class="kl-chips" id="klineUnit">
+          <button type="button" data-unit="D" class="active">日K</button><button type="button" data-unit="W">週K</button><button type="button" data-unit="M">月K</button>
+        </div>
+      </div>
+      <canvas id="klineChart" height="330"></canvas>
+      <div id="klineInfo" class="card kl-info">點圖上的標記看那一波的進場明細；點其他位置看那根 K 線的開高低收。</div>
     </section>
     <section id="tabTech" class="tab-page"><div id="techDetail" class="card selectable">尚未選取股票</div></section>
     <section id="tabNews" class="tab-page">

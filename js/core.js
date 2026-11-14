@@ -337,6 +337,8 @@
   //     起算，價位用買進日的策略（當天 analyze；analyze 失敗時退回訊號日策略價位）。
   // 報酬一律扣 costRate+slippage（預設共 0.5%）。horizons 由呼叫端依週期傳入
   // （短線 [5,10,20]、中線 [10,20,40]、長線 [20,60,120]）。
+  // 每組每 天數另回 medRet（與 avgRet 同一組已成交報酬樣本的中位數，偶數筆取中間
+  // 兩筆平均）；entries 為每波一筆代表紀錄（見函式尾），供 K 線回顧標記使用。
   // 效能：逐日判定改用 analyzeWindow——只取當天往前 ≤360 日視窗，以與 computeIndicators
   // 相同的種子/遞迴順序重算路徑相依指標（EMA/MACD/RSI/KD/ATR/ADX/Supertrend），
   // 視窗位置型數值（均線/布林/OBV/一目/trailing 量）取視窗尾端，再經 scoreTechAt/
@@ -556,26 +558,29 @@
   function historyStats(stock, opts = {}) {
     const o = Object.assign({ minTech: 65, minEntry: 45, minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001, waitDays: 5 }, opts);
     const b = stock.bars, horizons = o.horizons, n = b.close.length;
-    const blankG = () => { const g = {}; for (const h of horizons) g[h] = { count: 0, upRatio: 0, avgRet: 0, targetHit: 0, stopHit: 0 }; return g; };
+    const blankG = () => { const g = {}; for (const h of horizons) g[h] = { count: 0, upRatio: 0, avgRet: 0, medRet: 0, targetHit: 0, stopHit: 0 }; return g; };
     const out = {
-      waves: 0, days: 0, signalDays: [],
+      waves: 0, days: 0, signalDays: [], entries: [],
       direct: Object.assign(blankG(), { days: 0, dates: [] }),
       wait: Object.assign(blankG(), { signalDays: 0, dates: [], filled: 0, filledDates: [], fillRate: 0 }),
     };
     if (n < 126) return out;
     const sums = { direct: {}, wait: {} }, ups = { direct: {}, wait: {} }, th = { direct: {}, wait: {} }, sh = { direct: {}, wait: {} };
-    for (const g of ['direct', 'wait']) for (const h of horizons) { sums[g][h] = 0; ups[g][h] = 0; th[g][h] = 0; sh[g][h] = 0; }
+    const retsArr = { direct: {}, wait: {} };
+    for (const g of ['direct', 'wait']) for (const h of horizons) { sums[g][h] = 0; ups[g][h] = 0; th[g][h] = 0; sh[g][h] = 0; retsArr[g][h] = []; }
     const record = (g, entryIdx, strat) => {
       for (const h of horizons) {
         if (entryIdx + h >= n) continue;
         const ret = (b.close[entryIdx + h] / b.close[entryIdx] - 1) - o.costRate - o.slippage;
-        out[g][h].count++; sums[g][h] += ret * 100; if (ret > 0) ups[g][h]++;
+        out[g][h].count++; sums[g][h] += ret * 100; retsArr[g][h].push(ret * 100); if (ret > 0) ups[g][h]++;
         let hitT = false, hitS = false;
         for (let j = entryIdx + 1; j <= entryIdx + h; j++) { if (b.high[j] >= strat.target1) hitT = true; if (b.low[j] <= strat.stop) hitS = true; }
         if (hitT) th[g][h]++; if (hitS) sh[g][h]++;
       }
     };
     let prevOk = false;
+    let curWave = null; const wavesArr = [];
+    const newWave = () => ({ days: 0, direct: 0, waitFilled: 0, unfilled: 0, fills: [], firstSigIdx: -1 });
     for (let end = 125; end < n; end++) {
       const a = analyzeWindow(b, end, o.periodMode);
       const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
@@ -584,7 +589,8 @@
         && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk;
       if (okDay) {
         out.days++; out.signalDays.push(b.dates[end]);
-        if (!prevOk) out.waves++;
+        if (!prevOk) { out.waves++; curWave = newWave(); wavesArr.push(curWave); }
+        curWave.days++; if (curWave.firstSigIdx < 0) curWave.firstSigIdx = end;
         if (a.status === '等待回檔') {
           const w = out.wait;
           w.signalDays++; w.dates.push(b.dates[end]);
@@ -592,11 +598,13 @@
           for (let j = end + 1; j <= Math.min(end + o.waitDays, n - 1); j++) if (b.close[j] <= a.strat.entryHigh) { buy = j; break; }
           if (buy >= 0) {
             w.filled++; w.filledDates.push(b.dates[buy]);
+            curWave.waitFilled++; curWave.fills.push({ idx: buy, sigIdx: end, group: 'wait' });
             const ba = analyzeWindow(b, buy, o.periodMode);
             record('wait', buy, (ba && ba.strat) || a.strat);
-          }
+          } else curWave.unfilled++;
         } else { // 接近進場 / 突破觀察 → 直接買
           out.direct.days++; out.direct.dates.push(b.dates[end]);
+          curWave.direct++; curWave.fills.push({ idx: end, sigIdx: end, group: 'direct' });
           record('direct', end, a.strat);
         }
       }
@@ -604,13 +612,62 @@
     }
     for (const g of ['direct', 'wait']) for (const h of horizons) {
       const cnt = out[g][h].count;
-      if (cnt) { out[g][h].upRatio = ups[g][h] / cnt * 100; out[g][h].avgRet = sums[g][h] / cnt; out[g][h].targetHit = th[g][h] / cnt * 100; out[g][h].stopHit = sh[g][h] / cnt * 100; }
+      if (cnt) {
+        out[g][h].upRatio = ups[g][h] / cnt * 100; out[g][h].avgRet = sums[g][h] / cnt;
+        out[g][h].targetHit = th[g][h] / cnt * 100; out[g][h].stopHit = sh[g][h] / cnt * 100;
+        const arr = retsArr[g][h].slice().sort((x, y) => x - y), mid = arr.length >> 1;
+        out[g][h].medRet = arr.length % 2 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
+      }
     }
     out.wait.fillRate = out.wait.signalDays ? out.wait.filled / out.wait.signalDays * 100 : 0;
+    // entries：每波一筆代表紀錄供 K 線標記——波內第一個已成交進場（以實際進場日先後計，
+    // 同日取訊號日較早者）；整波無成交時以第一個訊號日為未成交代表。
+    const entryRets = idx => { const r = {}; for (const h of horizons) r[h] = idx + h < n ? ((b.close[idx + h] / b.close[idx] - 1) - o.costRate - o.slippage) * 100 : null; return r; };
+    out.entries = wavesArr.map((w, wi) => {
+      const base = { wave: wi + 1, days: w.days, direct: w.direct, waitFilled: w.waitFilled, unfilled: w.unfilled };
+      if (w.fills.length) {
+        let best = w.fills[0];
+        for (const f of w.fills) if (f.idx < best.idx || (f.idx === best.idx && f.sigIdx < best.sigIdx)) best = f;
+        return Object.assign(base, { filled: true, group: best.group, idx: best.idx, date: b.dates[best.idx], sigIdx: best.sigIdx, sigDate: b.dates[best.sigIdx], price: b.close[best.idx], rets: entryRets(best.idx) });
+      }
+      const r = {}; for (const h of horizons) r[h] = null;
+      return Object.assign(base, { filled: false, group: 'wait', idx: w.firstSigIdx, date: b.dates[w.firstSigIdx], sigIdx: w.firstSigIdx, sigDate: b.dates[w.firstSigIdx], price: b.close[w.firstSigIdx], rets: r });
+    });
     return out;
   }
 
-  const api = { sma, ema, tickSize, roundTick, filterBars, computeIndicators, scoreTech, buildStrategy, analyze, scan, historyStats, isETF, trimBars, SIGNAL_DEFS };
+  // aggregateBars(b, unit)：日線合成週線（ISO 週一～週日）或月線（日曆月）。
+  // 開＝首日開、高＝最高、低＝最低、收＝末日收、量＝合計；dates/endDates＝組內最後
+  // 交易日、startDates＝首日、fromIdx/toIdx＝日線索引範圍（供訊號標記對位）。
+  function aggregateBars(b, unit) {
+    const n = b.close.length;
+    const out = { dates: [], open: [], high: [], low: [], close: [], volume: [], amount: b.amount ? [] : null, startDates: [], endDates: [], fromIdx: [], toIdx: [] };
+    if (!n) return out;
+    const keyOf = dstr => {
+      if (unit === 'month') return dstr.slice(0, 7);
+      const d = new Date(dstr + 'T00:00:00Z');
+      d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+      return d.toISOString().slice(0, 10);
+    };
+    let curKey = null, gi = -1;
+    for (let i = 0; i < n; i++) {
+      const k = keyOf(b.dates[i]);
+      if (k !== curKey) {
+        curKey = k; gi++;
+        out.dates.push(b.dates[i]); out.open.push(b.open[i]); out.high.push(b.high[i]); out.low.push(b.low[i]); out.close.push(b.close[i]);
+        out.volume.push(b.volume[i]); if (out.amount) out.amount.push(b.amount[i] || 0);
+        out.startDates.push(b.dates[i]); out.endDates.push(b.dates[i]); out.fromIdx.push(i); out.toIdx.push(i);
+      } else {
+        if (b.high[i] > out.high[gi]) out.high[gi] = b.high[i];
+        if (b.low[i] < out.low[gi]) out.low[gi] = b.low[i];
+        out.close[gi] = b.close[i]; out.dates[gi] = b.dates[i]; out.endDates[gi] = b.dates[i]; out.toIdx[gi] = i;
+        out.volume[gi] += b.volume[i]; if (out.amount) out.amount[gi] += (b.amount[i] || 0);
+      }
+    }
+    return out;
+  }
+
+  const api = { sma, ema, tickSize, roundTick, filterBars, computeIndicators, scoreTech, buildStrategy, analyze, scan, historyStats, aggregateBars, isETF, trimBars, SIGNAL_DEFS };
   global.TWCore = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

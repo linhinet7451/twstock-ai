@@ -58,34 +58,51 @@ ok(mixedRes.stats.qualityBad === 1, 'mode date excludes minority ahead stock');
 function historyRef(stock, opts = {}) {
   const o = Object.assign({ minTech: 65, minEntry: 45, minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001, waitDays: 5 }, opts);
   const b = stock.bars, n = b.close.length;
-  const grp = () => { const g = {}; for (const h of o.horizons) g[h] = { count: 0, up: 0, sum: 0, t: 0, s: 0 }; return g; };
+  const grp = () => { const g = {}; for (const h of o.horizons) g[h] = { count: 0, up: 0, sum: 0, t: 0, s: 0, list: [] }; return g; };
   const D = grp(), W = grp();
-  const res = { waves: 0, days: 0, signalDays: [], directDays: 0, directDates: [], waitSignalDays: 0, waitDates: [], waitFilled: 0, filledDates: [] };
+  const res = { waves: 0, days: 0, signalDays: [], directDays: 0, directDates: [], waitSignalDays: 0, waitDates: [], waitFilled: 0, filledDates: [], entries: [] };
+  const refWaves = [];
+  let refWave = null;
   const analyzeAt = (end) => {
     const sub = core.trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
     try { return core.analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, o.periodMode); } catch (e) { return null; }
   };
-  const rec = (G, idx, strat) => { for (const h of o.horizons) { if (idx + h >= n) continue; const r = (b.close[idx + h] / b.close[idx] - 1) - o.costRate - o.slippage; const g = G[h]; g.count++; g.sum += r * 100; if (r > 0) g.up++; let t = false, s = false; for (let j = idx + 1; j <= idx + h; j++) { if (b.high[j] >= strat.target1) t = true; if (b.low[j] <= strat.stop) s = true; } if (t) g.t++; if (s) g.s++; } };
+  const rec = (G, idx, strat) => { for (const h of o.horizons) { if (idx + h >= n) continue; const r = (b.close[idx + h] / b.close[idx] - 1) - o.costRate - o.slippage; const g = G[h]; g.count++; g.sum += r * 100; g.list.push(r * 100); if (r > 0) g.up++; let t = false, s = false; for (let j = idx + 1; j <= idx + h; j++) { if (b.high[j] >= strat.target1) t = true; if (b.low[j] <= strat.stop) s = true; } if (t) g.t++; if (s) g.s++; } };
   let prevOk = false;
   for (let end = 125; end < n; end++) {
     const a = analyzeAt(end);
     const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
     const okDay = !!a && a.techScore >= o.minTech && a.entryScore >= o.minEntry && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk;
     if (okDay) {
-      res.days++; res.signalDays.push(b.dates[end]); if (!prevOk) res.waves++;
+      res.days++; res.signalDays.push(b.dates[end]);
+      if (!prevOk) { res.waves++; refWave = { days: 0, direct: 0, waitFilled: 0, unfilled: 0, fills: [], firstSigIdx: -1 }; refWaves.push(refWave); }
+      refWave.days++; if (refWave.firstSigIdx < 0) refWave.firstSigIdx = end;
       if (a.status === '等待回檔') {
         res.waitSignalDays++; res.waitDates.push(b.dates[end]);
         let buy = -1; for (let j = end + 1; j <= Math.min(end + o.waitDays, n - 1); j++) if (b.close[j] <= a.strat.entryHigh) { buy = j; break; }
-        if (buy >= 0) { res.waitFilled++; res.filledDates.push(b.dates[buy]); const ba = analyzeAt(buy); rec(W, buy, (ba && ba.strat) || a.strat); }
-      } else { res.directDays++; res.directDates.push(b.dates[end]); rec(D, end, a.strat); }
+        if (buy >= 0) { res.waitFilled++; res.filledDates.push(b.dates[buy]); refWave.waitFilled++; refWave.fills.push({ idx: buy, sigIdx: end, group: 'wait' }); const ba = analyzeAt(buy); rec(W, buy, (ba && ba.strat) || a.strat); }
+        else refWave.unfilled++;
+      } else { res.directDays++; res.directDates.push(b.dates[end]); refWave.direct++; refWave.fills.push({ idx: end, sigIdx: end, group: 'direct' }); rec(D, end, a.strat); }
     }
     prevOk = okDay;
   }
-  const fin = g => { const o2 = {}; for (const h of o.horizons) { const x = g[h]; o2[h] = { count: x.count, upRatio: x.count ? x.up / x.count * 100 : 0, avgRet: x.count ? x.sum / x.count : 0, targetHit: x.count ? x.t / x.count * 100 : 0, stopHit: x.count ? x.s / x.count * 100 : 0 }; } return o2; };
+  const medianOf = arr => { if (!arr.length) return 0; const s = arr.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  res.entries = refWaves.map((w, wi) => {
+    const base = { wave: wi + 1, days: w.days, direct: w.direct, waitFilled: w.waitFilled, unfilled: w.unfilled };
+    const retsAt = idx => { const r = {}; for (const h of o.horizons) r[h] = idx + h < n ? ((b.close[idx + h] / b.close[idx] - 1) - o.costRate - o.slippage) * 100 : null; return r; };
+    if (w.fills.length) {
+      let best = w.fills[0]; for (const f of w.fills) if (f.idx < best.idx || (f.idx === best.idx && f.sigIdx < best.sigIdx)) best = f;
+      return Object.assign(base, { filled: true, group: best.group, idx: best.idx, date: b.dates[best.idx], sigIdx: best.sigIdx, sigDate: b.dates[best.sigIdx], price: b.close[best.idx], rets: retsAt(best.idx) });
+    }
+    const r = {}; for (const h of o.horizons) r[h] = null;
+    return Object.assign(base, { filled: false, group: 'wait', idx: w.firstSigIdx, date: b.dates[w.firstSigIdx], sigIdx: w.firstSigIdx, sigDate: b.dates[w.firstSigIdx], price: b.close[w.firstSigIdx], rets: r });
+  });
+  const fin = g => { const o2 = {}; for (const h of o.horizons) { const x = g[h]; o2[h] = { count: x.count, upRatio: x.count ? x.up / x.count * 100 : 0, avgRet: x.count ? x.sum / x.count : 0, medRet: medianOf(x.list), targetHit: x.count ? x.t / x.count * 100 : 0, stopHit: x.count ? x.s / x.count * 100 : 0 }; } return o2; };
   res.direct = fin(D); res.wait = fin(W);
   res.fillRate = res.waitSignalDays ? res.waitFilled / res.waitSignalDays * 100 : 0;
   return res;
 }
+let medianEvenSeen = false;
 function cmpHist(actual, ref, horizons, label) {
   ok(actual.days === ref.days && actual.waves === ref.waves, `${label}: days/waves match ref (${actual.days}/${ref.days}, ${actual.waves}/${ref.waves})`);
   ok(JSON.stringify(actual.signalDays) === JSON.stringify(ref.signalDays), `${label}: signalDays match ref`);
@@ -93,8 +110,17 @@ function cmpHist(actual, ref, horizons, label) {
     && actual.wait.signalDays === ref.waitSignalDays && JSON.stringify(actual.wait.dates) === JSON.stringify(ref.waitDates)
     && actual.wait.filled === ref.waitFilled && JSON.stringify(actual.wait.filledDates) === JSON.stringify(ref.filledDates)
     && Math.abs(actual.wait.fillRate - ref.fillRate) < 1e-9, `${label}: group counts/fillRate match ref`);
-  const statOk = (g, r) => horizons.every(hh => { const x = g[hh], y = r[hh]; return x.count === y.count && Math.abs(x.upRatio - y.upRatio) < 1e-9 && Math.abs(x.avgRet - y.avgRet) < 1e-9 && Math.abs(x.targetHit - y.targetHit) < 1e-9 && Math.abs(x.stopHit - y.stopHit) < 1e-9; });
-  ok(statOk(actual.direct, ref.direct) && statOk(actual.wait, ref.wait), `${label}: per-group horizon stats match ref`);
+  for (const g of [ref.direct, ref.wait]) for (const hh of horizons) if (g[hh].count >= 2 && g[hh].count % 2 === 0) medianEvenSeen = true;
+  const statOk = (g, r) => horizons.every(hh => { const x = g[hh], y = r[hh]; return x.count === y.count && Math.abs(x.upRatio - y.upRatio) < 1e-9 && Math.abs(x.avgRet - y.avgRet) < 1e-9 && Math.abs(x.medRet - y.medRet) < 1e-9 && Math.abs(x.targetHit - y.targetHit) < 1e-9 && Math.abs(x.stopHit - y.stopHit) < 1e-9; });
+  ok(statOk(actual.direct, ref.direct) && statOk(actual.wait, ref.wait), `${label}: per-group horizon stats (incl. medRet) match ref`);
+  const entOk = Array.isArray(actual.entries) && actual.entries.length === ref.entries.length && actual.entries.every((e, i) => {
+    const r = ref.entries[i];
+    return e.wave === r.wave && e.days === r.days && e.direct === r.direct && e.waitFilled === r.waitFilled && e.unfilled === r.unfilled
+      && e.filled === r.filled && e.group === r.group && e.idx === r.idx && e.date === r.date && e.sigIdx === r.sigIdx && e.price === r.price
+      && horizons.every(hh => (e.rets[hh] === null && r.rets[hh] === null) || (e.rets[hh] !== null && r.rets[hh] !== null && Math.abs(e.rets[hh] - r.rets[hh]) < 1e-9));
+  });
+  ok(entOk, `${label}: entries (wave rep + splits) match ref`);
+  ok(actual.entries.length === actual.waves, `${label}: entries length equals waves`);
 }
 function synthStock(closes, amountPerDay) {
   const n = closes.length, end = new Date('2026-11-13T00:00:00Z'), dates = [], open = [], high = [], low = [], volume = [], amount = [];
@@ -103,12 +129,18 @@ function synthStock(closes, amountPerDay) {
   return { code: '9999', name: '合成測試', market: 'TWSE', bars: { dates, open, high, low, close: closes, volume, amount } };
 }
 
-// (a) 回傳形狀（逐日＋波數＋兩組）
+// (a) 回傳形狀（逐日＋波數＋兩組＋中位數＋entries）
 {
   const h = core.historyStats(stocks[0], { horizons: [5, 10, 20] });
   ok([5, 10, 20].every(k => h.direct[k] && typeof h.direct[k].count === 'number' && h.wait[k] && typeof h.wait[k].count === 'number'), 'history grouped stats shape');
+  ok([5, 10, 20].every(k => typeof h.direct[k].medRet === 'number' && typeof h.wait[k].medRet === 'number'), 'history medRet present in both groups');
   ok(typeof h.days === 'number' && typeof h.waves === 'number' && Array.isArray(h.signalDays) && h.signalDays.length === h.days
     && h.direct.days + h.wait.signalDays === h.days && typeof h.wait.fillRate === 'number', 'history waves/days/groups accounting');
+  ok(Array.isArray(h.entries) && h.entries.length === h.waves && h.entries.every((e, i) => e.wave === i + 1
+    && e.direct + e.waitFilled + e.unfilled === e.days && typeof e.idx === 'number' && typeof e.price === 'number'
+    && [5, 10, 20].every(k => k in e.rets)), 'history entries: one per wave, splits sum to wave days');
+  ok(h.entries.reduce((s, e) => s + e.days, 0) === h.days && h.entries.reduce((s, e) => s + e.direct, 0) === h.direct.days
+    && h.entries.reduce((s, e) => s + e.waitFilled, 0) === h.wait.filled, 'history entries splits aggregate to totals');
   const hDef = core.historyStats(stocks[0]);
   ok([5, 10, 20].every(k => hDef.direct[k] && typeof hDef.direct[k].count === 'number'), 'history stats default opts shape');
 }
@@ -119,6 +151,34 @@ cmpHist(core.historyStats(stocks[0], { minTech: 50, minEntry: 30, horizons: [5, 
 cmpHist(core.historyStats(stocks[4], { minTech: 65, minEntry: 45, horizons: [10, 20, 40] }), historyRef(stocks[4], { minTech: 65, minEntry: 45, horizons: [10, 20, 40] }), [10, 20, 40], '9005 穩健 中線天數');
 cmpHist(core.historyStats(stocks[8], { minTech: 50, minEntry: 30, horizons: [5, 10, 20] }), historyRef(stocks[8], { minTech: 50, minEntry: 30, horizons: [5, 10, 20] }), [5, 10, 20], '9009 積極');
 cmpHist(core.historyStats(stocks[4], { minTech: 65, minEntry: 45, horizons: [5, 10, 20], periodMode: '中線' }), historyRef(stocks[4], { minTech: 65, minEntry: 45, horizons: [5, 10, 20], periodMode: '中線' }), [5, 10, 20], '9005 穩健 指定中線');
+ok(medianEvenSeen, 'median even-count case exercised in ref comparisons (two-middle average)');
+
+// (f) aggregateBars 週/月合成已知答案
+{
+  // 2026-01-28(三)～01-30(五) 同一 ISO 週（週一 01-26）且同月；02-02(一)～02-03 另一週、另一月
+  const kb = {
+    dates: ['2026-01-28', '2026-01-29', '2026-01-30', '2026-02-02', '2026-02-03'],
+    open: [10, 11, 12, 13, 14], high: [12, 13, 14, 15, 16], low: [9, 10, 11, 12, 13],
+    close: [11, 12, 13, 14, 15], volume: [100, 200, 300, 400, 500], amount: [1000, 2000, 3000, 4000, 5000],
+  };
+  const wk = core.aggregateBars(kb, 'week');
+  ok(wk.close.length === 2, 'aggregateBars week: 2 groups');
+  ok(wk.open[0] === 10 && wk.high[0] === 14 && wk.low[0] === 9 && wk.close[0] === 13 && wk.volume[0] === 600 && wk.amount[0] === 6000, 'aggregateBars week g1 OHLCV/amount');
+  ok(wk.open[1] === 13 && wk.high[1] === 16 && wk.low[1] === 12 && wk.close[1] === 15 && wk.volume[1] === 900, 'aggregateBars week g2 OHLCV');
+  ok(wk.startDates[0] === '2026-01-28' && wk.endDates[0] === '2026-01-30' && wk.fromIdx[0] === 0 && wk.toIdx[0] === 2
+    && wk.startDates[1] === '2026-02-02' && wk.endDates[1] === '2026-02-03' && wk.fromIdx[1] === 3 && wk.toIdx[1] === 4, 'aggregateBars week ranges');
+  const mo = core.aggregateBars(kb, 'month');
+  ok(mo.close.length === 2 && mo.open[0] === 10 && mo.close[0] === 13 && mo.volume[0] === 600 && mo.open[1] === 13 && mo.close[1] === 15 && mo.volume[1] === 900
+    && mo.fromIdx[1] === 3 && mo.toIdx[1] === 4, 'aggregateBars month groups match calendar months');
+  const db = stocks[0].bars;
+  const wkD = core.aggregateBars(db, 'week');
+  ok(wkD.close.length < db.close.length && wkD.close.at(-1) === db.close.at(-1)
+    && wkD.volume.reduce((s, v) => s + v, 0) === db.volume.reduce((s, v) => s + v, 0), 'aggregateBars demo week: volume preserved, last close preserved');
+  ok(wkD.fromIdx[0] === 0 && wkD.toIdx.at(-1) === db.close.length - 1
+    && wkD.fromIdx.every((f, i) => i === 0 || f === wkD.toIdx[i - 1] + 1), 'aggregateBars ranges tile the daily index space');
+  const empty = core.aggregateBars({ dates: [], open: [], high: [], low: [], close: [], volume: [] }, 'week');
+  ok(empty.close.length === 0 && empty.amount === null, 'aggregateBars empty input tolerated');
+}
 
 // (c) 等回檔組語意釘版：9005 穩健的每個等待回檔訊號日，成交日＝其後 5 日內第一個收盤 ≤ 訊號日 entryHigh
 {

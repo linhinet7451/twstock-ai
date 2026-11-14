@@ -410,6 +410,7 @@ renderStrategyCard(a);
 renderTech(a);
 if (state.aiByCode[a.code]) renderAI(a.code); else $('aiResult').textContent = '尚未進行 AI 分析。AI 只解讀既有數據，不得捏造價格或改寫交易價位。';
 if (a._history) renderHistory(a); else $('historyResult').textContent = '還沒算過。按上面的按鈕，看這檔以前出現強勢訊號時，後來通常漲還是跌。';
+if ($('tabKline').classList.contains('active')) openKline(); // 停在 K 線回顧時換股 → 直接換成新股的圖
 renderNews(a.code);
 if (!state.newsStatus[a.code]) fetchNews(a); // 首次選到就自動嘗試載入新聞（失敗會顯示外部搜尋連結，不再假裝查無）
 // 手機：點卡片／查詢後把明細帶到眼前（扣掉置頂操作列高度）
@@ -728,63 +729,211 @@ const hs = a._historyHorizons || [5, 10, 20];
 const head = `算法：翻這檔股票的完整歷史，每次達到『${c.name}』推薦條件（技術 ≥${c.tech}、進場 ≥${c.entry}、狀態可進場、風報比 ≥1.5）的那天，照當天狀態模擬進場（天數依這檔的週期 ${c.period}，報酬已先扣交易成本約 0.5%）：\n狀態是接近進場或突破觀察，當天收盤直接買；狀態是等待回檔，先不買，5 天內收盤回到建議進場區上緣才買，沒等到就不買。連續達標的日子合併算一波。`;
 const foot = '「賺錢」指扣掉成本後報酬大於 0；「曾漲到目標價／曾跌到停損價」指持有期間盤中有碰到（等回檔組以實際買進日與當天價位起算）。這是簡單統計，不是照策略實際買賣的回測；出現次數少於 10 次時，參考價值低。';
 if (!h.days) return head + '\n過去沒有達到過這套條件的紀錄（條件太嚴或歷史不足），可換較寬的風格再看。\n' + foot;
-const rows = g => hs.filter(k => h[g][k] && h[g][k].count > 0).map(k => `抱 ${k} 天｜賺錢 ${fmt(h[g][k].upRatio, 1)}%｜平均 ${fmtSign(h[g][k].avgRet)}%｜曾漲到目標價 ${fmt(h[g][k].targetHit, 1)}%｜曾跌到停損價 ${fmt(h[g][k].stopHit, 1)}%`);
+const rows = g => hs.filter(k => h[g][k] && h[g][k].count > 0).map(k => `抱 ${k} 天｜賺錢 ${fmt(h[g][k].upRatio, 1)}%｜平均 ${fmtSign(h[g][k].avgRet)}%｜中位數 ${fmtSign(h[g][k].medRet)}%｜曾漲到目標價 ${fmt(h[g][k].targetHit, 1)}%｜曾跌到停損價 ${fmt(h[g][k].stopHit, 1)}%`);
 let s = head + `\n出現 ${h.waves} 波・共 ${h.days} 個進場日`;
 if (h.direct.days) { s += `\n直接買（狀態：接近進場・突破觀察）｜共 ${h.direct.days} 個進場日`; const r = rows('direct'); if (r.length) s += '\n' + r.join('\n'); }
 if (h.wait.signalDays) { s += `\n等回檔才買（狀態：等待回檔）｜共 ${h.wait.signalDays} 個訊號日，等到 ${h.wait.filled} 個，成交率 ${fmt(h.wait.fillRate, 1)}%`; const r = rows('wait'); if (r.length) s += '\n' + r.join('\n'); }
 return s + '\n' + foot;
 }
 // 卡片式總覽：數字全取自同一份 historyStats 輸出；完整文字明細收進摺疊區（renderHistoryText 原樣）
+// selH（a._selHorizon）為比較卡與 K 線標記上色共用的持有天數；a._btMetric 為比較表的
+// 報酬指標（avg 平均／med 中位數）。兩者都存在該檔分析物件上，換股或換預設重算時重設。
 function renderHistory(a) {
 const el = $('historyResult');
 const h = a._history;
 if (!h.days) { el.textContent = '過去沒有達到過這套條件的紀錄（條件太嚴或歷史不足），可換較寬的風格再看。'; return; }
 const hs = a._historyHorizons || [5, 10, 20];
 const lastH = hs[hs.length - 1];
+const selH = hs.includes(a._selHorizon) ? a._selHorizon : lastH;
+const metric = a._btMetric === 'med' ? 'med' : 'avg';
 // 成交率＝實際有買到的筆數（直接買日數＋等回檔成交數）／全部訊號日；無等回檔組時恆為 100%
 const fillRate = (h.direct.days + h.wait.filled) / h.days * 100;
-const bigPct = g => (h[g][lastH] && h[g][lastH].count > 0) ? fmt(h[g][lastH].upRatio, 1) + '%' : '—';
+const bigPct = g => (h[g][selH] && h[g][selH].count > 0) ? fmt(h[g][selH].upRatio, 1) + '%' : '—';
 let cmp = '';
-if (h.direct.days) cmp += `<div class="bt-cmp-card"><div class="bt-cmp-name">直接買進</div><div class="bt-cmp-num">${bigPct('direct')}</div><div class="bt-cmp-cap">${lastH} 日正報酬比例</div></div>`;
+if (h.direct.days) cmp += `<div class="bt-cmp-card"><div class="bt-cmp-name">直接買進</div><div class="bt-cmp-num">${bigPct('direct')}</div><div class="bt-cmp-cap">${selH} 日正報酬比例</div></div>`;
 if (h.wait.signalDays) cmp += h.wait.filled
-? `<div class="bt-cmp-card"><div class="bt-cmp-name">等待回檔</div><div class="bt-cmp-num">${bigPct('wait')}</div><div class="bt-cmp-cap">${lastH} 日正報酬比例</div></div>`
+? `<div class="bt-cmp-card"><div class="bt-cmp-name">等待回檔</div><div class="bt-cmp-num">${bigPct('wait')}</div><div class="bt-cmp-cap">${selH} 日正報酬比例</div></div>`
 : `<div class="bt-cmp-card"><div class="bt-cmp-name">等待回檔</div><div class="bt-cmp-num">—</div><div class="bt-cmp-cap">無成交</div></div>`;
 const cmpCls = (h.direct.days ? 1 : 0) + (h.wait.signalDays ? 1 : 0) === 1 ? 'bt-cmp one' : 'bt-cmp';
-const cell = (g, k) => { const s = h[g][k]; if (!s || !s.count) return '<td>—</td>'; const cls = s.avgRet > 0 ? 'bt-pos' : s.avgRet < 0 ? 'bt-neg' : ''; return `<td class="${cls}">${fmtSign(s.avgRet)}%</td>`; };
+const chips = hs.map(k => `<button type="button" class="bt-chip${k === selH ? ' active' : ''}" data-h="${k}">${k} 天</button>`).join('');
+const cell = (g, k) => { const s = h[g][k]; if (!s || !s.count) return '<td>—</td>'; const v = metric === 'med' ? s.medRet : s.avgRet; const cls = v > 0 ? 'bt-pos' : v < 0 ? 'bt-neg' : ''; return `<td class="${cls}">${fmtSign(v)}%</td>`; };
 const rowsHtml = hs.map(k => `<tr><td class="bt-l">${k} 天</td>${cell('direct', k)}${cell('wait', k)}</tr>`).join('');
 el.innerHTML =
 `<div class="bt-title">策略回測總覽</div>`
 + `<div class="bt-stats"><div class="bt-stat"><span class="bt-stat-label">訊號波次</span><span class="bt-stat-num">${h.waves}</span></div>`
 + `<div class="bt-stat"><span class="bt-stat-label">進場日</span><span class="bt-stat-num">${h.days}</span></div>`
 + `<div class="bt-stat"><span class="bt-stat-label">成交率</span><span class="bt-stat-num rate">${fmt(fillRate, 1)}<span class="bt-unit">%</span></span></div></div>`
-+ `<div class="bt-sec"><div class="bt-sec-title">不同進場方式比較</div><div class="${cmpCls}">${cmp}</div></div>`
-+ `<div class="bt-sec"><div class="bt-sec-title">持有期間比較<span class="bt-sec-note">平均報酬率</span></div>`
++ `<div class="bt-sec"><div class="bt-sec-title">不同進場方式比較</div><div class="bt-chips">${chips}</div><div class="${cmpCls}">${cmp}</div></div>`
++ `<div class="bt-sec"><div class="bt-sec-title">持有期間比較<span class="bt-sec-note bt-toggle" id="btMetricToggle" title="點一下切換平均／中位數">${metric === 'med' ? '中位數' : '平均'}報酬率 ⇄</span></div>`
 + `<table class="bt-table"><thead><tr><th class="bt-l">持有</th><th>直接買進</th><th>等待回檔</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`
 + `<details class="bt-detail"><summary>完整統計明細</summary><div class="bt-detail-text"></div></details>`;
 el.querySelector('.bt-detail-text').textContent = renderHistoryText(a);
+el.querySelectorAll('.bt-chip').forEach(btn => btn.addEventListener('click', () => {
+  a._selHorizon = +btn.dataset.h;
+  renderHistory(a);
+  if (klState.a === a) drawKline(); // K 線標記上色跟著 selH 走
+}));
+const tg = el.querySelector('#btMetricToggle');
+if (tg) tg.addEventListener('click', () => { a._btMetric = metric === 'med' ? 'avg' : 'med'; renderHistory(a); });
 }
-async function runHistory() {
-if (!state.selected ||!state.selectedStock) { alert('請先選取股票'); return;}
-if (state.busy) return noteBusy();
-const a = state.selected;
+// 本次歷史統計的條件上下文（預設門檻＋週期＋天數組＋簽名）；runHistory 與 K 線回顧共用
+function histCtx(a) {
 const o = scanOpts();
 const condName = currentCondName();
 const period = (a.strat && a.strat.period) || a.period || '短線';
 const horizons = HISTORY_HORIZONS[period] || [5, 10, 20];
 // 記下本次計算用的條件；門檻或週期變了就重算，避免拿舊條件的結果誤讀
 const sig = [condName, o.minTech, o.minEntry, o.minAvgAmountM, period, o.periodMode].join('|');
-if (a._history && a._historySig === sig) { renderHistory(a); return;}
+return { o, condName, period, horizons, sig };
+}
+// 以 ctx 條件計算 a 的歷史統計（呼叫端先 ensureFullHistory）；成功回 true
+function calcHistory(a, ctx) {
+try {
+a._history = TWCore.historyStats(state.selectedStock, { minTech: ctx.o.minTech, minEntry: ctx.o.minEntry, minAvgAmountM: ctx.o.minAvgAmountM, horizons: ctx.horizons, periodMode: ctx.o.periodMode });
+a._historyCond = { name: ctx.condName, tech: ctx.o.minTech, entry: ctx.o.minEntry, period: ctx.period };
+a._historyHorizons = ctx.horizons; a._historySig = ctx.sig;
+a._selHorizon = ctx.horizons[ctx.horizons.length - 1]; // 換預設重算 → 比較天數重設為最長
+return true;
+} catch (e) { log('歷史統計失敗：' + e.message); return false; }
+}
+async function runHistory() {
+if (!state.selected ||!state.selectedStock) { alert('請先選取股票'); return;}
+if (state.busy) return noteBusy();
+const a = state.selected;
+const ctx = histCtx(a);
+if (a._history && a._historySig === ctx.sig) { renderHistory(a); return;}
 setBusy(true); setProgress(15, '載入完整 10 年歷史…');
 $('historyResult').textContent = '計算中…（會翻最長 10 年歷史，稍等一下）';
 state.selectedStock = await ensureFullHistory(state.selectedStock);
 setProgress(40, '計算中…（會翻最長 10 年歷史，稍等一下）');
 await new Promise(r => setTimeout(r, 30));
-try { a._history = TWCore.historyStats(state.selectedStock, { minTech: o.minTech, minEntry: o.minEntry, minAvgAmountM: o.minAvgAmountM, horizons, periodMode: o.periodMode });
-a._historyCond = { name: condName, tech: o.minTech, entry: o.minEntry, period };
-a._historyHorizons = horizons; a._historySig = sig;
-renderHistory(a); setProgress(100, '歷史統計完成'); log(`歷史訊號統計完成 ${a.code}（${state.selectedStock.bars.close.length} 筆日線，條件：${condName} 技術≥${o.minTech} 進場≥${o.minEntry}，週期 ${period}）`);}
-catch (e) { log('歷史統計失敗：' + e.message);}
-finally { setBusy(false);}
+if (calcHistory(a, ctx)) { renderHistory(a); setProgress(100, '歷史統計完成'); log(`歷史訊號統計完成 ${a.code}（${state.selectedStock.bars.close.length} 筆日線，條件：${ctx.condName} 技術≥${ctx.o.minTech} 進場≥${ctx.o.minEntry}，週期 ${ctx.period}）`);}
+setBusy(false);
+}
+
+// ---------- K 線回顧（完整歷史 K 線＋每波進場標記） ----------
+// 標記取自與回測總覽同一份 historyStats 的 entries（每波一筆代表紀錄）；上色天數與
+// 回測總覽比較卡共用 a._selHorizon。只在分頁打開時計算與繪製。
+const klState = { a: null, stock: null, unit: 'D', range: 12, start: 0, count: 0, total: 0, agg: null, byBar: new Map(), markers: [], slotW: 0, plotL: 0 };
+let klRaf = 0;
+function klSelH(a) { const hs = a._historyHorizons || [5, 10, 20]; return hs.includes(a._selHorizon) ? a._selHorizon : hs[hs.length - 1]; }
+async function openKline() {
+const info = $('klineInfo');
+if (!state.selected || !state.selectedStock) { info.textContent = '請先選取股票。'; return; }
+const a = state.selected;
+const ctx = histCtx(a);
+state.selectedStock = await ensureFullHistory(state.selectedStock);
+if (!a._history || a._historySig !== ctx.sig) {
+  info.textContent = '計算中…（會翻最長 10 年歷史，稍等一下）';
+  await new Promise(r => setTimeout(r, 30));
+  if (!calcHistory(a, ctx)) { info.textContent = '歷史統計計算失敗，請看執行紀錄。'; return; }
+  log(`K 線回顧：已計算 ${a.code} 歷史訊號（條件：${ctx.condName}，週期 ${ctx.period}）`);
+}
+klState.a = a; klState.stock = state.selectedStock;
+$('klineNote').style.display = a._history.days ? 'none' : 'block';
+buildKlineAgg(); klSyncChips(); drawKline();
+info.textContent = '點圖上的標記看那一波的進場明細；點其他位置看那根 K 線的開高低收。';
+}
+function buildKlineAgg() {
+const b = klState.stock.bars, n = b.close.length;
+let agg;
+if (klState.unit === 'D') {
+  const idx = b.close.map((_, i) => i);
+  agg = { dates: b.dates, open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume, startDates: b.dates, endDates: b.dates, fromIdx: idx, toIdx: idx };
+} else agg = TWCore.aggregateBars(b, klState.unit === 'W' ? 'week' : 'month');
+klState.agg = agg; klState.total = agg.close.length;
+// 日線索引 → 合成根索引（entries 的代表進場日對位）
+const map = new Int32Array(n);
+for (let g = 0; g < agg.close.length; g++) for (let i = agg.fromIdx[g]; i <= agg.toIdx[g]; i++) map[i] = g;
+klState.byBar = new Map();
+for (const e of (klState.a._history.entries || [])) {
+  const g = map[e.idx]; if (g === undefined) continue;
+  if (!klState.byBar.has(g)) klState.byBar.set(g, []);
+  klState.byBar.get(g).push(e);
+}
+// 可視根數：範圍（月）換算截止日，視窗結尾對齊最後一根
+let count = klState.total;
+if (klState.range > 0 && klState.total) {
+  const endD = new Date(agg.endDates[klState.total - 1] + 'T00:00:00Z');
+  endD.setUTCMonth(endD.getUTCMonth() - klState.range);
+  const cut = endD.toISOString().slice(0, 10);
+  let lo = 0; while (lo < klState.total && agg.endDates[lo] < cut) lo++;
+  count = klState.total - lo;
+}
+klState.count = count; klState.start = klState.total - count;
+}
+function drawKline() {
+const cv = $('klineChart'); if (!cv || !klState.agg || !klState.total) return;
+const agg = klState.agg, total = klState.total, count = Math.min(klState.count, total);
+if (!count) return;
+const start = Math.max(0, Math.min(klState.start, total - count));
+klState.start = start;
+const dpr = window.devicePixelRatio || 1;
+const W = cv.clientWidth || 320, H = 330;
+cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+ctx.fillStyle = '#10223b'; ctx.fillRect(0, 0, W, H);
+const plotL = 4, plotR = W - 46, plotW = plotR - plotL;
+const priceTop = 20, priceBot = H - 62, volTop = H - 52, volBot = H - 18;
+let lo = Infinity, hi = -Infinity, vmax = 0;
+for (let g = start; g < start + count; g++) { if (agg.low[g] < lo) lo = agg.low[g]; if (agg.high[g] > hi) hi = agg.high[g]; if (agg.volume[g] > vmax) vmax = agg.volume[g]; }
+const pad = (hi - lo) * 0.07 || 1; lo -= pad; hi += pad;
+const Y = v => priceTop + (priceBot - priceTop) * (1 - (v - lo) / (hi - lo));
+const slotW = plotW / count; klState.slotW = slotW; klState.plotL = plotL;
+const X = g => plotL + slotW * (g - start + 0.5);
+ctx.font = '11px sans-serif';
+for (let gi = 0; gi < 5; gi++) { const v = lo + (hi - lo) * gi / 4, y = Y(v); ctx.strokeStyle = '#24497c'; ctx.beginPath(); ctx.moveTo(plotL, y); ctx.lineTo(plotR, y); ctx.stroke(); ctx.fillStyle = '#9db8d8'; ctx.fillText(v.toFixed(1), plotR + 5, y + 4); }
+ctx.fillStyle = '#9db8d8';
+for (let gi = 0; gi < 4; gi++) { const g = start + Math.round((count - 1) * gi / 3); const label = klState.unit === 'M' ? agg.endDates[g].slice(0, 7) : agg.endDates[g].slice(5); ctx.fillText(label, Math.max(plotL, Math.min(X(g) - 14, W - 44)), H - 4); }
+const bodyW = Math.max(1, Math.min(9, slotW * 0.62));
+for (let g = start; g < start + count; g++) {
+  const up = agg.close[g] >= agg.open[g];
+  ctx.fillStyle = up ? 'rgba(45,212,191,0.55)' : 'rgba(255,138,128,0.55)';
+  const vh = vmax ? agg.volume[g] / vmax * (volBot - volTop) : 0;
+  ctx.fillRect(X(g) - bodyW / 2, volBot - vh, bodyW, vh);
+}
+for (let g = start; g < start + count; g++) {
+  const up = agg.close[g] >= agg.open[g], col = up ? '#2dd4bf' : '#ff8a80', x = X(g);
+  ctx.strokeStyle = col; ctx.fillStyle = col;
+  ctx.beginPath(); ctx.moveTo(x, Y(agg.high[g])); ctx.lineTo(x, Y(agg.low[g])); ctx.stroke();
+  const y1 = Y(Math.max(agg.open[g], agg.close[g])), y2 = Y(Math.min(agg.open[g], agg.close[g]));
+  ctx.fillRect(x - bodyW / 2, y1, bodyW, Math.max(1, y2 - y1));
+}
+// 標記：實心＝已成交（顏色依 selH 該筆報酬），空心灰＝整波未成交
+klState.markers = [];
+const selH = klSelH(klState.a);
+for (let g = start; g < start + count; g++) {
+  const list = klState.byBar.get(g); if (!list) continue;
+  list.forEach((e, k) => {
+    const x = X(g), y = Y(agg.high[g]) - 9 - k * 11;
+    ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 7);
+    if (!e.filled) { ctx.fillStyle = '#10223b'; ctx.fill(); ctx.strokeStyle = '#9db8d8'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.lineWidth = 1; }
+    else { const r = e.rets[selH]; ctx.fillStyle = r == null || r === 0 ? '#7d94b5' : r > 0 ? '#35c759' : '#ff5252'; ctx.fill(); }
+    klState.markers.push({ x, y, e });
+  });
+}
+}
+function klineTap(x, y) {
+const info = $('klineInfo'), a = klState.a; if (!a) return;
+let best = null, bd = 13;
+for (const m of klState.markers) { const d = Math.hypot(m.x - x, m.y - y); if (d < bd) { bd = d; best = m; } }
+const selH = klSelH(a);
+if (best) {
+  const e = best.e;
+  const split = `進場日 ${e.days} 天（直接買 ${e.direct}・等回檔成交 ${e.waitFilled}・未成交 ${e.unfilled}）`;
+  if (e.filled) { const r = e.rets[selH]; info.textContent = `第 ${e.wave} 波｜${split}\n${e.date} ${e.group === 'direct' ? '直接買進' : '等待回檔成交'}｜買進 ${fmt(e.price)}｜抱 ${selH} 天 ${r == null ? '—（資料不足）' : fmtSign(r) + '%'}`; }
+  else info.textContent = `第 ${e.wave} 波｜${split}\n${e.sigDate} 等待回檔訊號，5 天內沒回到進場區（未成交）`;
+  return;
+}
+const agg = klState.agg;
+let g = klState.start + Math.floor((x - klState.plotL) / klState.slotW);
+g = Math.max(klState.start, Math.min(klState.start + klState.count - 1, g));
+const when = klState.unit === 'D' ? agg.dates[g] : `${agg.startDates[g]} ～ ${agg.endDates[g]}`;
+info.textContent = `${when}｜開 ${fmt(agg.open[g])} 高 ${fmt(agg.high[g])} 低 ${fmt(agg.low[g])} 收 ${fmt(agg.close[g])}`;
+}
+function klSyncChips() {
+document.querySelectorAll('#klineRange button').forEach(b => b.classList.toggle('active', +b.dataset.range === klState.range));
+document.querySelectorAll('#klineUnit button').forEach(b => b.classList.toggle('active', b.dataset.unit === klState.unit));
 }
 
 // ---------- Excel 匯出 (#251-262) ----------
@@ -845,6 +994,7 @@ function switchTab(id) {
 document.querySelectorAll('.tab-page').forEach(p => p.classList.toggle('active', p.id === id));
 document.querySelectorAll('#detailTabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
 if (id === 'tabStrategy' && state.selected) drawChart(state.selected);
+if (id === 'tabKline') openKline();
 if (id === 'tabNews' && state.selected && !state.newsStatus[state.selected.code]) fetchNews(state.selected);
 }
 
@@ -901,9 +1051,26 @@ $('btnTestGemini').addEventListener('click', testGemini);
 $('btnAI').addEventListener('click', () => runAI(false));
 $('btnAIBatch').addEventListener('click', () => runAI(true));
 $('btnHistory').addEventListener('click', runHistory);
+document.querySelectorAll('#klineRange button').forEach(b => b.addEventListener('click', () => { klState.range = +b.dataset.range; klSyncChips(); if (klState.a) { buildKlineAgg(); drawKline(); } }));
+document.querySelectorAll('#klineUnit button').forEach(b => b.addEventListener('click', () => { klState.unit = b.dataset.unit; klSyncChips(); if (klState.a) { buildKlineAgg(); drawKline(); } }));
+{ const cv = $('klineChart');
+let drag = null;
+cv.addEventListener('pointerdown', ev => { drag = { x0: ev.clientX, start0: klState.start, moved: false }; });
+cv.addEventListener('pointermove', ev => {
+  if (!drag) return;
+  const dx = ev.clientX - drag.x0;
+  if (Math.abs(dx) > 4) drag.moved = true;
+  if (drag.moved && klState.slotW > 0 && klState.count < klState.total) {
+    const ns = Math.max(0, Math.min(klState.total - klState.count, drag.start0 - Math.round(dx / klState.slotW)));
+    if (ns !== klState.start) { klState.start = ns; if (!klRaf) klRaf = requestAnimationFrame(() => { klRaf = 0; drawKline(); }); }
+  }
+});
+cv.addEventListener('pointerup', ev => { if (!drag) return; const wasDrag = drag.moved; drag = null; if (!wasDrag && klState.a) { const r = cv.getBoundingClientRect(); klineTap(ev.clientX - r.left, ev.clientY - r.top); } });
+cv.addEventListener('pointercancel', () => { drag = null; });
+}
 $('btnExport').addEventListener('click', exportExcel);
 document.querySelectorAll('#detailTabs button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
-window.addEventListener('resize', () => { if (state.selected) drawChart(state.selected);});
+window.addEventListener('resize', () => { if (state.selected) drawChart(state.selected); if ($('tabKline').classList.contains('active') && klState.a) drawKline(); });
 $('btnReloadData').addEventListener('click', updateToLatest);
 $('btnClearQuery').addEventListener('click', () => { $('inpQuery').value = ''; state.results.custom = []; $('selList').value = 'candidates'; renderList(); $('inpQuery').focus(); });
 idb.open().then(async () => { const saved = await idb.get('realStocks'); if (Array.isArray(saved) && saved.length) { state.realStocks = saved; log(`已還原先前匯入資料 ${saved.length} 檔`);} refreshStatus(); loadBackendData(true); }).catch(() => { refreshStatus(); loadBackendData(true); });

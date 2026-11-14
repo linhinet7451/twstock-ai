@@ -191,3 +191,13 @@ dialog td,dialog th{white-space:normal;text-align:left}
 .bt-detail summary::after{content:'▾';color:var(--muted)}
 .bt-detail[open ] summary::after{content:'▴'}
 .bt-detail-text{padding:0 12px 12px;font-size:14px;line-height:1.7}
+.bt-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bt-chips button,.kl-chips button{background:#1b3357;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13.5px;cursor:pointer}
+.bt-chips button.active,.kl-chips button.active{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700}
+.bt-toggle{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+/* K 線回顧 */
+.kl-note{color:var(--muted);font-size:14px;margin:2px 0 8px}
+.kl-bar{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.kl-chips{display:flex;gap:6px;flex-wrap:wrap}
+#klineChart{width:100%;display:block;border-radius:8px;touch-action:pan-y;cursor:grab}
+.kl-info{white-space:pre-line;font-size:14px;line-height:1.65;margin-top:8px;min-height:52px}
