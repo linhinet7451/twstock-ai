@@ -323,69 +323,290 @@
   }
 
   // ---------- 歷史訊號觀察 (#240-250) ----------
-  // 訊號定義（2026-11-14 改版，固定，不再跟隨所選風格）：研究 Round 2/3 的 C3 家族，
-  // 定義逐項對照 round2/PREREG.md 與 pass2.mjs/evaluate.mjs 實作移植——同日滿足
-  // (a) 趨勢模板：收盤 > MA50 > MA150 > MA200（收盤簡單移動平均）且收盤距 240 日高 ≤25%；
-  // (b) 收盤距 240 日高 ≤10%（240 日高＝含當日之 240 日內最高價 high）；
-  // (c) 收盤突破前 60 日最高價（不含當日，high 計）；
-  // 且訊號日 analyze 的 avgAmount20M ≥ minAvgAmountM（研究共同門檻，預設 10 百萬元）。
-  // 計次改回逐日：每個訊號日都算一筆進場（days＝進場日總數）；連續訊號日合併為一「波」（waves）。
-  // 報酬：訊號日收盤買、抱滿 h 天收盤賣、扣 costRate+slippage（預設共 0.5%）；
-  // 目標/停損觸及取訊號日 analyze 的 strat.target1/stop，持有期間以 high/low 判定。
-  // horizons 由呼叫端依週期傳入（短線 [5,10,20]、中線 [10,20,40]、長線 [20,60,120]）。
-  // MA 與日高皆以整段 bars 一次預計算的滾動序列判定；analyze 只在訊號日呼叫（取停損/目標與金額）。
-  function historyStats(stock, opts = {}) {
-    const o = Object.assign({ minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001 }, opts);
-    const b = stock.bars, horizons = o.horizons, n = b.close.length;
-    const out = { waves: 0, days: 0, signalDays: [] };
-    for (const h of horizons) out[h] = { count: 0, upRatio: 0, avgRet: 0, targetHit: 0, stopHit: 0 };
-    const sums = {}, ups = {}, th = {}, sh = {};
-    for (const h of horizons) { sums[h] = 0; ups[h] = 0; th[h] = 0; sh[h] = 0; }
-    if (n < 240) return out; // 240 日高算不出來 → 無訊號
-    const cs = new Array(n); let run = 0;
-    for (let i = 0; i < n; i++) { run += b.close[i]; cs[i] = run; }
-    const smaAt = (p, i) => i < p - 1 ? null : (cs[i] - (i - p >= 0 ? cs[i - p] : 0)) / p; // 同 pass2 smaPre
-    const slideMax = (arr, w) => { // res[i] = max(arr[i-w+1..i])，i < w-1 時為 null
-      const res = new Array(n).fill(null), dq = [];
-      for (let i = 0; i < n; i++) {
-        while (dq.length && dq[0] <= i - w) dq.shift();
-        while (dq.length && arr[dq[dq.length - 1]] <= arr[i]) dq.pop();
-        dq.push(i);
-        if (i >= w - 1) res[i] = arr[dq[0]];
-      }
-      return res;
+  // 訊號定義（2026-11-14 改版）：逐日重算，當天達到「目前所選風格的完整推薦條件」才算訊號日，
+  // 與 scan 的候選條件一致——techScore ≥ minTech、entryScore ≥ minEntry、
+  // avgAmount20M ≥ minAvgAmountM、status 不是「暫不追價」/「條件失效」、
+  // strat.rr ≥ 1.5、priceOk（stop < entryLow < target1）且 stop > 0。門檻由呼叫端傳入。
+  // 計次採逐日：每個訊號日都列入（days＝訊號日總數）；連續訊號日合併為一「波」（waves）。
+  // 執行依訊號日狀態分組，照工具當天給使用者的建議模擬買進：
+  //   直接買組（狀態「接近進場」或「突破觀察」）：訊號日收盤買進、抱滿天數；
+  //     目標/停損觸及以訊號日策略價位、持有期間 high/low 判定。
+  //   等回檔組（狀態「等待回檔」）：訊號日不買，往後 waitDays（預設 5）個交易日內，
+  //     第一個收盤 ≤ 訊號日進場區上緣（entryHigh）的日子以該日收盤買進；沒等到＝未成交
+  //     （計入成交率分母，不列入績效）。買進後抱滿天數與目標/停損觸及一律以實際買進日
+  //     起算，價位用買進日的策略（當天 analyze；analyze 失敗時退回訊號日策略價位）。
+  // 報酬一律扣 costRate+slippage（預設共 0.5%）。horizons 由呼叫端依週期傳入
+  // （短線 [5,10,20]、中線 [10,20,40]、長線 [20,60,120]）。
+  // 效能：逐日判定改用 analyzeWindow——只取當天往前 ≤360 日視窗，以與 computeIndicators
+  // 相同的種子/遞迴順序重算路徑相依指標（EMA/MACD/RSI/KD/ATR/ADX/Supertrend），
+  // 視窗位置型數值（均線/布林/OBV/一目/trailing 量）取視窗尾端，再經 scoreTechAt/
+  // buildStrategyAt（scoreTech/buildStrategy 的逐索引鏡像）評分。已逐日驗證與
+  // analyze(slice+trimBars 360) 位元一致（2886/2891 全 4,624 日＋demo 3,150 日零差異），
+  // 訊號集合與 b29c219c 逐日 analyze 版完全相同；單檔 10 年歷史實測約 0.5 秒。
+  function scoreTechAt(ind, i, volRatioAt, prevHighAt) {
+    const c = ind.bars.close;
+    const xup = (a, b) => a[i - 1] != null && b[i - 1] != null && a[i] != null && b[i] != null && a[i - 1] <= b[i - 1] && a[i] > b[i];
+    let s = 0;
+    if (ind.ma5[i] > ind.ma20[i] && ind.ma20[i] > ind.ma60[i]) s += 10;              // MA多頭排列
+    if (xup(ind.ma5, ind.ma20)) s += 8;                                            // 均線黃金交叉
+    if (xup(ind.macd, ind.macdSignal)) s += 10;                                    // MACD翻多
+    if (ind.rsi14[i] >= 50 && ind.rsi14[i] <= 75) s += 8;                          // RSI偏多
+    if (xup(ind.k, ind.d)) s += 6;                                                 // KD黃金交叉
+    if (c[i] > ind.ma20[i] && c[i] <= ind.bollUpper[i] * 1.02) s += 6;             // 布林偏多
+    if (volRatioAt != null && volRatioAt >= 1.5) s += 10;                          // 成交量放大
+    { let m = -Infinity; for (let j = i - 20; j < i; j++) if (ind.obv[j] > m) m = ind.obv[j]; if (ind.obv[i] > m) s += 6; } // OBV偏多
+    if (ind.adx[i] >= 25 && ind.plusDi[i] > ind.minusDi[i]) s += 6;                // ADX強勢
+    if (prevHighAt != null && c[i] > prevHighAt) s += 10;                          // 突破前高
+    if (ind.stBull[i] === true) s += 8;                                            // Supertrend翻多
+    { const a = ind.senkouA[i - 26], bb = ind.senkouB[i - 26];                     // 一目均衡表偏多
+      if (a != null && bb != null && c[i] > a && c[i] > bb && ind.tenkan[i] > ind.kijun[i]) s += 6; }
+    if (ind.mfi14[i] >= 50) s += 6;                                                // MFI偏多
+    return s;
+  }
+  function buildStrategyAt(ind, i, techScore, periodMode, sc) {
+    const b = ind.bars, close = b.close[i], atr = ind.atr14[i];
+    if (close == null || atr == null || atr <= 0) return null;
+    let period = periodMode && periodMode !== '自動判斷' ? periodMode : null;
+    if (!period) period = (close > ind.ma60[i] && ind.ma20[i] > ind.ma60[i] && techScore >= 65) ? '中線' : '短線';
+    const baseMa = period === '長線' ? ind.ma60[i] : ind.ma20[i];
+    if (baseMa == null) return null;
+    const isBreakout = sc.prevHigh != null && close > sc.prevHigh && sc.volRatio != null && sc.volRatio >= 1.2;
+    let entryLow = Math.min(close - 0.45 * atr, baseMa + 0.25 * atr);
+    let entryHigh = Math.min(close, baseMa + 0.65 * atr);
+    if (entryLow >= entryHigh) entryLow = entryHigh - tickSize(entryHigh);
+    const entryMid = roundTick((entryLow + entryHigh) / 2);
+    const support = Math.min(sc.low20, sc.low60, baseMa);
+    let stop = Math.min(entryLow - 1.25 * atr, support - 0.15 * atr);
+    if (stop >= entryLow) stop = entryLow - tickSize(entryLow);
+    stop = roundTick(stop);
+    const risk = entryMid - stop;
+    if (risk <= 0) return null;
+    const pressure = sc.prevHigh != null && sc.prevHigh > entryMid ? sc.prevHigh : 0;
+    const target1 = roundTick(Math.max(entryMid + 1.8 * risk, pressure));
+    const rr = (target1 - entryMid) / risk;
+    const distPct = Math.max(0, close - entryHigh) / entryHigh * 100;
+    let status;
+    if (close < entryLow - 0.5 * atr) status = '條件失效';
+    else if (close >= entryLow && close <= entryHigh) status = '接近進場';
+    else if (isBreakout && close <= entryHigh + 0.8 * atr) status = '突破觀察';
+    else if (close > entryHigh + 0.8 * atr) status = '暫不追價';
+    else status = '等待回檔';
+    const parts = {
+      base: 45,
+      distPenalty: -Math.min(45, distPct * 2.2),
+      techBonus: Math.min(20, Math.max(0, (techScore - 50) * 0.45)),
+      volBonus: Math.min(15, Math.max(0, ((sc.volRatio ?? 0) - 0.8) * 10)),
+      rrBonus: Math.min(15, Math.max(0, (rr - 1) * 7)),
+      atrPenalty: -Math.min(15, Math.max(0, atr / close * 100 * 1.5)),
     };
-    const hi240 = slideMax(b.high, 240); // 含當日的 240 日最高價
-    const hi60 = slideMax(b.high, 60);   // hi60[end-1] = 前 60 日最高價（不含當日）
-    let prevSignal = false;
+    let entryScore = Math.round(parts.base + parts.distPenalty + parts.techBonus + parts.volBonus + parts.rrBonus + parts.atrPenalty);
+    entryScore = status === '條件失效' ? 0 : clamp(entryScore, 0, 100);
+    return { entryLow: roundTick(entryLow), entryHigh: roundTick(entryHigh), entryMid, stop, target1, rr, distPct, status, entryScore };
+  }
+  // analyzeWindow(b, end, periodMode)：只取 end 往前 ≤360 日視窗，重算 analyze 在該視窗的
+  // 全部判定輸出（techScore/entryScore/status/strat/avgAmount20M），與
+  // analyze(trimBars(slice(0, end+1), 360)) 位元一致（驗證見上方效能註記）。
+  // 路徑相依指標（EMA/MACD/RSI/KD/ATR/ADX/Supertrend）以與 computeIndicators 相同的
+  // 種子與遞迴順序在視窗內重算；視窗位置型數值取視窗尾端；最後組裝成索引 26=當日、
+  // 25=前日、senkou 位於 0 的 ind 形狀，交給 scoreTechAt/buildStrategyAt 評分。
+  function analyzeWindow(b, end, periodMode) {
+    const s = Math.max(0, end - 359);
+    const c = b.close.slice(s, end + 1), h = b.high.slice(s, end + 1), l = b.low.slice(s, end + 1),
+          v = b.volume.slice(s, end + 1), amt = b.amount ? b.amount.slice(s, end + 1) : null;
+    const m = c.length, L = m - 1;
+    if (m < 15) return null;
+    const trAt = i => i === 0 ? h[0] - l[0] : Math.max(h[i] - l[i], Math.abs(h[i] - c[i - 1]), Math.abs(l[i] - c[i - 1]));
+    // 均線（sma 的 running sum 順序）
+    let ma5p = null, ma5L = null, ma20p = null, ma20L = null, ma60L = null;
+    { let s5 = 0, s20 = 0, s60 = 0;
+      for (let j = 0; j <= L; j++) {
+        s5 += c[j]; if (j >= 5) s5 -= c[j - 5];
+        s20 += c[j]; if (j >= 20) s20 -= c[j - 20];
+        s60 += c[j]; if (j >= 60) s60 -= c[j - 60];
+        if (j === L - 1) { ma5p = s5 / 5; ma20p = s20 / 20; }
+        if (j === L) { ma5L = s5 / 5; ma20L = s20 / 20; ma60L = j >= 59 ? s60 / 60 : null; }
+      } }
+    // EMA12/26、MACD 與訊號線（ema 的種子/遞迴順序）
+    let macdP = null, macdL = null, sigP = null, sigL = null;
+    { let e12 = null, e26 = null, sum12 = 0, sum26 = 0;
+      const macdVals = [];
+      for (let j = 0; j <= L; j++) {
+        if (j < 12) sum12 += c[j]; if (j === 11) e12 = sum12 / 12; else if (j > 11) e12 = c[j] * (2 / 13) + e12 * (1 - 2 / 13);
+        if (j < 26) sum26 += c[j]; if (j === 25) e26 = sum26 / 26; else if (j > 25) e26 = c[j] * (2 / 27) + e26 * (1 - 2 / 27);
+        if (e12 != null && e26 != null) { const mv = e12 - e26; macdVals.push([j, mv]); if (j === L - 1) macdP = mv; if (j === L) macdL = mv; }
+      }
+      if (macdVals.length >= 9) {
+        let prev = 0; for (let j = 0; j < 9; j++) prev += macdVals[j][1]; prev /= 9;
+        const kk2 = 2 / 10;
+        if (macdVals[8][0] === L - 1) sigP = prev;
+        if (macdVals[8][0] === L) sigL = prev;
+        for (let j = 9; j < macdVals.length; j++) { prev = macdVals[j][1] * kk2 + prev * (1 - kk2); if (macdVals[j][0] === L - 1) sigP = prev; if (macdVals[j][0] === L) sigL = prev; }
+      } }
+    // RSI14（Wilder）
+    let rsiL = null;
+    { let ag = 0, al = 0;
+      for (let i = 1; i <= 14; i++) { const d = c[i] - c[i - 1]; ag += Math.max(d, 0); al += Math.max(-d, 0); }
+      ag /= 14; al /= 14;
+      let r = al === 0 ? 100 : 100 - 100 / (1 + ag / al); if (L === 14) rsiL = r;
+      for (let i = 15; i <= L; i++) { const d = c[i] - c[i - 1]; ag = (ag * 13 + Math.max(d, 0)) / 14; al = (al * 13 + Math.max(-d, 0)) / 14; r = al === 0 ? 100 : 100 - 100 / (1 + ag / al); if (i === L) rsiL = r; } }
+    // KD（RSV 9 + 1/3 平滑）
+    let kP = null, kL = null, dP = null, dL = null;
+    { let pk = 50, pd = 50;
+      for (let i = 0; i <= L; i++) {
+        if (i < 8) continue;
+        let hh = -Infinity, ll = Infinity;
+        for (let j = i - 8; j <= i; j++) { if (h[j] > hh) hh = h[j]; if (l[j] < ll) ll = l[j]; }
+        const rsv = hh === ll ? 50 : (c[i] - ll) / (hh - ll) * 100;
+        pk = pk * 2 / 3 + rsv / 3; pd = pd * 2 / 3 + pk / 3;
+        if (i === L - 1) { kP = pk; dP = pd; }
+        if (i === L) { kL = pk; dL = pd; }
+      } }
+    // 布林上緣（ma20 ± 2σ，兩段式標準差）
+    let bollUpperL = null;
+    if (L >= 19 && ma20L != null) { let ss = 0; for (let j = L - 19; j <= L; j++) ss += (c[j] - ma20L) ** 2; bollUpperL = ma20L + 2 * Math.sqrt(ss / 20); }
+    // ATR14（Wilder）與 Supertrend（同一趟遞迴）
+    let atrL = null, stBullL = null;
+    { let atrPrev = null, sum14 = 0, fU = null, fL = null, prevBull = true;
+      for (let i = 0; i <= L; i++) {
+        const tr = trAt(i);
+        if (i >= 1 && i <= 14) sum14 += tr;
+        if (i === 14) atrPrev = sum14 / 14;
+        else if (i > 14) atrPrev = (atrPrev * 13 + tr) / 14;
+        if (i < 14) continue;
+        const atr = atrPrev;
+        if (i === L) atrL = atr;
+        const mid = (h[i] + l[i]) / 2;
+        let up = mid + 3 * atr, lo = mid - 3 * atr;
+        if (fU != null) { up = (up < fU || c[i - 1] > fU) ? up : fU; lo = (lo > fL || c[i - 1] < fL) ? lo : fL; }
+        let cur; if (fL == null) cur = true; else if (prevBull) cur = !(c[i] < fL); else cur = c[i] > fU;
+        if (i === L) stBullL = cur;
+        fU = up; fL = lo; prevBull = cur;
+      } }
+    // ADX / +DI / -DI（Wilder 平滑 + DX 的 vi 壓縮遞迴）
+    let adxL = null, plusDiL = null, minusDiL = null;
+    { let sTr = 0, sP = 0, sM = 0, sumTr = 0, sumP = 0, sumM = 0, adxPrev = null, dxCnt = 0, dxSum = 0;
+      for (let i = 1; i <= L; i++) {
+        const up = h[i] - h[i - 1], dn = l[i - 1] - l[i];
+        const pdm = (up > dn && up > 0) ? up : 0, mdm = (dn > up && dn > 0) ? dn : 0, tr = trAt(i);
+        if (i <= 14) { sumTr += tr; sumP += pdm; sumM += mdm; if (i === 14) { sTr = sumTr; sP = sumP; sM = sumM; } }
+        else { sTr = sTr - sTr / 14 + tr; sP = sP - sP / 14 + pdm; sM = sM - sM / 14 + mdm; }
+        if (i < 14) continue;
+        let dx = null, pDi = null, mDi = null;
+        if (sTr > 0) { pDi = sP / sTr * 100; mDi = sM / sTr * 100; const den = pDi + mDi; dx = den ? Math.abs(pDi - mDi) / den * 100 : 0; }
+        if (i === L) { plusDiL = pDi; minusDiL = mDi; }
+        if (dx != null) {
+          dxCnt++;
+          if (dxCnt <= 14) dxSum += dx;
+          if (dxCnt === 14) adxPrev = dxSum / 14;
+          else if (dxCnt > 14) adxPrev = (adxPrev * 13 + dx) / 14;
+          if (i === L) adxL = dxCnt > 14 ? adxPrev : null; // 原版需 vi 長度 > 14 才有 adx
+        }
+      } }
+    // MFI14（當日）
+    let mfiL = null;
+    if (L >= 14) { const tp = i => (h[i] + l[i] + c[i]) / 3; let pos = 0, neg = 0;
+      for (let j = L - 13; j <= L; j++) { const f = tp(j) * v[j]; if (tp(j) > tp(j - 1)) pos += f; else if (tp(j) < tp(j - 1)) neg += f; }
+      mfiL = neg === 0 ? 100 : 100 - 100 / (1 + pos / neg); }
+    // OBV
+    const obvArr = new Array(m); obvArr[0] = 0;
+    for (let i = 1; i < m; i++) obvArr[i] = obvArr[i - 1] + (c[i] > c[i - 1] ? v[i] : c[i] < c[i - 1] ? -v[i] : 0);
+    // 一目均衡表（當日與 26 日前的轉換/基準/先行）
+    const midP = (p, i) => { if (i < p - 1) return null; let hh = -Infinity, ll = Infinity; for (let j = i - p + 1; j <= i; j++) { if (h[j] > hh) hh = h[j]; if (l[j] < ll) ll = l[j]; } return (hh + ll) / 2; };
+    const tenkanL = midP(9, L), kijunL = midP(26, L);
+    const iS = L - 26;
+    const tS = iS >= 0 ? midP(9, iS) : null, kS = iS >= 0 ? midP(26, iS) : null;
+    const senkouA = (tS != null && kS != null) ? (tS + kS) / 2 : null;
+    const senkouB = iS >= 0 ? midP(52, iS) : null;
+    // trailing 量（與 computeIndicators 同公式）
+    let volRatio = null;
+    if (m >= 21) { let sv = 0; for (let j = L - 20; j < L; j++) sv += v[j]; volRatio = v[L] / (sv / 20); }
+    let avgAmount20M = null;
+    if (m >= 20) { let sa = 0; for (let j = L - 19; j <= L; j++) sa += (amt && amt[j]) ? amt[j] : v[j] * c[j]; avgAmount20M = sa / 20 / 1e6; }
+    let prev20High = null;
+    if (m >= 21) { let mx = -Infinity; for (let j = L - 20; j < L; j++) if (h[j] > mx) mx = h[j]; prev20High = mx; }
+    let low20 = Infinity, low60 = Infinity;
+    for (let j = Math.max(0, L - 19); j <= L; j++) if (l[j] < low20) low20 = l[j];
+    for (let j = Math.max(0, L - 59); j <= L; j++) if (l[j] < low60) low60 = l[j];
+    // 組裝 ind 形狀（26=當日、25=前日、senkou 在 0）給 At 鏡像評分
+    const A = () => new Array(27).fill(null);
+    const indW = { bars: { close: A() }, ma5: A(), ma20: A(), ma60: A(), macd: A(), macdSignal: A(), rsi14: A(), k: A(), d: A(),
+      bollUpper: A(), atr14: A(), adx: A(), plusDi: A(), minusDi: A(), mfi14: A(), obv: new Array(27).fill(0), stBull: A(), tenkan: A(), kijun: A(), senkouA: A(), senkouB: A() };
+    indW.bars.close[26] = c[L];
+    indW.ma5[25] = ma5p; indW.ma5[26] = ma5L;
+    indW.ma20[25] = ma20p; indW.ma20[26] = ma20L;
+    indW.ma60[26] = ma60L;
+    indW.macd[25] = macdP; indW.macd[26] = macdL;
+    indW.macdSignal[25] = sigP; indW.macdSignal[26] = sigL;
+    indW.rsi14[26] = rsiL;
+    indW.k[25] = kP; indW.k[26] = kL;
+    indW.d[25] = dP; indW.d[26] = dL;
+    indW.bollUpper[26] = bollUpperL;
+    indW.atr14[26] = atrL;
+    indW.adx[26] = adxL; indW.plusDi[26] = plusDiL; indW.minusDi[26] = minusDiL;
+    indW.mfi14[26] = mfiL;
+    for (let j = 0; j <= 20; j++) indW.obv[6 + j] = obvArr[L - 20 + j];
+    indW.stBull[26] = stBullL;
+    indW.tenkan[26] = tenkanL; indW.kijun[26] = kijunL;
+    indW.senkouA[0] = senkouA; indW.senkouB[0] = senkouB;
+    const techScore = scoreTechAt(indW, 26, volRatio, prev20High);
+    const strat = buildStrategyAt(indW, 26, techScore, periodMode, { volRatio, prevHigh: prev20High, low20, low60 });
+    if (!strat) return null;
+    return { techScore, entryScore: strat.entryScore, status: strat.status, strat, avgAmount20M };
+  }
+  function historyStats(stock, opts = {}) {
+    const o = Object.assign({ minTech: 65, minEntry: 45, minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001, waitDays: 5 }, opts);
+    const b = stock.bars, horizons = o.horizons, n = b.close.length;
+    const blankG = () => { const g = {}; for (const h of horizons) g[h] = { count: 0, upRatio: 0, avgRet: 0, targetHit: 0, stopHit: 0 }; return g; };
+    const out = {
+      waves: 0, days: 0, signalDays: [],
+      direct: Object.assign(blankG(), { days: 0, dates: [] }),
+      wait: Object.assign(blankG(), { signalDays: 0, dates: [], filled: 0, filledDates: [], fillRate: 0 }),
+    };
+    if (n < 126) return out;
+    const sums = { direct: {}, wait: {} }, ups = { direct: {}, wait: {} }, th = { direct: {}, wait: {} }, sh = { direct: {}, wait: {} };
+    for (const g of ['direct', 'wait']) for (const h of horizons) { sums[g][h] = 0; ups[g][h] = 0; th[g][h] = 0; sh[g][h] = 0; }
+    const record = (g, entryIdx, strat) => {
+      for (const h of horizons) {
+        if (entryIdx + h >= n) continue;
+        const ret = (b.close[entryIdx + h] / b.close[entryIdx] - 1) - o.costRate - o.slippage;
+        out[g][h].count++; sums[g][h] += ret * 100; if (ret > 0) ups[g][h]++;
+        let hitT = false, hitS = false;
+        for (let j = entryIdx + 1; j <= entryIdx + h; j++) { if (b.high[j] >= strat.target1) hitT = true; if (b.low[j] <= strat.stop) hitS = true; }
+        if (hitT) th[g][h]++; if (hitS) sh[g][h]++;
+      }
+    };
+    let prevOk = false;
     for (let end = 125; end < n; end++) {
-      let isSignal = false, sigA = null;
-      if (hi240[end] != null) {
-        const dh240 = b.close[end] / hi240[end] - 1;
-        const ma50 = smaAt(50, end), ma150 = smaAt(150, end), ma200 = smaAt(200, end);
-        const tmpl = ma200 != null && b.close[end] > ma50 && ma50 > ma150 && ma150 > ma200 && dh240 >= -0.25;
-        const brk60 = end >= 60 && hi60[end - 1] != null && b.close[end] > hi60[end - 1];
-        if (tmpl && dh240 >= -0.10 && brk60) {
-          const sub = trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
-          let a = null; try { a = analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, o.periodMode); } catch (e) { }
-          if (a && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM) { isSignal = true; sigA = a; }
-        }
-      }
-      if (isSignal) {
+      const a = analyzeWindow(b, end, o.periodMode);
+      const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
+      const okDay = !!a && a.techScore >= o.minTech && a.entryScore >= o.minEntry
+        && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM
+        && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk;
+      if (okDay) {
         out.days++; out.signalDays.push(b.dates[end]);
-        if (!prevSignal) out.waves++;
-        for (const h of horizons) {
-          if (end + h >= n) continue;
-          const ret = (b.close[end + h] / b.close[end] - 1) - o.costRate - o.slippage; // #247
-          out[h].count++; sums[h] += ret * 100; if (ret > 0) ups[h]++;
-          let hitT = false, hitS = false;
-          for (let j = end + 1; j <= end + h; j++) { if (b.high[j] >= sigA.strat.target1) hitT = true; if (b.low[j] <= sigA.strat.stop) hitS = true; }
-          if (hitT) th[h]++; if (hitS) sh[h]++;
+        if (!prevOk) out.waves++;
+        if (a.status === '等待回檔') {
+          const w = out.wait;
+          w.signalDays++; w.dates.push(b.dates[end]);
+          let buy = -1;
+          for (let j = end + 1; j <= Math.min(end + o.waitDays, n - 1); j++) if (b.close[j] <= a.strat.entryHigh) { buy = j; break; }
+          if (buy >= 0) {
+            w.filled++; w.filledDates.push(b.dates[buy]);
+            const ba = analyzeWindow(b, buy, o.periodMode);
+            record('wait', buy, (ba && ba.strat) || a.strat);
+          }
+        } else { // 接近進場 / 突破觀察 → 直接買
+          out.direct.days++; out.direct.dates.push(b.dates[end]);
+          record('direct', end, a.strat);
         }
       }
-      prevSignal = isSignal;
+      prevOk = okDay;
     }
-    for (const h of horizons) if (out[h].count) { out[h].upRatio = ups[h] / out[h].count * 100; out[h].avgRet = sums[h] / out[h].count; out[h].targetHit = th[h] / out[h].count * 100; out[h].stopHit = sh[h] / out[h].count * 100; }
+    for (const g of ['direct', 'wait']) for (const h of horizons) {
+      const cnt = out[g][h].count;
+      if (cnt) { out[g][h].upRatio = ups[g][h] / cnt * 100; out[g][h].avgRet = sums[g][h] / cnt; out[g][h].targetHit = th[g][h] / cnt * 100; out[g][h].stopHit = sh[g][h] / cnt * 100; }
+    }
+    out.wait.fillRate = out.wait.signalDays ? out.wait.filled / out.wait.signalDays * 100 : 0;
     return out;
   }
 

@@ -52,31 +52,49 @@ ok(mixedRes.latestDate === '2026-11-12', 'mode date is majority date');
 ok(mixedRes.stats.scanned === 3, 'mode date scans majority stocks');
 ok(mixedRes.stats.qualityBad === 1, 'mode date excludes minority ahead stock');
 
-// 歷史訊號（訊號定義固定為 C3 強勢日，逐日計次；horizons 由呼叫端依週期傳入）
-const h = core.historyStats(stocks[0], { horizons: [5, 10, 20] });
-ok([5, 10, 20].every(k => h[k] && typeof h[k].count === 'number'), 'history stats shape');
-ok(typeof h.days === 'number' && typeof h.waves === 'number' && Array.isArray(h.signalDays) && h.signalDays.length === h.days, 'history waves/days/signalDays shape');
-const hDef = core.historyStats(stocks[0]);
-ok([5, 10, 20].every(k => hDef[k] && typeof hDef[k].count === 'number'), 'history stats default opts shape');
-
-// C3 定義的獨立重算（對照 round2 pass2/evaluate 的樸素窗格實作）：
-// 趨勢模板（收盤>MA50>MA150>MA200 且距 240 日高 ≤25%）∧ 距 240 日高 ≤10% ∧ 收盤突破前 60 日最高價，
-// 再以訊號日 analyze 的 avgAmount20M ≥ minAvgAmountM 把關。回傳訊號日的 bar index 陣列。
-function c3DaysBrute(stock, minAmt = 10) {
-  const b = stock.bars, n = b.close.length, days = [];
-  const sma = (p, i) => { if (i < p - 1) return null; let s = 0; for (let j = i - p + 1; j <= i; j++) s += b.close[j]; return s / p; };
-  const maxOf = (arr, x, y) => { let m = -Infinity; for (let j = x; j <= y; j++) if (arr[j] > m) m = arr[j]; return m; };
-  for (let end = 125; end < n; end++) {
-    const dh240 = end >= 239 ? b.close[end] / maxOf(b.high, end - 239, end) - 1 : null;
-    const ma50 = sma(50, end), ma150 = sma(150, end), ma200 = sma(200, end);
-    const tmpl = ma200 != null && dh240 != null && b.close[end] > ma50 && ma50 > ma150 && ma150 > ma200 && dh240 >= -0.25;
-    const brk60 = end >= 60 && b.close[end] > maxOf(b.high, end - 60, end - 1);
-    if (!(tmpl && dh240 >= -0.10 && brk60)) continue;
+// 歷史訊號（訊號＝目前所選風格的完整推薦條件，逐日計次＋波數；執行依訊號日狀態分組：
+// 接近進場/突破觀察→訊號日直接買；等待回檔→5 日內回到進場區上緣才買，沒等到不算績效）
+// 獨立重算（b29 式逐日 slice+trim+analyze，與 production 的 analyzeWindow 不同實作，互為對照）
+function historyRef(stock, opts = {}) {
+  const o = Object.assign({ minTech: 65, minEntry: 45, minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001, waitDays: 5 }, opts);
+  const b = stock.bars, n = b.close.length;
+  const grp = () => { const g = {}; for (const h of o.horizons) g[h] = { count: 0, up: 0, sum: 0, t: 0, s: 0 }; return g; };
+  const D = grp(), W = grp();
+  const res = { waves: 0, days: 0, signalDays: [], directDays: 0, directDates: [], waitSignalDays: 0, waitDates: [], waitFilled: 0, filledDates: [] };
+  const analyzeAt = (end) => {
     const sub = core.trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
-    let a = null; try { a = core.analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, '自動判斷'); } catch (e) { }
-    if (a && a.avgAmount20M != null && a.avgAmount20M >= minAmt) days.push(end);
+    try { return core.analyze({ code: stock.code, name: stock.name, market: stock.market, bars: sub }, o.periodMode); } catch (e) { return null; }
+  };
+  const rec = (G, idx, strat) => { for (const h of o.horizons) { if (idx + h >= n) continue; const r = (b.close[idx + h] / b.close[idx] - 1) - o.costRate - o.slippage; const g = G[h]; g.count++; g.sum += r * 100; if (r > 0) g.up++; let t = false, s = false; for (let j = idx + 1; j <= idx + h; j++) { if (b.high[j] >= strat.target1) t = true; if (b.low[j] <= strat.stop) s = true; } if (t) g.t++; if (s) g.s++; } };
+  let prevOk = false;
+  for (let end = 125; end < n; end++) {
+    const a = analyzeAt(end);
+    const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
+    const okDay = !!a && a.techScore >= o.minTech && a.entryScore >= o.minEntry && a.avgAmount20M != null && a.avgAmount20M >= o.minAvgAmountM && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk;
+    if (okDay) {
+      res.days++; res.signalDays.push(b.dates[end]); if (!prevOk) res.waves++;
+      if (a.status === '等待回檔') {
+        res.waitSignalDays++; res.waitDates.push(b.dates[end]);
+        let buy = -1; for (let j = end + 1; j <= Math.min(end + o.waitDays, n - 1); j++) if (b.close[j] <= a.strat.entryHigh) { buy = j; break; }
+        if (buy >= 0) { res.waitFilled++; res.filledDates.push(b.dates[buy]); const ba = analyzeAt(buy); rec(W, buy, (ba && ba.strat) || a.strat); }
+      } else { res.directDays++; res.directDates.push(b.dates[end]); rec(D, end, a.strat); }
+    }
+    prevOk = okDay;
   }
-  return days;
+  const fin = g => { const o2 = {}; for (const h of o.horizons) { const x = g[h]; o2[h] = { count: x.count, upRatio: x.count ? x.up / x.count * 100 : 0, avgRet: x.count ? x.sum / x.count : 0, targetHit: x.count ? x.t / x.count * 100 : 0, stopHit: x.count ? x.s / x.count * 100 : 0 }; } return o2; };
+  res.direct = fin(D); res.wait = fin(W);
+  res.fillRate = res.waitSignalDays ? res.waitFilled / res.waitSignalDays * 100 : 0;
+  return res;
+}
+function cmpHist(actual, ref, horizons, label) {
+  ok(actual.days === ref.days && actual.waves === ref.waves, `${label}: days/waves match ref (${actual.days}/${ref.days}, ${actual.waves}/${ref.waves})`);
+  ok(JSON.stringify(actual.signalDays) === JSON.stringify(ref.signalDays), `${label}: signalDays match ref`);
+  ok(actual.direct.days === ref.directDays && JSON.stringify(actual.direct.dates) === JSON.stringify(ref.directDates)
+    && actual.wait.signalDays === ref.waitSignalDays && JSON.stringify(actual.wait.dates) === JSON.stringify(ref.waitDates)
+    && actual.wait.filled === ref.waitFilled && JSON.stringify(actual.wait.filledDates) === JSON.stringify(ref.filledDates)
+    && Math.abs(actual.wait.fillRate - ref.fillRate) < 1e-9, `${label}: group counts/fillRate match ref`);
+  const statOk = (g, r) => horizons.every(hh => { const x = g[hh], y = r[hh]; return x.count === y.count && Math.abs(x.upRatio - y.upRatio) < 1e-9 && Math.abs(x.avgRet - y.avgRet) < 1e-9 && Math.abs(x.targetHit - y.targetHit) < 1e-9 && Math.abs(x.stopHit - y.stopHit) < 1e-9; });
+  ok(statOk(actual.direct, ref.direct) && statOk(actual.wait, ref.wait), `${label}: per-group horizon stats match ref`);
 }
 function synthStock(closes, amountPerDay) {
   const n = closes.length, end = new Date('2026-11-13T00:00:00Z'), dates = [], open = [], high = [], low = [], volume = [], amount = [];
@@ -85,43 +103,67 @@ function synthStock(closes, amountPerDay) {
   return { code: '9999', name: '合成測試', market: 'TWSE', bars: { dates, open, high, low, close: closes, volume, amount } };
 }
 
-// (a) 線性上升合成序列：239 日後每天都是 C3 日（已知答案）＋ brute-force 逐日對照
+// (a) 回傳形狀（逐日＋波數＋兩組）
 {
-  const closes = []; for (let i = 0; i < 300; i++) closes.push(+(100 + i * 0.3).toFixed(2));
-  const up = synthStock(closes, 300000000);
-  const hu = core.historyStats(up, { horizons: [5, 20] });
-  const brute = c3DaysBrute(up);
-  ok(brute.length === 61 && brute[0] === 239, 'brute-force C3 on uptrend = 61 days from idx 239');
-  ok(hu.days === 61 && hu.waves === 1, 'uptrend: 61 entry days, 1 wave');
-  ok(JSON.stringify(hu.signalDays) === JSON.stringify(brute.map(i => up.bars.dates[i])), 'core signalDays match brute-force set');
-  ok(hu[5].count === 56 && hu[20].count === 41, 'per-horizon counts exclude tail days without forward data');
-  ok(hu[5].upRatio > 90 && hu[5].avgRet > 0, 'uptrend forward returns positive');
-  // 中途一天小回檔（不破前高）→ 波數變 2、進場日少 1
-  const closes2 = closes.slice(); closes2[270] = +(closes2[269] - 0.05).toFixed(2);
-  const dip = synthStock(closes2, 300000000);
-  const hd = core.historyStats(dip, { horizons: [5] });
-  ok(JSON.stringify(hd.signalDays) === JSON.stringify(c3DaysBrute(dip).map(i => dip.bars.dates[i])), 'dip series signalDays match brute-force set');
-  ok(hd.days === 60 && hd.waves === 2, 'one non-signal day splits the run into 2 waves');
+  const h = core.historyStats(stocks[0], { horizons: [5, 10, 20] });
+  ok([5, 10, 20].every(k => h.direct[k] && typeof h.direct[k].count === 'number' && h.wait[k] && typeof h.wait[k].count === 'number'), 'history grouped stats shape');
+  ok(typeof h.days === 'number' && typeof h.waves === 'number' && Array.isArray(h.signalDays) && h.signalDays.length === h.days
+    && h.direct.days + h.wait.signalDays === h.days && typeof h.wait.fillRate === 'number', 'history waves/days/groups accounting');
+  const hDef = core.historyStats(stocks[0]);
+  ok([5, 10, 20].every(k => hDef.direct[k] && typeof hDef.direct[k].count === 'number'), 'history stats default opts shape');
 }
 
-// (b) 下降序列 → 零訊號；金額不足 → 被共同門檻擋下（放寬門檻後恢復）
+// (b) 與獨立重算逐項對照（多檔 × 兩預設 × 不同天數組/週期模式）
+cmpHist(core.historyStats(stocks[0], { minTech: 65, minEntry: 45, horizons: [5, 10, 20] }), historyRef(stocks[0], { minTech: 65, minEntry: 45, horizons: [5, 10, 20] }), [5, 10, 20], '9001 穩健');
+cmpHist(core.historyStats(stocks[0], { minTech: 50, minEntry: 30, horizons: [5, 10, 20] }), historyRef(stocks[0], { minTech: 50, minEntry: 30, horizons: [5, 10, 20] }), [5, 10, 20], '9001 積極');
+cmpHist(core.historyStats(stocks[4], { minTech: 65, minEntry: 45, horizons: [10, 20, 40] }), historyRef(stocks[4], { minTech: 65, minEntry: 45, horizons: [10, 20, 40] }), [10, 20, 40], '9005 穩健 中線天數');
+cmpHist(core.historyStats(stocks[8], { minTech: 50, minEntry: 30, horizons: [5, 10, 20] }), historyRef(stocks[8], { minTech: 50, minEntry: 30, horizons: [5, 10, 20] }), [5, 10, 20], '9009 積極');
+cmpHist(core.historyStats(stocks[4], { minTech: 65, minEntry: 45, horizons: [5, 10, 20], periodMode: '中線' }), historyRef(stocks[4], { minTech: 65, minEntry: 45, horizons: [5, 10, 20], periodMode: '中線' }), [5, 10, 20], '9005 穩健 指定中線');
+
+// (c) 等回檔組語意釘版：9005 穩健的每個等待回檔訊號日，成交日＝其後 5 日內第一個收盤 ≤ 訊號日 entryHigh
+{
+  const s = stocks[4], b = s.bars, n = b.close.length;
+  const expBuys = [];
+  let waitSeen = 0;
+  for (let end = 125; end < n; end++) {
+    const sub = core.trimBars({ dates: b.dates.slice(0, end + 1), open: b.open.slice(0, end + 1), high: b.high.slice(0, end + 1), low: b.low.slice(0, end + 1), close: b.close.slice(0, end + 1), volume: b.volume.slice(0, end + 1), amount: (b.amount || []).slice(0, end + 1) }, 360);
+    let a = null; try { a = core.analyze({ code: s.code, name: s.name, market: s.market, bars: sub }, '自動判斷'); } catch (e) { }
+    const priceOk = !!a && a.strat.stop > 0 && a.strat.stop < a.strat.entryLow && a.strat.entryLow < a.strat.target1;
+    const okDay = !!a && a.techScore >= 65 && a.entryScore >= 45 && a.avgAmount20M != null && a.avgAmount20M >= 10 && a.status !== '條件失效' && a.status !== '暫不追價' && a.strat.rr >= 1.5 && priceOk;
+    if (okDay && a.status === '等待回檔') {
+      waitSeen++;
+      let buy = -1; for (let j = end + 1; j <= Math.min(end + 5, n - 1); j++) if (b.close[j] <= a.strat.entryHigh) { buy = j; break; }
+      if (buy >= 0) expBuys.push(b.dates[buy]);
+    }
+  }
+  const h = core.historyStats(s, { minTech: 65, minEntry: 45, horizons: [5, 10, 20] });
+  ok(waitSeen > 0 && h.wait.signalDays === waitSeen, '9005 wait signal days found and counted');
+  ok(JSON.stringify(h.wait.filledDates) === JSON.stringify(expBuys), '9005 filled dates = first close <= entryHigh within 5 days');
+  ok(h.wait.filled < h.wait.signalDays && h.wait.fillRate > 0 && h.wait.fillRate < 100, '9005 has both filled and unfilled wait signals (partial fill rate)');
+}
+
+// (d) 零訊號與門檻單調性
 {
   const closes = []; for (let i = 0; i < 300; i++) closes.push(+(200 - i * 0.1).toFixed(2));
   const hz0 = core.historyStats(synthStock(closes, 300000000), { horizons: [5, 10, 20] });
-  ok(hz0.days === 0 && hz0.waves === 0 && hz0.signalDays.length === 0, 'downtrend: zero signals');
-  ok([5, 10, 20].every(k => hz0[k].count === 0 && hz0[k].avgRet === 0), 'zero-signal horizons stay zeroed (no NaN rows)');
-  const upCloses = []; for (let i = 0; i < 300; i++) upCloses.push(+(100 + i * 0.3).toFixed(2));
-  const lowAmt = synthStock(upCloses, 5000000); // avgAmount20M = 5 < 10
-  ok(core.historyStats(lowAmt, { horizons: [5] }).days === 0, 'avgAmount20M below gate blocks signals');
-  ok(core.historyStats(lowAmt, { horizons: [5], minAvgAmountM: 0 }).days === 61, 'relaxing amount gate restores signals');
-  const short = synthStock(upCloses.slice(0, 200), 300000000); // 歷史 <240 日
-  ok(core.historyStats(short, { horizons: [5] }).days === 0, 'history shorter than 240 days: zero signals');
+  ok(hz0.days === 0 && hz0.waves === 0 && hz0.direct.days === 0 && hz0.wait.signalDays === 0 && hz0.wait.fillRate === 0, 'downtrend: zero signals in both groups');
+  ok([5, 10, 20].every(k => hz0.direct[k].count === 0 && hz0.wait[k].count === 0), 'zero-signal horizons stay zeroed (no NaN rows)');
+  const short = synthStock(closes.slice(0, 100), 300000000);
+  ok(core.historyStats(short, { horizons: [5] }).days === 0, 'history shorter than 126 days: zero signals');
+  const s5 = stocks[4];
+  const dAll = core.historyStats(s5, { minTech: 0, minEntry: 0, horizons: [5] }).days;
+  const dAct = core.historyStats(s5, { minTech: 50, minEntry: 30, horizons: [5] }).days;
+  const dSte = core.historyStats(s5, { minTech: 65, minEntry: 45, horizons: [5] }).days;
+  const dStr = core.historyStats(s5, { minTech: 75, minEntry: 60, horizons: [5] }).days;
+  ok(dAll >= dAct && dAct >= dSte && dSte >= dStr && dAll > dStr, 'signal days monotone in preset thresholds');
+  const hAct = core.historyStats(s5, { minTech: 50, minEntry: 30, horizons: [5] });
+  ok(hAct.waves <= hAct.days && hAct.waves > 0, 'waves <= days under daily counting');
 }
 
-// (c) horizons 依傳入參數回傳對應 key
+// (e) horizons 依傳入參數回傳對應 key（兩組皆然）
 {
   const hz = core.historyStats(stocks[0], { horizons: [20, 60, 120] });
-  ok([20, 60, 120].every(k => hz[k] && typeof hz[k].count === 'number' && typeof hz[k].avgRet === 'number'), 'history horizons keys follow opts');
+  ok([20, 60, 120].every(k => hz.direct[k] && typeof hz.direct[k].count === 'number' && hz.wait[k] && typeof hz.wait[k].avgRet === 'number'), 'history horizons keys follow opts in both groups');
 }
 
 // filterBars：移除 close<=0 的無成交佔位列，各陣列同步過濾
