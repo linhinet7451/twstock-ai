@@ -902,6 +902,7 @@ for (let g = start; g < start + count; g++) {
 // 標記：實心＝已成交（顏色依 selH 該筆報酬），空心灰＝整波未成交
 klState.markers = [];
 const selH = klSelH(klState.a);
+const klLegendH = $('klineLegendH'); if (klLegendH) klLegendH.textContent = selH; // 圖例天數跟著比較天數走
 for (let g = start; g < start + count; g++) {
   const list = klState.byBar.get(g); if (!list) continue;
   list.forEach((e, k) => {

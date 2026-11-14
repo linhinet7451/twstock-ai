@@ -201,3 +201,8 @@ dialog td,dialog th{white-space:normal;text-align:left}
 .kl-chips{display:flex;gap:6px;flex-wrap:wrap}
 #klineChart{width:100%;display:block;border-radius:8px;touch-action:pan-y;cursor:grab}
 .kl-info{white-space:pre-line;font-size:14px;line-height:1.65;margin-top:8px;min-height:52px}
+.kl-legend{color:var(--muted);font-size:12.5px;line-height:1.6;margin:0 0 6px}
+.kl-dot{display:inline-block;box-sizing:border-box;width:9px;height:9px;border-radius:50%;vertical-align:-1px;margin:0 1px}
+.kl-dot.win{background:#35c759}
+.kl-dot.loss{background:#ff5252}
+.kl-dot.none{background:transparent;border:1.6px solid #9db8d8}
