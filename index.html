@@ -113,6 +113,22 @@
       <label class="check"><input type="checkbox" id="chkNear"> 只看接近進場</label>
     </div>
     <div id="revLine" class="rev-line hidden"></div>
+    <div id="revFilterBar" class="rev-filter hidden">
+      <label>狀態
+        <select id="selRevStatus">
+          <option value="all">全部</option>
+          <option value="enter">可進場（接近進場・突破觀察）</option>
+          <option value="wait">等待回檔</option>
+          <option value="no">暫不追價（含條件失效）</option>
+        </select></label>
+      <label>事件新鮮度
+        <select id="selRevAge">
+          <option value="all">全部</option>
+          <option value="5">5 日內</option>
+          <option value="10">10 日內</option>
+        </select></label>
+    </div>
+    <details id="revStatsFold" class="rev-stats hidden"><summary>歷史表現（近一年站內資料計算）</summary><div id="revStatsBody" class="rev-stats-body">展開後計算…</div></details>
     <div id="emptyHint" class="empty hidden"></div>
     <div class="table-wrap">
       <table id="resultTable">
@@ -175,6 +191,7 @@
     <section id="tabHistory" class="tab-page">
       <button id="btnHistory" class="btn">看過去出現這種訊號時，後來漲還是跌</button>
       <div id="historyResult" class="card">還沒算過。按上面的按鈕，看這檔以前出現強勢訊號時，後來通常漲還是跌。</div>
+      <div id="revHistResult" class="card rev-hist hidden"></div>
     </section>
     <section id="tabLog" class="tab-page"><div id="logBox" class="card log"></div></section>
   </section>

@@ -77,12 +77,19 @@ input[type=checkbox]{width:auto}
 .tech-sum{margin:2px 0 4px;line-height:1.6;font-size:14.5px}
 .info-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;margin-left:5px;padding:0;border-radius:50%;border:1px solid var(--line);background:#1b3357;color:var(--muted);font-size:11.5px;line-height:1;cursor:pointer;vertical-align:2px}
 .info-btn:hover{color:var(--text);background:#24497c}
-/* 營收事件獨立按鈕：與風格預設同組，深橘專屬色區隔性質 */
-.btn.rev-preset{width:100%;border-color:#ea580c;background:#221105;color:#ffb38a}
-.btn.rev-preset .p-name{display:block}
-.btn.rev-preset .p-sub{display:block;font-size:10.5px;font-weight:400;opacity:.8;margin-top:1px}
-.btn.rev-preset.active{background:#ea580c;border-color:#ea580c;color:#fff;font-weight:700}
-.btn.rev-preset.active .p-sub{opacity:1}
+/* 營收事件按鈕與四顆風格預設完全同級：同列第五顆、同樣式（.btn.preset），
+   出現時按鈕列由 4 欄改 5 欄 */
+.preset-btns.has-rev{grid-template-columns:repeat(5,1fr)}
+/* 營收事件檢視：狀態／新鮮度篩選列與歷史表現摺疊 */
+.rev-filter{display:flex;gap:8px;flex-wrap:wrap;margin:0 2px 8px;align-items:center}
+.rev-filter label{flex-direction:row;align-items:center;gap:6px;font-size:13.5px;color:var(--muted)}
+.rev-filter select{width:auto;padding:6px 8px;font-size:14px}
+.rev-stats{border:1px solid var(--line);border-radius:8px;margin:0 2px 8px;background:#0d1a2c}
+.rev-stats summary{cursor:pointer;font-weight:700;font-size:14px;padding:8px 10px}
+.rev-stats-body{padding:0 10px 10px;font-size:13.5px;line-height:1.7;color:var(--text);white-space:pre-wrap}
+.rev-hist{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.rev-hist .rh-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.rev-hist .rh-note{color:var(--muted);font-size:13px}
 .sc-demo{color:var(--warn);font-weight:700}
 .sc-notes{white-space:pre-wrap;line-height:1.7;color:var(--text)}
 .more-tools{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#0d1a2c}
@@ -111,7 +118,6 @@ td.reason{white-space:normal;min-width:200px;text-align:left;color:var(--muted)}
 td.tg{display:none}
 .empty{border:1px dashed var(--warn);color:var(--warn);border-radius:8px;padding:10px;margin-bottom:8px;font-size:14px;line-height:1.6}
 .rev-line{color:var(--muted);font-size:13.5px;margin:2px 2px 8px}
-.sum-rev{color:var(--good);font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;margin:12px 0 8px}
 .tabs button{background:#0b1626;color:var(--muted);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:8px 10px;font-size:14px;cursor:pointer}
 .tabs button.active{background:var(--panel2);color:var(--text);font-weight:700}
