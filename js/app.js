@@ -167,59 +167,77 @@ function parseCSV(text) {
 
 // ---------- 後端資料包自動載入（GitHub Actions 排程更新 → 靜態檔案） ----------
 // 資料來源（2026-11-15 起）：主要來源為專用資料 repo（linhinet7451/twstock-ai-data）的 Pages，
-// 主要來源失敗時自動改用本站 data/ 的凍結舊副本重試。manifest、掃描包、完整歷史三種抓取
+// 主要來源失敗時自動改用本站 data/ 的凍結舊副本。manifest、掃描包、完整歷史三種抓取
 // 一律走 fetchDataJson / fetchDataGzip 單一入口；某來源成功後記住它，本次工作階段沿用。
+// 每個來源內先重試（首次＋2 次，退避 0.8s／2s）：fetch 拋錯、HTTP 非 200、gzip 解壓或
+// JSON 解析失敗都算一次失敗，吃掉下載中途瞬斷這類暫時故障；來源 3 次都失敗才換下一個來源。
 const DATA_BASES = [
   'https://linhinet7451.github.io/twstock-ai-data/data/',
   'data/',
 ];
 let dataBaseIdx = 0;
+const DATA_RETRY_DELAYS = [800, 2000];
+const sleepMs = ms => new Promise(r => setTimeout(r, ms));
 async function withDataBase(fn) {
   let lastErr = null;
   for (let i = dataBaseIdx; i < DATA_BASES.length; i++) {
-    try {
-      const r = await fn(DATA_BASES[i]);
-      dataBaseIdx = i;
-      return r;
-    } catch (e) { lastErr = e; }
+    for (let attempt = 0; attempt <= DATA_RETRY_DELAYS.length; attempt++) {
+      try {
+        const r = await fn(DATA_BASES[i]);
+        dataBaseIdx = i;
+        return r;
+      } catch (e) {
+        lastErr = e;
+        if (e && /DecompressionStream/.test(e.message || '')) throw e; // 瀏覽器不支援解壓：重試或換來源都沒用
+        if (attempt < DATA_RETRY_DELAYS.length) await sleepMs(DATA_RETRY_DELAYS[attempt]);
+      }
+    }
   }
   throw lastErr || new Error('資料來源無回應');
 }
 async function fetchDataJson(path) {
   return withDataBase(async base => {
-    const resp = await fetch(base + path, { cache: 'no-store' });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + base + path);
-    return resp.json();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000); // 單次嘗試逾時，避免連線卡死無限等待
+    try {
+      const resp = await fetch(base + path, { cache: 'no-store', signal: ctrl.signal });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + base + path);
+      return await resp.json();
+    } finally { clearTimeout(timer); }
   });
 }
 async function fetchDataGzip(path, onProgress) {
   return withDataBase(base => fetchGzipJson(base + path, onProgress));
 }
 async function fetchGzipJson(url, onProgress) {
-  const resp = await fetch(url, { cache: 'no-store' });
-  if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + url);
-  if (typeof DecompressionStream === 'undefined' || !resp.body) {
-    throw new Error('瀏覽器不支援 gzip 解壓（DecompressionStream），請更新瀏覽器');
-  }
-  let stream = resp.body;
-  if (onProgress) { // 串流計量下載進度：Content-Length 拿不到總長時只報已下載 MB
-    const total = +resp.headers.get('Content-Length') || 0;
-    const reader = stream.getReader();
-    let loaded = 0, lastShown = -1;
-    stream = new ReadableStream({
-      async pull(ctrl) {
-        const { done, value } = await reader.read();
-        if (done) { ctrl.close(); return; }
-        loaded += value.byteLength;
-        const pct = total ? Math.floor(loaded / total * 100) : -1;
-        if (pct !== lastShown) { lastShown = pct; onProgress(loaded, total); }
-        ctrl.enqueue(value);
-      },
-      cancel(r) { reader.cancel(r); },
-    });
-  }
-  const pipe = stream.pipeThrough(new DecompressionStream('gzip'));
-  return JSON.parse(await new Response(pipe).text());
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000); // 單次嘗試逾時（16MB 掃描包綽綽有餘），避免連線卡死無限等待
+  try {
+    const resp = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + url);
+    if (typeof DecompressionStream === 'undefined' || !resp.body) {
+      throw new Error('瀏覽器不支援 gzip 解壓（DecompressionStream），請更新瀏覽器');
+    }
+    let stream = resp.body;
+    if (onProgress) { // 串流計量下載進度：Content-Length 拿不到總長時只報已下載 MB
+      const total = +resp.headers.get('Content-Length') || 0;
+      const reader = stream.getReader();
+      let loaded = 0, lastShown = -1;
+      stream = new ReadableStream({
+        async pull(ctrl2) {
+          const { done, value } = await reader.read();
+          if (done) { ctrl2.close(); return; }
+          loaded += value.byteLength;
+          const pct = total ? Math.floor(loaded / total * 100) : -1;
+          if (pct !== lastShown) { lastShown = pct; onProgress(loaded, total); }
+          ctrl2.enqueue(value);
+        },
+        cancel(r) { reader.cancel(r); },
+      });
+    }
+    const pipe = stream.pipeThrough(new DecompressionStream('gzip'));
+    return JSON.parse(await new Response(pipe).text());
+  } finally { clearTimeout(timer); }
 }
 function rowsToStock(code, name, market, rows) {
   return { code, name, market, isDemo: false, bars: {
