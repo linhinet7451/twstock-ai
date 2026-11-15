@@ -16,6 +16,9 @@ TWSE／TPEx 官方全市場每日行情各抓一次，官方整包失敗時才 f
   scan.json.gz          最近 370 個交易日的全市場精簡包（前端掃描用，gzip）
   manifest.json         {updatedAt, latestDate, stockCount, withHistory, scanFile,...}
   state.json            回補進度 {done:[...], empty:[...], failed:{...}}（commit 後可續跑）
+  revstate.json.gz      月營收原始狀態（後端專用）：每檔最近 26 個月的營收與抓取進度
+  revenue.json.gz       E1 營收事件前端契約（daily 每次重算）：{generatedAt, latestDate,
+                        latestRevMonth, stocks:{code:{m, yoy, event, age}}}
 
 用法：
   python3 backend/update_data.py backfill --years 10 --batch 150 [--sleep 0.5]
@@ -36,6 +39,7 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from bisect import bisect_left
 from collections import Counter
 from datetime import date, timedelta
 from pathlib import Path
@@ -457,6 +461,7 @@ def cmd_daily(args, store: Store, token: str) -> int:
     except Exception as e:
         log(f"官方全市場每日行情抓取失敗，改走 FinMind 逐檔 fallback：{e}")
         cmd_daily_finmind(args, store, token, files, start)
+        _revenue_safe(args, store, token)
         return 0
 
     target = meta["targetDate"]
@@ -491,6 +496,7 @@ def cmd_daily(args, store: Store, token: str) -> int:
     store.save_state()
     log(f"每日更新覆蓋率：{covered}/{len(files)} 檔已達目標日期 {target}（{summary['coveragePct']}%；本次新增 {updated}、原本已達 {already}、無歷史或官方無此檔 {missing}）")
     log(f"每日增量（官方主線）完成：{summary}")
+    _revenue_safe(args, store, token)
     return 0
 
 
@@ -529,6 +535,216 @@ def build_bundle(store: Store) -> dict:
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     log(f"掃描包完成：{len(stocks)} 檔、最新 {latest}、gzip {manifest['scanBytes']} bytes（原始 {len(raw)}）")
     return manifest
+
+
+# ---------- E1 營收事件（月營收年增 > 20%，研究端 Round 6B 預註冊驗證通過） ----------
+# 定義（與研究端 round6b/PREREG.md 逐字一致，不得改動）：
+#   M 月營收自 M+1 月 15 日起可用；事件日 = 可用日起、該股自身交易日序的第一個交易日；
+#   事件窗 = 事件日後 20 個交易日（含事件日）。前端只顯示 age <= 20 的事件標記。
+# FinMind TaiwanStockMonthRevenue 不支援無 data_id 的批量查詢（實測 HTTP 400），
+# 故採逐檔抓取＋revstate 進度輪替：每次 daily 依優先序抓一批（未抓過 > 有新月份待補 >
+# 最久未更新），全市場約 9 次 daily 完成首輪，之後每月新月份陸續補入。
+REV_KEEP = 26            # revstate 每檔保留的最近月份數
+REV_FETCH_YEARS = 4      # 逐檔抓取回溯年數（夠算最近 26 個月的 YoY）
+REV_BATCH = 300          # 無 token 時每次 daily 的抓取上限（FinMind 未登入配額自律）
+REV_BATCH_TOKEN = 1200   # 有 FINMIND_TOKEN 時的上限
+
+
+def rev_month_idx(y: int, m: int) -> int:
+    return y * 12 + (m - 1)
+
+
+def rev_month_label(idx: int) -> str:
+    return f"{idx // 12:04d}-{idx % 12 + 1:02d}"
+
+
+def rev_avail_date(idx: int) -> str:
+    """營收月 idx 的可用日：次月 15 日（ISO）。"""
+    nxt = idx + 1
+    return date(nxt // 12, nxt % 12 + 1, 15).isoformat()
+
+
+def rev_latest_available_idx(latest_date: str) -> int:
+    """截至 latest_date 已可用的最新營收月 idx（可用日 <= latest_date 的最大月份）。"""
+    y, m, d = int(latest_date[:4]), int(latest_date[5:7]), int(latest_date[8:10])
+    cand = rev_month_idx(y, m) - 1      # 其可用日 = 本月 15 日
+    if d < 15:
+        cand -= 1
+    return cand
+
+
+def rev_yoy_ratio(series: dict, idx: int):
+    """YoY（比率）：去年同月缺漏或 <= 0 時回傳 None（比照研究端定義）。"""
+    v = series.get(idx)
+    prev = series.get(idx - 12)
+    if v is None or prev is None or prev <= 0:
+        return None
+    return v / prev - 1
+
+
+def rev_event_age(dates: list, avail: str):
+    """事件日 = dates 中第一個 >= avail 的交易日；age 以 dates 序計（事件日 = 0）。"""
+    j = bisect_left(dates, avail)
+    if j >= len(dates):
+        return None, None
+    return dates[j], (len(dates) - 1) - j
+
+
+def compute_revenue_payload(series_by_code: dict, dates_by_code: dict, generated_at: str) -> dict:
+    """組前端契約 revenue.json 的內容（純函數，供 selftest 與正式路徑共用）。
+
+    每檔取「不晚於全域最新可用月、且 YoY 可計算」的新近月份為其營收狀態；
+    YoY > 20% 才給 event/age（event 不存在於 bars 範圍時兩者皆 null）。
+    """
+    latest = ""
+    for dates in dates_by_code.values():
+        if dates and dates[-1] > latest:
+            latest = dates[-1]
+    payload = {"generatedAt": generated_at, "latestDate": latest,
+               "latestRevMonth": None, "stocks": {}}
+    if not latest:
+        return payload
+    cap = rev_latest_available_idx(latest)
+    payload["latestRevMonth"] = rev_month_label(cap)
+    for code in sorted(series_by_code):
+        series = series_by_code[code]
+        if not series:
+            continue
+        start_idx = min(max(series), cap)
+        idx, yoy = start_idx, None
+        while idx >= start_idx - 12 and idx >= 0:
+            yoy = rev_yoy_ratio(series, idx)
+            if yoy is not None:
+                break
+            idx -= 1
+        if yoy is None:
+            continue
+        entry = {"m": rev_month_label(idx), "yoy": round(yoy * 100, 1),
+                 "event": None, "age": None}
+        if yoy > 0.20:
+            ev, age = rev_event_age(dates_by_code.get(code) or [], rev_avail_date(idx))
+            entry["event"] = ev
+            entry["age"] = age
+        payload["stocks"][code] = entry
+    return payload
+
+
+def load_revstate(store: Store) -> dict:
+    rs = {"stocks": {}, "fetched": {}}
+    p = store.dir / "revstate.json.gz"
+    if p.exists():
+        try:
+            with gzip.open(p, "rb") as f:
+                raw = json.loads(f.read().decode("utf-8"))
+            for code, pairs in (raw.get("stocks") or {}).items():
+                rs["stocks"][code] = {int(i): float(v) for i, v in pairs}
+            rs["fetched"] = raw.get("fetched") or {}
+        except Exception as e:
+            log(f"revstate 讀取失敗，視為空白重建：{e}")
+    return rs
+
+
+def save_revstate(store: Store, rs: dict):
+    raw = {"stocks": {c: [[i, s[i]] for i in sorted(s)] for c, s in rs["stocks"].items()},
+           "fetched": rs["fetched"]}
+    data = json.dumps(raw, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    with gzip.open(store.dir / "revstate.json.gz", "wb", compresslevel=9) as f:
+        f.write(data)
+
+
+def maintain_revenue(args, store: Store, token: str):
+    """營收維護：逐檔抓取（輪替）→ 保存 revstate → 重算 revenue.json.gz。
+
+    任何未預期錯誤由呼叫端 _revenue_safe 攔截，不影響價格主流程；
+    單檔抓取失敗只記錄、隔日再試；配額錯誤則停止本日抓取但照常產出。
+    """
+    rs = load_revstate(store)
+    series, fetched = rs["stocks"], rs["fetched"]
+    files = sorted(store.hist.glob("*.json.gz"))
+    codes = [p.name.replace(".json.gz", "") for p in files]
+    today = date.today()
+    # 已公布的最新營收月估計（M 月於 M+1 月 10 日前公布）：僅用於抓取優先序
+    pub = rev_month_idx(today.year, today.month) - (1 if today.day >= 10 else 2)
+
+    def priority(code):
+        f = fetched.get(code)
+        s = series.get(code)
+        if f is None:
+            # 未抓過：一般公司優先；00 開頭多為 ETF/基金（實測不申報月營收）排後，
+            # 避免首批額度全耗在無資料證券上（它們仍會在輪替中被抓到）
+            return (2, "") if code.startswith("00") else (0, "")
+        if s and max(s) < pub:
+            return (1, f)
+        return (3, f)
+
+    todo = sorted(codes, key=lambda c: (priority(c), c))
+    batch = REV_BATCH_TOKEN if token else REV_BATCH
+    start = (today - timedelta(days=int(REV_FETCH_YEARS * 365.25))).isoformat()
+    n_ok = n_empty = n_fail = attempted = 0
+    for code in todo:
+        if attempted >= batch:
+            break
+        if fetched.get(code) == today.isoformat() and code in series:
+            continue  # 同日重跑（備援排程）不重複抓，把額度留給下一批
+        attempted += 1
+        try:
+            data = fetch_json("TaiwanStockMonthRevenue", token, data_id=code, start_date=start)
+            s = {}
+            for r in data:
+                try:
+                    s[rev_month_idx(int(r["revenue_year"]), int(r["revenue_month"]))] = float(r["revenue"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+            keep = sorted(s)[-REV_KEEP:]
+            series[code] = {i: s[i] for i in keep}
+            fetched[code] = today.isoformat()
+            if s:
+                n_ok += 1
+            else:
+                n_empty += 1
+        except Exception as e:
+            n_fail += 1
+            log(f"  營收 {code} 抓取失敗：{e}")
+            if is_quota_error(e):
+                log("疑似觸及 FinMind 配額，停止本日營收抓取（已抓部分照常保存與產出）")
+                break
+        if attempted % 100 == 0:
+            save_revstate(store, rs)
+            log(f"  營收抓取進度 {attempted}/{batch}（成功 {n_ok}、無資料 {n_empty}、失敗 {n_fail}）")
+        polite_sleep(max(args.sleep, 0.3))
+    save_revstate(store, rs)
+    covered = sum(1 for c in codes if fetched.get(c))
+    log(f"營收抓取：本日嘗試 {attempted} 檔（成功 {n_ok}、無營收資料 {n_empty}、失敗 {n_fail}）；"
+        f"累計已抓 {covered}/{len(codes)} 檔")
+
+    dates_by_code, series_by_code = {}, {}
+    for p in files:
+        code = p.name.replace(".json.gz", "")
+        s = store.read_stock(code)
+        if s and s.get("rows"):
+            dates_by_code[code] = [r[0] for r in clean_rows(s["rows"])]
+        if code in series:
+            series_by_code[code] = series[code]
+    payload = compute_revenue_payload(
+        series_by_code, dates_by_code,
+        time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+    raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    out = store.dir / "revenue.json.gz"
+    with gzip.open(out, "wb", compresslevel=9) as f:
+        f.write(raw)
+    in_window = sum(1 for v in payload["stocks"].values()
+                    if v.get("age") is not None and v["age"] <= 20)
+    log(f"營收輸出 revenue.json.gz：{len(payload['stocks'])} 檔有 YoY、事件窗內 {in_window} 檔、"
+        f"最新營收月 {payload['latestRevMonth']}、行情最新 {payload['latestDate']}、"
+        f"gzip {out.stat().st_size} bytes")
+
+
+def _revenue_safe(args, store: Store, token: str):
+    """營收維護的隔離包裝：失敗沿用既有 revenue.json.gz，絕不讓 daily 主流程失敗。"""
+    try:
+        maintain_revenue(args, store, token)
+    except Exception as e:
+        log(f"營收維護失敗（沿用既有 revenue.json.gz，不影響價格更新）：{e}")
 
 
 def cmd_selftest(store: Store) -> int:
@@ -575,6 +791,33 @@ def cmd_selftest(store: Store) -> int:
     by_code = {s["c"]: s for s in payload["stocks"]}
     assert by_code["9999"]["c"] == "9999" and len(by_code["9999"]["r"]) == 130
     assert len(by_code["9997"]["r"]) == 125 and all(r[4] > 0 for r in by_code["9997"]["r"]), by_code.get("9997")
+    # 營收 E1：可用日／最新可用月／YoY／事件日與 age（合成資料，逐值核對）
+    i_sep25, i_sep26 = rev_month_idx(2025, 9), rev_month_idx(2026, 9)
+    i_oct25, i_oct26 = rev_month_idx(2025, 10), rev_month_idx(2026, 10)
+    assert rev_avail_date(i_oct26) == "2026-11-15" and rev_avail_date(rev_month_idx(2026, 12)) == "2027-01-15"
+    assert rev_latest_available_idx("2026-11-13") == i_sep26, rev_latest_available_idx("2026-11-13")
+    assert rev_latest_available_idx("2026-11-15") == i_oct26 and rev_latest_available_idx("2026-11-14") == i_sep26
+    assert abs(rev_yoy_ratio({i_oct25: 100.0, i_oct26: 130.0}, i_oct26) - 0.30) < 1e-9
+    assert rev_yoy_ratio({i_oct25: 0, i_oct26: 5.0}, i_oct26) is None
+    assert rev_yoy_ratio({i_oct26: 5.0}, i_oct26) is None
+    ndays = ["2026-11-12", "2026-11-13", "2026-11-16", "2026-11-17"]
+    assert rev_event_age(ndays, "2026-11-15") == ("2026-11-16", 1)   # 可用日逢週日 → 次一交易日
+    assert rev_event_age(ndays, "2026-11-13") == ("2026-11-13", 2)   # 可用日即交易日
+    assert rev_event_age(ndays, "2026-12-01") == (None, None)        # bars 範圍外
+    days = ["2026-10-14", "2026-10-15", "2026-10-16", "2026-11-16", "2026-11-17"]
+    bars_map = {"AAA": days, "BBB": days, "CCC": days, "DDD": days}
+    series_map = {
+        "AAA": {i_sep25: 100.0, i_sep26: 130.0},   # YoY +30% → 事件（2026-09 月，10/15 可用）
+        "BBB": {i_sep25: 100.0, i_sep26: 90.0},    # YoY −10% → 無事件
+        "CCC": {i_sep25: 100.0, i_sep26: 120.0},   # YoY 恰 +20% → 不算事件（須嚴格 > 20%）
+        "DDD": {i_sep26: 100.0},                   # 缺去年同月 → 整檔省略
+    }
+    pl = compute_revenue_payload(series_map, bars_map, "2026-11-17T00:00:00Z")
+    assert pl["latestDate"] == "2026-11-17" and pl["latestRevMonth"] == "2026-10", pl
+    assert pl["stocks"]["AAA"] == {"m": "2026-09", "yoy": 30.0, "event": "2026-10-15", "age": 3}, pl["stocks"]
+    assert pl["stocks"]["BBB"] == {"m": "2026-09", "yoy": -10.0, "event": None, "age": None}, pl["stocks"]
+    assert pl["stocks"]["CCC"]["event"] is None and pl["stocks"]["CCC"]["age"] is None, pl["stocks"]
+    assert "DDD" not in pl["stocks"], pl["stocks"]
     log("selftest OK")
     return 0
 
