@@ -95,7 +95,7 @@ function markPreset() {
   updateCompactInfo();
 }
 // 模式切換的統一收斂點：按鈕 active、說明、摘要、精簡列一次對齊目前模式
-function syncModeUI() { markPreset(); syncRevButton(); refreshSumLine(); }
+function syncModeUI() { markPreset(); syncRevButton(); refreshSumLine(); syncRevSortUI(); }
 async function applyPreset(k) {
   const p = PRESETS[k]; if (!p) return;
   $('inpFilter').value = ''; // 切換預設時清空名單關鍵字，避免殘留關鍵字把新名單濾成空的、誤以為選不到股票
@@ -268,6 +268,44 @@ function revTierDays() {
   let v = el ? parseInt(el.value, 10) : 10;
   if (!Number.isFinite(v)) v = 10;
   return Math.max(1, Math.min(19, v));
+}
+// 營收名單排序（使用者可切換；預設 fresh＝事件新鮮度：age 小到大、同 age 時 yoy 大到小，
+// 與改版前完全相同）。選擇存 localStorage（twstock_rev_sort），非法值回退 fresh。
+// 只影響營收檢視的顯示順序：state.results 的分層與內容不動，預設模式名單的排序
+// （選股設定的 sortMode）不在此範圍、不受影響。
+const REV_SORT_KEYS = ['fresh', 'tech', 'entry', 'yoy'];
+function revSortKey() {
+  try { const v = localStorage.getItem('twstock_rev_sort'); return REV_SORT_KEYS.includes(v) ? v : 'fresh'; }
+  catch (e) { return 'fresh'; }
+}
+// 檢視標頭的排序說明（跟著目前選擇走；fresh 的文字與改版前完全相同）
+function revSortText() {
+  switch (revSortKey()) {
+    case 'tech': return '技術分高到低';
+    case 'entry': return '進場適合度高到低';
+    case 'yoy': return '年增高到低';
+    default: return '事件新到舊、年增高到低';
+  }
+}
+// 非 fresh 排序比較：主鍵降冪，tie-break 依序 age 小到大、yoy 大到小、代號小到大（穩定確定）
+function cmpRevSort(a, b) {
+  const k = revSortKey();
+  let d = 0;
+  if (k === 'tech') d = b.techScore - a.techScore;
+  else if (k === 'entry') d = b.entryScore - a.entryScore;
+  else if (k === 'yoy') d = (b._rev ? b._rev.yoy : -Infinity) - (a._rev ? a._rev.yoy : -Infinity);
+  if (d) return d;
+  d = (a._rev ? a._rev.age : 0) - (b._rev ? b._rev.age : 0);
+  if (d) return d;
+  d = (b._rev ? b._rev.yoy : 0) - (a._rev ? a._rev.yoy : 0);
+  if (d) return d;
+  return a.code < b.code ? -1 : a.code > b.code ? 1 : 0;
+}
+// 排序下拉只在營收模式顯示（預設模式隱藏），且值與持久化選擇同步
+function syncRevSortUI() {
+  const sel = $('selRevSort'); if (!sel) return;
+  sel.value = revSortKey();
+  sel.classList.toggle('hidden', !revActive());
 }
 // 檢視標頭的分層定義（跟著分層日設定值走）：E1 全集（age <= 20）依新鮮度拆兩層
 const revRecDef = () => `營收推薦：月營收年增 > 20%，事件後 ${revTierDays()} 個交易日內（不套用風格門檻）`;
@@ -602,12 +640,12 @@ function updateRevLine(displayed) {
   if (nearLbl) nearLbl.classList.toggle('hidden', isRev);
   if (!isRev) return;
   const def = view === 'revwatch' ? revWatchDef() : revRecDef();
-  if (state.revLoading) { el.textContent = def + '・排序：事件新到舊、年增高到低｜名單載入中…'; return; }
+  if (state.revLoading) { el.textContent = def + `・排序：${revSortText()}｜名單載入中…`; return; }
   const total = state.revTotal != null ? state.revTotal : revEventEntries().length;
   const cardableAll = state.results.rev.length + state.results.revwatch.length;
   const cardable = state.results[view].length;
   const shown = displayed != null ? displayed : cardable;
-  el.textContent = def + '・排序：事件新到舊、年增高到低｜' +
+  el.textContent = def + `・排序：${revSortText()}｜` +
     (shown < cardable ? `共 ${cardable} 檔，搜尋後顯示 ${shown} 檔` : `目前 ${cardable} 檔`) +
     (total > cardableAll ? `（另 ${total - cardableAll} 檔歷史不足 125 日，無法產生卡片）` : '');
 }
@@ -943,6 +981,12 @@ function currentList() {
   if (kind !== 'rev' && kind !== 'revwatch' && $('chkNear').checked) {
     list = list.filter(a => a.status === '接近進場');
   }
+  // 營收檢視的排序：先關鍵字篩選、後排序（可疊加）。fresh＝state 陣列本身的新鮮度
+  // 順序（buildRevList 已排好），不重排以維持改版前完全相同的順序；其餘排序排副本，
+  // 不動 state.results 本體，切回 fresh 即恢復原順序。
+  if ((kind === 'rev' || kind === 'revwatch') && revSortKey() !== 'fresh') {
+    list = [...list].sort(cmpRevSort);
+  }
   return list;
 }
 const CARD_KEY = [1, 2, 5, 8, 9, 11, 14]; // 手機卡片第一層只顯示七項：代號、名稱、收盤、技術分、進場適合度、狀態、進場區間；停損／目標／風報／原因等其餘欄位收進「展開全部欄位」
@@ -952,6 +996,7 @@ function renderList() {
   if (!revActive()) state.revHistShown = false; // 已離開營收模式 → 營收歷史產出狀態不殘留
   updateRevLine();
   syncRevButton();
+  syncRevSortUI();
   const list = currentList();
   const body = $('resultBody');
   body.innerHTML = '';
@@ -1806,6 +1851,10 @@ document.addEventListener('click', e => { if (e.target && e.target.closest && e.
 $('selList').addEventListener('change', async () => {
   if (revView()) await enterRevMode($('selList').value); // 與營收鈕同一條路徑：同步先原子切換 UI，再以進度回饋重建名單（推薦／觀察皆然）
   else { state.revHistShown = false; renderList(); syncModeUI(); } // 檢視切換即模式切換：按鈕 active／說明／摘要一併收斂
+});
+$('selRevSort').addEventListener('change', () => {
+  try { localStorage.setItem('twstock_rev_sort', $('selRevSort').value); } catch (e) { /* 寫入失敗（如隱私模式）時僅本次瀏覽有效 */ }
+  renderList(); // 即時重排目前名單，不需重掃；檢視標頭的排序說明由 updateRevLine 跟著目前選擇更新
 });
 $('inpFilter').addEventListener('input', renderList);
 $('chkNear').addEventListener('change', renderList);
