@@ -62,7 +62,7 @@ input[type=checkbox]{width:auto}
 .badge.b-wait{background:#57451a;color:#ffd54f;border-color:#8a6d2f}
 .badge.b-info{background:#173f5c;color:#7cc4ff;border-color:#2a6ea3}
 .badge.b-mut{background:#22344d;color:var(--muted)}
-.badge.b-rev{background:#4a2c14;color:#ffb74d;border-color:#8a5a2b}
+.badge.b-rev{background:#f59e0b;color:#221100;border-color:#f59e0b;font-weight:700}
 .kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:8px 0 10px}
 .kv-grid>div{display:flex;flex-direction:column;gap:1px}
 .kv-grid span{font-size:12px;color:var(--muted)}
@@ -96,6 +96,7 @@ td.reason{white-space:normal;min-width:200px;text-align:left;color:var(--muted)}
 td.tg{display:none}
 .empty{border:1px dashed var(--warn);color:var(--warn);border-radius:8px;padding:10px;margin-bottom:8px;font-size:14px;line-height:1.6}
 .rev-line{color:var(--muted);font-size:13.5px;margin:2px 2px 8px}
+.sum-rev{color:var(--good);font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;margin:12px 0 8px}
 .tabs button{background:#0b1626;color:var(--muted);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:8px 10px;font-size:14px;cursor:pointer}
 .tabs button.active{background:var(--panel2);color:var(--text);font-weight:700}
