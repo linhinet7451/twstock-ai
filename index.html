@@ -34,7 +34,7 @@
     <p class="hint" id="presetHint"></p>
   </div>
   <div class="scan-row">
-    <button id="btnScan" class="btn primary big">▶ 開始掃描及產生推薦</button>
+    <button id="btnScan" class="btn primary big">▶ 開始掃描</button>
     <button id="btnStop" class="btn danger hidden" disabled>■ 停止</button>
   </div>
   <div class="compact-row">
@@ -52,7 +52,7 @@
       <div class="block-body">
         <p class="hint" id="backendStatus">後端資料：尚未載入（開站會自動載入後端排程更新的資料包）</p>
         <button id="btnReloadData" class="btn accent">更新最新資料</button>
-        <details class="more-tools"><summary>更多工具（補抓／匯入／檢查／示範）</summary>
+        <details class="more-tools"><summary>更多工具</summary>
           <div class="mt-body">
             <label>下載天數（個股補抓用，120～3650）
               <input type="number" id="inpDays" min="120" max="3650" step="1" value="365"></label>
@@ -135,11 +135,11 @@
     <nav class="tabs" id="detailTabs">
       <button data-tab="tabStrategy" class="active">走勢＋策略摘要</button>
       <button data-tab="tabKline">K線回顧</button>
-      <button data-tab="tabTech">詳細技術指標</button>
-      <button data-tab="tabNews">個股新聞</button>
-      <button data-tab="tabAI">Gemini 深度解讀</button>
-      <button data-tab="tabHistory">歷史訊號觀察</button>
-      <button data-tab="tabLog">執行紀錄</button>
+      <button data-tab="tabTech">技術明細</button>
+      <button data-tab="tabNews">新聞</button>
+      <button data-tab="tabAI">AI 解讀</button>
+      <button data-tab="tabHistory">歷史表現</button>
+      <button data-tab="tabLog">更新紀錄</button>
     </nav>
 
     <section id="tabStrategy" class="tab-page active">

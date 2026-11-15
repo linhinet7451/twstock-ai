@@ -26,7 +26,7 @@ const state = {
 };
 const stocksNow = () => state.mode === 'demo' ? state.demoStocks : state.realStocks;
 
-// ---------- 執行紀錄 (#268) ----------
+// ---------- 更新紀錄 (#268) ----------
 function log(msg) {
   const t = new Date().toLocaleTimeString('zh-TW', { hour12: false });
   const box = $('logBox');
@@ -41,7 +41,7 @@ function setBusy(b) {
   $('btnStop').classList.toggle('hidden', !b); // 停止鈕只在掃描／背景工作進行中顯示
   const cb = $('btnScanCompact'); if (cb) cb.disabled = b;
 }
-function updateScanLabel() { $('btnScan').textContent = state.scanDone ? '↻ 重新掃描' : '▶ 開始掃描及產生推薦'; }
+function updateScanLabel() { $('btnScan').textContent = state.scanDone ? '↻ 重新掃描' : '▶ 開始掃描'; }
 function updateCompactInfo() {
   const c = $('compactInfo'); if (!c) return;
   c.textContent = `${state.presetLabel || '穩健推薦'}｜推薦 ${state.results.candidates.length} 檔`;
@@ -357,6 +357,7 @@ function syncRevOption() {
     updateRevLine();
   }
   syncRevToggle();
+  syncRevButton();
 }
 // 「只看營收事件」交集篩選開關：index.html 不動，比照 selList 的 rev option 以 JS 動態建立，
 // 插在「只看接近進場」右邊、同一個篩選列同一個 .check 模式；僅在營收資料已載入且正式模式時出現。
@@ -377,6 +378,40 @@ function syncRevToggle() {
   const show = !!state.revenue && state.mode === 'real';
   wrap.classList.toggle('hidden', !show);
   if (!show) { const c = $('chkRev'); if (c && c.checked) { c.checked = false; if (state.scanDone) renderList(); } }
+}
+// 「營收事件」獨立按鈕：放在四顆風格預設正下方（同組但以深橘專屬色區隔性質），
+// 僅營收資料已載入且正式模式時出現。點按直接切到營收事件檢視——名單就是 E1 集合
+// 本體（age <= 20），不套用任何風格預設門檻（忠實度紅線）；與「只看營收事件」交集
+// 開關、摘要計數並存。active 呈現比照預設鈕（selList 為 rev 時亮起）。
+function ensureRevButton() {
+  let btn = $('btnRevPreset');
+  if (btn) return btn;
+  const bar = document.querySelector('.preset-bar'), row = $('presetRow');
+  if (!bar || !row) return null;
+  btn = document.createElement('button');
+  btn.id = 'btnRevPreset'; btn.type = 'button';
+  btn.className = 'btn small rev-preset hidden';
+  btn.innerHTML = '<span class="p-name">營收事件</span><span class="p-sub">月營收年增 > 20%・公布後 20 個交易日（不套用風格門檻）</span>';
+  btn.addEventListener('click', async () => {
+    if (!state.revenue || state.mode !== 'real') return;
+    await buildRevList();
+    $('selList').value = 'rev';
+    renderList();
+    const tb = document.querySelector('.toolbar');
+    if (tb) { // 把結果區帶到眼前（扣掉置頂操作列高度）
+      const barEl = document.querySelector('.action-bar');
+      const y = tb.getBoundingClientRect().top + window.scrollY - ((barEl ? barEl.offsetHeight : 0) + 10);
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    }
+  });
+  bar.insertBefore(btn, row.nextSibling);
+  return btn;
+}
+function syncRevButton() {
+  const btn = ensureRevButton(); if (!btn) return;
+  const show = !!state.revenue && state.mode === 'real';
+  btn.classList.toggle('hidden', !show);
+  btn.classList.toggle('active', show && $('selList') && $('selList').value === 'rev');
 }
 function rowsToStock(code, name, market, rows) {
   return { code, name, market, isDemo: false, bars: {
@@ -545,22 +580,23 @@ function currentList() {
   return list;
 }
 const CARD_KEY = [1, 2, 5, 8, 9, 11, 14]; // 手機卡片第一層只顯示七項：代號、名稱、收盤、技術分、進場適合度、狀態、進場區間；停損／目標／風報／原因等其餘欄位收進「展開全部欄位」
-const statusBadgeCls = s => s === '接近進場' ? 'b-ok' : s === '等待回檔' ? 'b-wait' : s === '突破觀察' ? 'b-info' : 'b-mut';
+// 狀態固定色票（全站一致）：接近進場＝藍綠、等待回檔＝黃、突破觀察＝紫、暫不追價＝灰、條件失效＝紅
+const statusBadgeCls = s => s === '接近進場' ? 'b-ok' : s === '等待回檔' ? 'b-wait' : s === '突破觀察' ? 'b-info' : s === '條件失效' ? 'b-bad' : 'b-mut';
 function renderList() {
   updateRevLine();
+  syncRevButton();
   const list = currentList();
   const body = $('resultBody');
   body.innerHTML = '';
   list.forEach((a, i) => {
     const tr = document.createElement('tr');
     if (state.selected && state.selected.code === a.code) tr.className = 'selected';
-    const scoreCls = v => v >= 80 ? 'score-hi' : 'score-mid';
     const cells = [
       ['排行', i + 1], ['代號', a.code], ['名稱', a.name], ['市場', a.market], ['最新日期', a.date],
       ['收盤', fmt(a.close)], ['當日漲跌', `<span class="${a.change >= 0 ? 'up' : 'down'}">${fmtSign(a.change)}</span>`],
       ['漲跌幅', `<span class="${a.changePct >= 0 ? 'up' : 'down'}">${fmtSign(a.changePct)}%</span>`],
-      ['技術分', `<span class="${scoreCls(a.techScore)}">${a.techScore}</span>`],
-      ['進場適合度', `<span class="${scoreCls(a.entryScore)}">${a.entryScore}</span>`],
+      ['技術分', `${a.techScore}`],
+      ['進場適合度', `${a.entryScore}`],
       ['距離進場%', fmtSign(a.strat.distPct) + '%'], ['狀態', `<span class="badge ${statusBadgeCls(a.status)}">${a.status}</span>${revBadgeHtml(a)}`], ['週期', a.period], ['策略', a.type],
       ['進場區間', `${fmt(a.strat.entryLow)}～${fmt(a.strat.entryHigh)}`], ['停損', fmt(a.strat.stop)],
       ['目標1 / 目標2', `${fmt(a.strat.target1)} / ${fmt(a.strat.target2)}${a.vlag ? '<div class="vlag">波段大漲後回落，目標僅供參考</div>' : ''}`],
@@ -610,6 +646,7 @@ tr.classList.toggle('selected', tr.children[1] && tr.children[1].textContent ===
 });
 drawChart(a);
 renderStrategyCard(a);
+if ($('tabStrategy').classList.contains('active')) maybeCardHistory(a); // 背景補算歷史統計，算完自動補進策略卡
 renderTech(a);
 if (state.aiByCode[a.code]) renderAI(a.code); else $('aiResult').textContent = '尚未進行 AI 分析。AI 只解讀既有數據，不得捏造價格或改寫交易價位。';
 if (a._history) renderHistory(a); else $('historyResult').textContent = '還沒算過。按上面的按鈕，看這檔以前出現強勢訊號時，後來通常漲還是跌。';
@@ -695,22 +732,89 @@ if (closeScore >= 8) { // 找不到乾淨位置就不畫：硬擠只會疊字，
   ctx.fillText(closeText, Math.max(34, lx - 44), closeY);
 }
 }
+// ---------- 策略卡補充資訊：為何入選／為何未推薦／歷史統計 ----------
+// 入選主因：命中訊號中加分最高的前 3 項（同分者依訊號定義順序）；候選＝目前推薦或觀察名單成員。
+function topHitNames(a, n = 3) { return a.hit.slice().sort((x, y) => y.pts - x.pts).slice(0, n); }
+function inCurrentLists(a) {
+  return state.results.candidates.some(x => x.code === a.code) || state.results.watch.some(x => x.code === a.code);
+}
+// 未推薦主因：五個固定類別擇一，附實際數字對目前所選預設的門檻。
+// 優先序（多因並存時）：資料不足 → 技術分不足 → 成交額不足 → 風報不足 → 距離過遠。
+// 「距離過遠」含位置不合：狀態暫不追價／條件失效，或進場適合度未達門檻（其主要扣分來自距離）。
+// 五類都不成立時回傳 null（例如通過條件但不在目前名單範圍，如推薦名額已滿）。
+function whyOut(a) {
+  const o = scanOpts(), s = a.strat;
+  if (!s || !(s.stop > 0) || !(s.target1 > s.entryLow) || a.avgAmount20M == null)
+    return { cat: '資料不足', detail: '策略價位或成交額資料不足，無法完成判斷' };
+  if (a.techScore < o.minTech) return { cat: '技術分不足', detail: `技術分 ${a.techScore}，未達 ${o.minTech}` };
+  if (a.avgAmount20M < o.minAvgAmountM) return { cat: '成交額不足', detail: `近 20 日均成交額 ${fmt(a.avgAmount20M, 1)} 百萬元，未達 ${o.minAvgAmountM} 百萬元` };
+  if (s.rr < 1.5) return { cat: '風報不足', detail: `風險報酬 1：${fmt(s.rr)}，未達 1.5` };
+  if (s.status === '暫不追價') return { cat: '距離過遠', detail: `收盤距進場區上緣 ${fmt(s.distPct, 1)}%，狀態「暫不追價」` };
+  if (s.status === '條件失效') return { cat: '距離過遠', detail: '狀態「條件失效」，股價已跌出進場區' };
+  if (a.entryScore < o.minEntry) return { cat: '距離過遠', detail: `進場適合度 ${a.entryScore}，未達 ${o.minEntry}（距進場區 ${fmt(s.distPct, 1)}%）` };
+  return null;
+}
+function whyLineHtml(a) {
+  if (inCurrentLists(a)) {
+    const top = topHitNames(a);
+    return `<div class="sc-why">為何入選：共命中 ${a.hit.length}／13 項訊號${top.length ? `，主要成立：${escapeHtml(top.map(h => `${h.name}（+${h.pts}）`).join('、'))}` : ''}</div>`;
+  }
+  const w = whyOut(a);
+  return w ? `<div class="sc-why">為何未推薦：${w.cat}（${escapeHtml(w.detail)}）</div>` : '';
+}
+// 卡片歷史統計：與「歷史表現」分頁同一份 historyStats（同預設條件、同口徑），
+// 目標一/二觸及比例為兩種進場方式（直接買＋等回檔）在最長持有天數下以筆數加權合併；
+// 狀態為等待回檔者加列等回檔組的整體成交率與平均等待天數（此股過去訊號的整體統計，非單一訊號數字）。
+function cardHistoryHtml(a) {
+  const h = a._history;
+  if (!h || !h.days || a._historySig !== histCtx(a).sig) return '';
+  const hs = a._historyHorizons || [5, 10, 20];
+  const hh = hs.includes(a._selHorizon) ? a._selHorizon : hs[hs.length - 1];
+  let cnt = 0, t1 = 0, t2 = 0;
+  for (const g of ['direct', 'wait']) { const s = h[g][hh]; if (s && s.count) { cnt += s.count; t1 += s.targetHit * s.count; t2 += (s.target2Hit || 0) * s.count; } }
+  if (!cnt) return '';
+  let line = `歷史統計（${(a._historyCond || {}).name || '目前'}條件・此股過去訊號的整體統計）：抱滿 ${hh} 天，目標一曾觸及 ${fmt(t1 / cnt, 1)}%、目標二曾觸及 ${fmt(t2 / cnt, 1)}%`;
+  if (a.status === '等待回檔' && h.wait.signalDays) line += `\n等待回檔整體統計：歷史成交率 ${fmt(h.wait.fillRate, 1)}%、平均等 ${fmt(h.wait.avgWaitDays, 1)} 天成交`;
+  if (h.days < 10) line += '\n（訊號出現次數少於 10 次，參考價值低）';
+  return `<div class="sc-hist">${escapeHtml(line)}</div>`;
+}
+// 選到股票後在背景補算歷史統計（完整歷史＋calcHistory，與歷史表現/K線回顧共用快取），
+// 算完若仍停在同一檔就重繪策略卡補上歷史統計行；失敗或換股就靜默放棄。
+async function maybeCardHistory(a) {
+  if (!a || a._histBusy) return;
+  const ctx = histCtx(a);
+  if (a._history && a._historySig === ctx.sig) return;
+  const stock0 = state.selectedStock;
+  if (!stock0 || stock0.code !== a.code) return;
+  a._histBusy = true;
+  try {
+    const full = await ensureFullHistory(stock0);
+    if (state.selected !== a) return;
+    state.selectedStock = full;
+    if (calcHistory(a, ctx) && state.selected === a) renderStrategyCard(a);
+  } catch (e) { /* 背景補算失敗不影響主流程 */ }
+  finally { a._histBusy = false; }
+}
 function renderStrategyCard(a) {
 const s = a.strat, demo = a.isDemo? '虛構示範資料｜勿用於投資\n': '';
 const ri = a.isDemo ? null : revInfo(a.code);
+// 停損距離（顯示規則，非策略變更）：（進場區中點−停損）／進場區中點 ≥ 10% 時標「風險偏高」
+const stopDistPct = s.entryMid > 0 ? (s.entryMid - s.stop) / s.entryMid * 100 : 0;
+const riskTag = stopDistPct >= 10 ? ' <span class="badge b-bad">風險偏高</span>' : '';
 $('strategyCard').innerHTML =
-`${demo ? `<div class="sc-demo">${demo.trim()}</div>` : ''}<div class="sc-title">${a.code} ${a.name}｜技術 ${a.techScore} / 100｜進場適合度 ${a.entryScore} / 100</div>
+`${demo ? `<div class="sc-demo">${demo.trim()}</div>` : ''}<div class="sc-title">${a.code} ${a.name}｜技術分 ${a.techScore} / 100<button type="button" class="info-btn" data-explain title="技術分／進場適合度計算說明">?</button>｜進場適合度 ${a.entryScore} / 100<button type="button" class="info-btn" data-explain title="技術分／進場適合度計算說明">?</button></div>
+<div class="sc-meta">資料截至 ${a.date}｜盤後資料、非即時行情</div>
 <div class="kv-grid">
 <div><span>收盤（${a.date}）</span><b>${fmt(a.close)}（${fmtSign(a.changePct)}%）</b></div>
-<div><span>進場狀態</span><b class="status-txt">${s.status}</b></div>
+<div><span>進場狀態</span><b><span class="badge ${statusBadgeCls(s.status)}">${s.status}</span></b></div>
 <div><span>進場區間</span><b class="entry-txt">${fmt(s.entryLow)} ～ ${fmt(s.entryHigh)}</b></div>
-<div><span>停損價位</span><b class="stop-txt">${fmt(s.stop)}</b></div>
+<div><span>停損價位</span><b class="stop-txt">${fmt(s.stop)}</b>${riskTag}</div>
 <div><span>目標一／目標二</span><b class="target-txt">${fmt(s.target1)} / ${fmt(s.target2)}</b></div>${a.vlag ? '\n<div class="vlag-note">波段大漲後回落，目標僅供參考</div>' : ''}${ri ? `\n<div><span>最新月營收（${ri.m}）</span><b>年增 ${fmtSign(ri.yoy, 1)}%</b></div>` : ''}
 <div><span>距離進場區</span><b>${fmt(s.distPct)}%</b></div>
 <div><span>風險報酬比</span><b>1 : ${fmt(s.rr)}</b></div>
 <div><span>操作策略／持有期間</span><b>${s.period}／${s.holding}</b></div>
 <div><span>進場策略類型</span><b>${s.type}</b></div>
-</div>
+</div>${whyLineHtml(a)}${cardHistoryHtml(a)}
 <div class="sc-notes">策略計算依據：${s.basis}｜目標一以 1.8 倍風險估算，非預測
 進場觸發條件：${s.trigger}
 策略失效條件：${s.invalid}
@@ -721,12 +825,15 @@ function renderTech(a) {
 const ind = a.ind, p = a.strat.parts;
 const row = (k, v) => `${k}：${v == null || (typeof v === 'number' && isNaN(v))? '—': typeof v === 'number'? fmt(v): v}`;
 const sub = (title, body) => `<details class="tech-sub"><summary>${title}</summary><div class="ts-body">${body}</div></details>`;
-// 預設只顯示技術分與進場適合度；訊號／拆解／均線指標各自收合，點開才看
+// 預設只顯示摘要：命中 N／13 項＋主要成立訊號（命中且加分最高的前 5 項，同分依訊號定義順序）；
+// 完整 13 項（成立與未成立）與拆解／均線指標各自收合，點開才看
+const top = topHitNames(a, 5);
+const allSignals = [...a.hit.map(h => `${h.name} +${h.pts}（成立）`), ...a.miss.map(h => `${h.name}（未成立，${h.pts} 分）`)].join('、');
 $('techDetail').innerHTML =
 `<div class="tech-legend">MA＝均線（平均成本）・RSI＝熱度（70 以上偏熱）・ATR＝波動大小・乖離＝離均線遠近</div>` +
-`<div class="tech-head">技術分 ${a.techScore} / 100｜進場適合度 ${a.entryScore} / 100</div>` +
-sub(`成立訊號（${a.hit.length}）`, escapeHtml(a.hit.map(h => `${h.name} +${h.pts}`).join('、') || '無')) +
-sub(`未成立訊號（${a.miss.length}）`, escapeHtml(a.miss.map(h => `${h.name}（${h.pts} 分）`).join('、') || '無')) +
+`<div class="tech-head">技術分 ${a.techScore} / 100<button type="button" class="info-btn" data-explain title="技術分／進場適合度計算說明">?</button>｜進場適合度 ${a.entryScore} / 100<button type="button" class="info-btn" data-explain title="技術分／進場適合度計算說明">?</button></div>` +
+`<div class="tech-sum">命中 ${a.hit.length}／13 項${top.length ? `｜主要成立：${escapeHtml(top.map(h => `${h.name} +${h.pts}`).join('、'))}` : '｜目前沒有成立的訊號'}</div>` +
+sub('全部 13 項訊號', escapeHtml(allSignals || '無')) +
 sub('進場適合度拆解', `基礎 ${p.base}｜距離扣分 ${fmt(p.distPenalty, 1)}｜技術加分 +${fmt(p.techBonus, 1)}｜成交量加分 +${fmt(p.volBonus, 1)}｜風報加分 +${fmt(p.rrBonus, 1)}｜波動扣分 ${fmt(p.atrPenalty, 1)} → ${a.entryScore} 分`) +
 sub('均線與指標', `${row('MA5', ind.ma5.at(-1))}｜${row('MA10', ind.ma10.at(-1))}｜${row('MA20', ind.ma20.at(-1))}｜${row('MA60', ind.ma60.at(-1))}｜${row('MA120', ind.ma120.at(-1))}
 ${row('MACD', ind.macd.at(-1))}｜${row('訊號線', ind.macdSignal.at(-1))}｜${row('RSI14', ind.rsi14.at(-1))}｜${row('K', ind.k.at(-1))}｜${row('D', ind.d.at(-1))}
@@ -919,19 +1026,24 @@ log(`Gemini 測試：可用模型 ${models.length} 個（${models.slice(0, 8).ma
 } catch (e) { alert('Gemini 連線失敗：' + e.message); log('Gemini 測試失敗：' + e.message);}
 }
 
-// ---------- 歷史訊號觀察 (#240-250) ----------
+// ---------- 歷史表現 (#240-250) ----------
 const HISTORY_HORIZONS = { '短線': [5, 10, 20], '中線': [10, 20, 40], '長線': [20, 60, 120] };
 function currentCondName() {
 const t = +$('inpMinTech').value || 0, e = +$('inpMinEntry').value || 0;
 for (const k in PRESETS) if (PRESETS[k].tech === t && PRESETS[k].entry === e) return PRESETS[k].label;
 return '自訂門檻';
 }
-function renderHistoryText(a) {
-const h = a._history;
+// 回測假設／成本／成交規則的說明文字（「回測說明」摺疊與完整統計明細共用同一份，口徑一致）
+function historyHeadFoot(a) {
 const c = a._historyCond || { name: '穩健推薦', tech: 65, entry: 45, period: (a.strat && a.strat.period) || a.period || '短線' };
-const hs = a._historyHorizons || [5, 10, 20];
 const head = `算法：翻這檔股票的完整歷史，每次達到『${c.name}』推薦條件（技術 ≥${c.tech}、進場 ≥${c.entry}、狀態可進場、風報比 ≥1.5）的那天，照當天狀態模擬進場（天數依這檔的週期 ${c.period}，報酬已先扣交易成本約 0.5%）：\n狀態是接近進場或突破觀察，當天收盤直接買；狀態是等待回檔，先不買，5 天內收盤回到建議進場區上緣才買，沒等到就不買。連續達標的日子合併算一波。`;
 const foot = '「賺錢」指扣掉成本後報酬大於 0；「曾漲到目標價／曾跌到停損價」指持有期間盤中有碰到（等回檔組以實際買進日與當天價位起算）。這是簡單統計，不是照策略實際買賣的回測；出現次數少於 10 次時，參考價值低。';
+return { head, foot };
+}
+function renderHistoryText(a) {
+const h = a._history;
+const hs = a._historyHorizons || [5, 10, 20];
+const { head, foot } = historyHeadFoot(a);
 if (!h.days) return head + '\n過去沒有達到過這套條件的紀錄（條件太嚴或歷史不足），可換較寬的風格再看。\n' + foot;
 const rows = g => hs.filter(k => h[g][k] && h[g][k].count > 0).map(k => `抱 ${k} 天｜賺錢 ${fmt(h[g][k].upRatio, 1)}%｜平均 ${fmtSign(h[g][k].avgRet)}%｜中位數 ${fmtSign(h[g][k].medRet)}%｜曾漲到目標價 ${fmt(h[g][k].targetHit, 1)}%｜曾跌到停損價 ${fmt(h[g][k].stopHit, 1)}%`);
 let s = head + `\n出現 ${h.waves} 波・共 ${h.days} 個進場日`;
@@ -970,8 +1082,10 @@ el.innerHTML =
 + `<div class="bt-sec"><div class="bt-sec-title">不同進場方式比較</div><div class="bt-chips">${chips}</div><div class="${cmpCls}">${cmp}</div></div>`
 + `<div class="bt-sec"><div class="bt-sec-title">持有期間比較<span class="bt-sec-note bt-toggle" id="btMetricToggle" title="點一下切換平均／中位數">${metric === 'med' ? '中位數' : '平均'}報酬率 ⇄</span></div>`
 + `<table class="bt-table"><thead><tr><th class="bt-l">持有</th><th>直接買進</th><th>等待回檔</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`
++ `<details class="bt-detail"><summary>回測說明</summary><div class="bt-detail-text bt-explain-text"></div></details>`
 + `<details class="bt-detail"><summary>完整統計明細</summary><div class="bt-detail-text"></div></details>`;
-el.querySelector('.bt-detail-text').textContent = renderHistoryText(a);
+{ const hf = historyHeadFoot(a); el.querySelector('.bt-explain-text').textContent = hf.head + '\n' + hf.foot; }
+el.querySelector('.bt-detail-text:not(.bt-explain-text)').textContent = renderHistoryText(a);
 el.querySelectorAll('.bt-chip').forEach(btn => btn.addEventListener('click', () => {
   a._selHorizon = +btn.dataset.h;
   renderHistory(a);
@@ -1030,7 +1144,7 @@ state.selectedStock = await ensureFullHistory(state.selectedStock);
 if (!a._history || a._historySig !== ctx.sig) {
   info.textContent = '計算中…（會翻最長 10 年歷史，稍等一下）';
   await new Promise(r => setTimeout(r, 30));
-  if (!calcHistory(a, ctx)) { info.textContent = '歷史統計計算失敗，請看執行紀錄。'; return; }
+  if (!calcHistory(a, ctx)) { info.textContent = '歷史統計計算失敗，請看更新紀錄。'; return; }
   log(`K 線回顧：已計算 ${a.code} 歷史訊號（條件：${ctx.condName}，週期 ${ctx.period}）`);
 }
 klState.a = a; klState.stock = state.selectedStock;
@@ -1238,12 +1352,14 @@ const barEl = document.querySelector('.action-bar'), topEl = document.querySelec
 window.addEventListener('scroll', () => { barEl.classList.toggle('compact', window.scrollY > (topEl ? topEl.offsetHeight : 100) + 10); }, { passive: true });
 }
 $('btnStop').addEventListener('click', () => { state.stopFlag = true;});
-$('btnExplain').addEventListener('click', () => {
+function openExplain() {
 $('explainBody').innerHTML = '<table><tr><th>項目</th><th>加分</th><th>成立條件</th></tr>' +
 [['MA多頭排列', 10, 'MA5＞MA20＞MA60'], ['均線黃金交叉', 8, 'MA5 上穿 MA20'], ['MACD翻多', 10, 'MACD 上穿訊號線'], ['RSI偏多', 8, 'RSI14 介於 50～75'], ['KD黃金交叉', 6, 'K 上穿 D'], ['布林偏多', 6, '收盤＞MA20 且 ≤ 布林上緣 102%'], ['成交量放大', 10, '量比 ≥ 1.5'], ['OBV偏多', 6, 'OBV 高於前20日最高'], ['ADX強勢', 6, 'ADX ≥ 25 且 +DI＞-DI'], ['突破前高', 10, '收盤突破前20日最高價'], ['Supertrend翻多', 8, 'Supertrend 多頭狀態'], ['一目均衡表偏多', 6, '收盤高於雲層且轉換線＞基準線'], ['MFI偏多', 6, 'MFI14 ≥ 50']]
 .map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('') + '</table>';
 $('explainDialog').showModal();
-});
+}
+$('btnExplain').addEventListener('click', openExplain);
+document.addEventListener('click', e => { if (e.target && e.target.closest && e.target.closest('[data-explain]')) openExplain(); });
 $('selList').addEventListener('change', async () => {
   if ($('selList').value === 'rev') await buildRevList(); // 每次打開檢視都以目前資料/週期重建，確保名單與排序新鮮
   renderList();
@@ -1251,6 +1367,7 @@ $('selList').addEventListener('change', async () => {
 $('inpFilter').addEventListener('input', renderList);
 $('chkNear').addEventListener('change', renderList);
 ensureRevToggle(); syncRevToggle();
+ensureRevButton(); syncRevButton();
 // 摘要列「含營收事件 N 檔」可點：切換「只看營收事件」交集篩選（在營收事件檢視時點了先切回可進場候選）
 $('sumLine').addEventListener('click', e => {
   if (!e.target || e.target.id !== 'sumRevToggle') return;

@@ -322,7 +322,7 @@
     return { dates: b.dates.slice(s), open: b.open.slice(s), high: b.high.slice(s), low: b.low.slice(s), close: b.close.slice(s), volume: b.volume.slice(s), amount: (b.amount || []).slice(s) };
   }
 
-  // ---------- 歷史訊號觀察 (#240-250) ----------
+  // ---------- 歷史表現 (#240-250) ----------
   // 訊號定義（2026-11-14 改版）：逐日重算，當天達到「目前所選風格的完整推薦條件」才算訊號日，
   // 與 scan 的候選條件一致——techScore ≥ minTech、entryScore ≥ minEntry、
   // avgAmount20M ≥ minAvgAmountM、status 不是「暫不追價」/「條件失效」、
@@ -385,6 +385,7 @@
     if (risk <= 0) return null;
     const pressure = sc.prevHigh != null && sc.prevHigh > entryMid ? sc.prevHigh : 0;
     const target1 = roundTick(Math.max(entryMid + 1.8 * risk, pressure));
+    const target2 = roundTick(Math.max(target1 + tickSize(target1), entryMid + 3 * risk)); // 附加欄位：與 buildStrategy 的 target2 同公式，供歷史統計計算目標二觸及率（顯示用，不影響既有欄位）
     const rr = (target1 - entryMid) / risk;
     const distPct = Math.max(0, close - entryHigh) / entryHigh * 100;
     let status;
@@ -403,7 +404,7 @@
     };
     let entryScore = Math.round(parts.base + parts.distPenalty + parts.techBonus + parts.volBonus + parts.rrBonus + parts.atrPenalty);
     entryScore = status === '條件失效' ? 0 : clamp(entryScore, 0, 100);
-    return { entryLow: roundTick(entryLow), entryHigh: roundTick(entryHigh), entryMid, stop, target1, rr, distPct, status, entryScore };
+    return { entryLow: roundTick(entryLow), entryHigh: roundTick(entryHigh), entryMid, stop, target1, target2, rr, distPct, status, entryScore };
   }
   // analyzeWindow(b, end, periodMode)：只取 end 往前 ≤360 日視窗，重算 analyze 在該視窗的
   // 全部判定輸出（techScore/entryScore/status/strat/avgAmount20M），與
@@ -558,24 +559,25 @@
   function historyStats(stock, opts = {}) {
     const o = Object.assign({ minTech: 65, minEntry: 45, minAvgAmountM: 10, horizons: [5, 10, 20], periodMode: '自動判斷', costRate: 0.004, slippage: 0.001, waitDays: 5 }, opts);
     const b = stock.bars, horizons = o.horizons, n = b.close.length;
-    const blankG = () => { const g = {}; for (const h of horizons) g[h] = { count: 0, upRatio: 0, avgRet: 0, medRet: 0, targetHit: 0, stopHit: 0 }; return g; };
+    const blankG = () => { const g = {}; for (const h of horizons) g[h] = { count: 0, upRatio: 0, avgRet: 0, medRet: 0, targetHit: 0, target2Hit: 0, stopHit: 0 }; return g; };
     const out = {
       waves: 0, days: 0, signalDays: [], entries: [],
       direct: Object.assign(blankG(), { days: 0, dates: [] }),
-      wait: Object.assign(blankG(), { signalDays: 0, dates: [], filled: 0, filledDates: [], fillRate: 0 }),
+      wait: Object.assign(blankG(), { signalDays: 0, dates: [], filled: 0, filledDates: [], fillRate: 0, avgWaitDays: 0 }),
     };
     if (n < 126) return out;
-    const sums = { direct: {}, wait: {} }, ups = { direct: {}, wait: {} }, th = { direct: {}, wait: {} }, sh = { direct: {}, wait: {} };
+    const sums = { direct: {}, wait: {} }, ups = { direct: {}, wait: {} }, th = { direct: {}, wait: {} }, th2 = { direct: {}, wait: {} }, sh = { direct: {}, wait: {} };
     const retsArr = { direct: {}, wait: {} };
-    for (const g of ['direct', 'wait']) for (const h of horizons) { sums[g][h] = 0; ups[g][h] = 0; th[g][h] = 0; sh[g][h] = 0; retsArr[g][h] = []; }
+    let waitDaysSum = 0; // 附加統計：等回檔組已成交訊號的平均等待天數（買進日−訊號日），僅顯示用
+    for (const g of ['direct', 'wait']) for (const h of horizons) { sums[g][h] = 0; ups[g][h] = 0; th[g][h] = 0; th2[g][h] = 0; sh[g][h] = 0; retsArr[g][h] = []; }
     const record = (g, entryIdx, strat) => {
       for (const h of horizons) {
         if (entryIdx + h >= n) continue;
         const ret = (b.close[entryIdx + h] / b.close[entryIdx] - 1) - o.costRate - o.slippage;
         out[g][h].count++; sums[g][h] += ret * 100; retsArr[g][h].push(ret * 100); if (ret > 0) ups[g][h]++;
-        let hitT = false, hitS = false;
-        for (let j = entryIdx + 1; j <= entryIdx + h; j++) { if (b.high[j] >= strat.target1) hitT = true; if (b.low[j] <= strat.stop) hitS = true; }
-        if (hitT) th[g][h]++; if (hitS) sh[g][h]++;
+        let hitT = false, hitT2 = false, hitS = false;
+        for (let j = entryIdx + 1; j <= entryIdx + h; j++) { if (b.high[j] >= strat.target1) hitT = true; if (strat.target2 != null && b.high[j] >= strat.target2) hitT2 = true; if (b.low[j] <= strat.stop) hitS = true; }
+        if (hitT) th[g][h]++; if (hitT2) th2[g][h]++; if (hitS) sh[g][h]++;
       }
     };
     let prevOk = false;
@@ -597,7 +599,7 @@
           let buy = -1;
           for (let j = end + 1; j <= Math.min(end + o.waitDays, n - 1); j++) if (b.close[j] <= a.strat.entryHigh) { buy = j; break; }
           if (buy >= 0) {
-            w.filled++; w.filledDates.push(b.dates[buy]);
+            w.filled++; w.filledDates.push(b.dates[buy]); waitDaysSum += buy - end;
             curWave.waitFilled++; curWave.fills.push({ idx: buy, sigIdx: end, group: 'wait' });
             const ba = analyzeWindow(b, buy, o.periodMode);
             record('wait', buy, (ba && ba.strat) || a.strat);
@@ -614,12 +616,13 @@
       const cnt = out[g][h].count;
       if (cnt) {
         out[g][h].upRatio = ups[g][h] / cnt * 100; out[g][h].avgRet = sums[g][h] / cnt;
-        out[g][h].targetHit = th[g][h] / cnt * 100; out[g][h].stopHit = sh[g][h] / cnt * 100;
+        out[g][h].targetHit = th[g][h] / cnt * 100; out[g][h].target2Hit = th2[g][h] / cnt * 100; out[g][h].stopHit = sh[g][h] / cnt * 100;
         const arr = retsArr[g][h].slice().sort((x, y) => x - y), mid = arr.length >> 1;
         out[g][h].medRet = arr.length % 2 ? arr[mid] : (arr[mid - 1] + arr[mid]) / 2;
       }
     }
     out.wait.fillRate = out.wait.signalDays ? out.wait.filled / out.wait.signalDays * 100 : 0;
+    out.wait.avgWaitDays = out.wait.filled ? waitDaysSum / out.wait.filled : 0;
     // entries：每波一筆代表紀錄供 K 線標記——波內第一個已成交進場（以實際進場日先後計，
     // 同日取訊號日較早者）；整波無成交時以第一個訊號日為未成交代表。
     const entryRets = idx => { const r = {}; for (const h of horizons) r[h] = idx + h < n ? ((b.close[idx + h] / b.close[idx] - 1) - o.costRate - o.slippage) * 100 : null; return r; };

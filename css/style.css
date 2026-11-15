@@ -58,16 +58,31 @@ input[type=checkbox]{width:auto}
 .scan-row .btn.big{flex:1;width:auto}
 .scan-row .btn.danger{flex:0 0 140px}
 .badge{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12.5px;border:1px solid var(--line);white-space:nowrap}
-.badge.b-ok{background:#14532d;color:#69f0ae;border-color:#1f7a43}
+/* 狀態固定色票：接近進場＝藍綠、等待回檔＝黃、突破觀察＝紫、暫不追價＝灰、條件失效＝紅 */
+.badge.b-ok{background:#0b3d38;color:#2dd4bf;border-color:#147d70}
 .badge.b-wait{background:#57451a;color:#ffd54f;border-color:#8a6d2f}
-.badge.b-info{background:#173f5c;color:#7cc4ff;border-color:#2a6ea3}
+.badge.b-info{background:#3a2358;color:#cfa9ff;border-color:#6d4aa0}
 .badge.b-mut{background:#22344d;color:var(--muted)}
-.badge.b-rev{background:#f59e0b;color:#221100;border-color:#f59e0b;font-weight:700}
+.badge.b-bad{background:#5b1f1f;color:#ff8a80;border-color:#8c3232}
+/* 營收標籤用深橘，與「等待回檔」的黃拉開色相 */
+.badge.b-rev{background:#ea580c;color:#fff;border-color:#ea580c;font-weight:700}
 .kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:8px 0 10px}
 .kv-grid>div{display:flex;flex-direction:column;gap:1px}
 .kv-grid span{font-size:12px;color:var(--muted)}
 .kv-grid b{font-size:16.5px;font-weight:700}
 .sc-title{font-size:16.5px;font-weight:700;line-height:1.5}
+.sc-meta{color:var(--muted);font-size:12.5px;margin-top:2px}
+.sc-why{margin-top:2px;font-size:14px;line-height:1.6}
+.sc-hist{margin-top:6px;font-size:13.5px;color:var(--muted);white-space:pre-wrap;line-height:1.65}
+.tech-sum{margin:2px 0 4px;line-height:1.6;font-size:14.5px}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;margin-left:5px;padding:0;border-radius:50%;border:1px solid var(--line);background:#1b3357;color:var(--muted);font-size:11.5px;line-height:1;cursor:pointer;vertical-align:2px}
+.info-btn:hover{color:var(--text);background:#24497c}
+/* 營收事件獨立按鈕：與風格預設同組，深橘專屬色區隔性質 */
+.btn.rev-preset{width:100%;border-color:#ea580c;background:#221105;color:#ffb38a}
+.btn.rev-preset .p-name{display:block}
+.btn.rev-preset .p-sub{display:block;font-size:10.5px;font-weight:400;opacity:.8;margin-top:1px}
+.btn.rev-preset.active{background:#ea580c;border-color:#ea580c;color:#fff;font-weight:700}
+.btn.rev-preset.active .p-sub{opacity:1}
 .sc-demo{color:var(--warn);font-weight:700}
 .sc-notes{white-space:pre-wrap;line-height:1.7;color:var(--text)}
 .more-tools{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#0d1a2c}
@@ -112,6 +127,26 @@ td.tg{display:none}
 dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;max-width:min(680px,92vw)}
 dialog table{min-width:0}
 dialog td,dialog th{white-space:normal;text-align:left}
+/* 桌面主表格：欄位瘦身（只留排名、代號、名稱、收盤、漲跌幅、技術分、進場適合度、
+   距離進場、狀態、進場區間、風險報酬；其餘欄位在明細頁，手機卡片不受影響）
+   ＋代號／名稱欄固定，水平捲動時仍能辨識股票 */
+@media (min-width:901px){
+  #resultTable{min-width:1020px}
+  #resultTable th:nth-child(4),#resultTable td:nth-child(4),
+  #resultTable th:nth-child(5),#resultTable td:nth-child(5),
+  #resultTable th:nth-child(7),#resultTable td:nth-child(7),
+  #resultTable th:nth-child(13),#resultTable td:nth-child(13),
+  #resultTable th:nth-child(14),#resultTable td:nth-child(14),
+  #resultTable th:nth-child(16),#resultTable td:nth-child(16),
+  #resultTable th:nth-child(17),#resultTable td:nth-child(17),
+  #resultTable th:nth-child(19),#resultTable td:nth-child(19){display:none}
+  #resultTable th:nth-child(2),#resultTable td:nth-child(2){position:sticky;left:0;width:64px;min-width:64px;z-index:2}
+  #resultTable th:nth-child(3),#resultTable td:nth-child(3){position:sticky;left:64px;z-index:2;box-shadow:8px 0 8px -8px rgba(0,0,0,.6)}
+  #resultTable thead th:nth-child(2),#resultTable thead th:nth-child(3){z-index:6}
+  #resultTable tbody td:nth-child(2),#resultTable tbody td:nth-child(3){background:#122642}
+  #resultTable tbody tr:nth-child(even) td:nth-child(2),#resultTable tbody tr:nth-child(even) td:nth-child(3){background:#0f1e35}
+  #resultTable tbody tr.selected td:nth-child(2),#resultTable tbody tr.selected td:nth-child(3){background:#1a3a66}
+}
 /* 手機版：單欄、表格列轉卡片 */
 @media (max-width:900px){
   .topbar{position:static;padding:8px 12px}
@@ -162,7 +197,7 @@ dialog td,dialog th{white-space:normal;text-align:left}
   td.lvrow{display:block;grid-column:1/-1;font-size:13px;line-height:1.25;padding:1px 8px;color:var(--muted)}
   .table-wrap{max-height:none;border:none}
 }
-/* 歷史訊號觀察：策略回測總覽（卡片式，數字同 historyStats 文字明細） */
+/* 歷史表現：策略回測總覽（卡片式，數字同 historyStats 文字明細） */
 .bt-title{font-size:19px;font-weight:700;margin:2px 0 10px;line-height:1.4}
 .bt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .bt-stat{background:#1b3357;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
