@@ -19,7 +19,7 @@
     <span id="dataStatus">正式／匯入資料｜0 檔｜最新資料：—</span>
     <span id="staleWarn" class="warn hidden">⚠ 行情可能過期（最新日期距今達 5 天）</span>
   </div>
-  <div class="summary-row" id="scanSummary"><span id="sumLine">已掃描 0 檔｜推薦 0 檔｜觀察 0 檔</span></div>
+  <div class="summary-row" id="scanSummary"><span id="sumLine">已掃描 0 檔｜推薦 0 檔｜觀察 0 檔</span><div id="sumComp" class="sum-comp hidden"></div></div>
 </header>
 
 <!-- 選股控制台：風格＋掃描＋進度同一組，手機版置頂固定，流程連貫 -->
@@ -39,6 +39,7 @@
   </div>
   <div class="compact-row">
     <span id="compactInfo">—</span>
+    <button id="btnStopCompact" class="btn danger small hidden">■ 停止</button>
     <button id="btnScanCompact" class="btn primary small">↻ 重新掃描</button>
   </div>
   <div class="progress"><div id="progBar"></div></div>
@@ -61,7 +62,7 @@
               <button class="btn small" data-days="1825">5年</button><button class="btn small" data-days="3650">10年</button>
             </div>
             <button id="btnIntegrity" class="btn">檢查行情資料完整性</button>
-            <label class="file-label">匯入本機 OHLCV CSV
+            <label class="file-label csv-import">匯入本機 OHLCV CSV
               <input type="file" id="fileCsv" accept=".csv,text/csv"></label>
             <button id="btnDemo" class="btn accent">載入離線示範資料</button>
             <button id="btnReal" class="btn">切回正式資料模式</button>
@@ -98,6 +99,7 @@
         <label>模型名稱<input type="text" id="inpModel" value="gemini-2.5-flash"></label>
         <button id="btnTestGemini" class="btn">測試 API／檢查模型</button>
         <label>單檔新聞數（1～30）<input type="number" id="inpNewsCount" min="1" max="30" value="10"></label>
+        <p class="hint">申請 API Key：<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>（有免費額度可用）。Key 只儲存在本機瀏覽器，不會上傳到本站伺服器。</p>
         <p class="hint">沒有 API Key 也能使用下載、計分、策略、走勢圖、新聞查詢與 Excel 匯出。</p>
       </div>
     </details>
@@ -136,14 +138,17 @@
     </div>
 
     <nav class="tabs" id="detailTabs">
-      <button data-tab="tabStrategy" class="active">走勢＋策略摘要</button>
-      <button data-tab="tabKline">K線回顧</button>
-      <button data-tab="tabTech">技術明細</button>
-      <button data-tab="tabNews">新聞</button>
-      <button data-tab="tabAI">AI 解讀</button>
+      <button data-tab="tabStrategy" class="active">策略</button>
       <button data-tab="tabHistory">歷史表現</button>
-      <button data-tab="tabLog">更新紀錄</button>
+      <button data-tab="tabKline">K線回顧</button>
+      <button type="button" id="btnMoreTabs" class="more-toggle" aria-expanded="false">更多 ▾</button>
     </nav>
+    <div class="tabs-more hidden" id="moreTabs">
+      <button data-tab="tabTech">技術明細</button>
+      <button data-tab="tabNews">外部新聞搜尋</button>
+      <button data-tab="tabAI" class="ai-only">AI 解讀</button>
+      <button data-tab="tabLog">更新紀錄</button>
+    </div>
 
     <section id="tabStrategy" class="tab-page active">
       <canvas id="chart" height="260"></canvas>

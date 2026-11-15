@@ -16,6 +16,8 @@ h1{font-size:19px;margin:0}
 .warn{color:var(--warn)} .hidden{display:none!important}
 .summary-row{margin-top:8px;font-size:13.5px;color:var(--muted);line-height:1.55}
 .summary-row b{color:var(--good)}
+.sum-comp{margin-top:2px;font-size:13px;color:var(--muted)}
+.sum-comp.warn-line{color:var(--warn)}
 .compact-row{display:none}
 .preset-btns .btn .p-name{display:block}
 .preset-btns .btn .p-sub{display:block;font-size:10.5px;font-weight:400;opacity:.78;margin-top:1px}
@@ -35,9 +37,10 @@ td.lvrow{display:none}
 .block summary{cursor:pointer;padding:10px 12px;font-weight:700}
 .block-body{padding:4px 12px 12px;display:flex;flex-direction:column;gap:8px}
 label{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted)}
-label.check{flex-direction:row;align-items:center;gap:6px;color:var(--text)}
+label.check{flex-direction:row;align-items:center;gap:6px;color:var(--text);min-height:40px}
 input,select{background:#0b1626;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:15px;width:100%}
 input[type=checkbox]{width:auto}
+label.check input[type=checkbox]{width:19px;height:19px;flex:0 0 auto;margin:0}
 .btn{background:#1b3357;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:14.5px;cursor:pointer;text-align:center}
 .btn:hover{background:#24497c}
 .btn.primary{background:var(--primary);font-weight:700}
@@ -71,11 +74,21 @@ input[type=checkbox]{width:auto}
 .kv-grid span{font-size:12px;color:var(--muted)}
 .kv-grid b{font-size:16.5px;font-weight:700}
 .sc-title{font-size:16.5px;font-weight:700;line-height:1.5}
+/* 結論卡：結論先行（狀態＋一句話＋分數 chips），數字與證據在後 */
+.concl-card{background:#14264a;border:1px solid #274069;border-radius:10px;padding:10px 12px;margin:8px 0 4px}
+.concl-line{font-size:15px;line-height:1.6;margin-top:6px}
+.concl-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.concl-chips .chip{background:#0b1626;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;color:var(--muted)}
+/* 名單依據行：桌面在名稱欄下方小字；手機為卡片全寬一列（td.basisrow） */
+.basis-sub{font-size:12px;color:var(--muted);font-weight:400;white-space:normal;line-height:1.45;margin-top:2px}
+td.basisrow{display:none}
+.bt-small-note{color:var(--warn);font-size:13px;margin-top:6px;line-height:1.5}
 .sc-meta{color:var(--muted);font-size:12.5px;margin-top:2px}
 .sc-why{margin-top:2px;font-size:14px;line-height:1.6}
 .sc-hist{margin-top:6px;font-size:13.5px;color:var(--muted);white-space:pre-wrap;line-height:1.65}
 .tech-sum{margin:2px 0 4px;line-height:1.6;font-size:14.5px}
-.info-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;margin-left:5px;padding:0;border-radius:50%;border:1px solid var(--line);background:#1b3357;color:var(--muted);font-size:11.5px;line-height:1;cursor:pointer;vertical-align:2px}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;margin-left:5px;padding:0;border-radius:50%;border:1px solid var(--line);background:#1b3357;color:var(--muted);font-size:11.5px;line-height:1;cursor:pointer;vertical-align:2px;position:relative}
+.info-btn::after{content:'';position:absolute;inset:-12px} /* 視覺維持 17px，命中區放大到約 41px */
 .info-btn:hover{color:var(--text);background:#24497c}
 /* 營收事件按鈕與四顆風格預設完全同級：同列第五顆、同樣式（.btn.preset），
    出現時按鈕列由 4 欄改 5 欄 */
@@ -98,7 +111,8 @@ input[type=checkbox]{width:auto}
 .rev-set-h{font-size:13px;font-weight:700;color:var(--text);margin-top:12px}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
 .toolbar input[type=search],.toolbar input[type=text]{flex:1;min-width:150px}
-.toolbar select{width:auto}
+.toolbar select{width:auto;min-height:40px}
+#btnClearQuery{min-width:40px;min-height:40px}
 .table-wrap{overflow:auto;max-height:52vh;border:1px solid var(--line);border-radius:8px}
 table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:1180px}
 thead th{background:#17335c;color:#fff;position:sticky;top:0;text-align:right;padding:8px;white-space:nowrap;cursor:pointer}
@@ -115,8 +129,13 @@ td.tg{display:none}
 .empty{border:1px dashed var(--warn);color:var(--warn);border-radius:8px;padding:10px;margin-bottom:8px;font-size:14px;line-height:1.6}
 .rev-line{color:var(--muted);font-size:13.5px;margin:2px 2px 8px}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;margin:12px 0 8px}
-.tabs button{background:#0b1626;color:var(--muted);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:8px 10px;font-size:14px;cursor:pointer}
+.tabs button{background:#0b1626;color:var(--muted);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:8px 10px;font-size:14px;cursor:pointer;min-height:40px}
 .tabs button.active{background:var(--panel2);color:var(--text);font-weight:700}
+.tabs button.more-toggle.active{background:var(--panel2);color:var(--text);font-weight:700}
+/* 「更多」分頁列：主要三鈕之外的分頁收在這裡，展開才顯示 */
+.tabs-more{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px}
+.tabs-more button{background:#0b1626;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer;min-height:40px}
+.tabs-more button.active{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700}
 .tab-page{display:none;border:1px solid var(--line);border-radius:0 8px 8px 8px;background:var(--panel2);padding:10px}
 .tab-page.active{display:block}
 #chart{width:100%;min-height:245px;background:var(--chart);border-radius:8px}
@@ -177,7 +196,7 @@ dialog td,dialog th{white-space:normal;text-align:left}
   .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
   .tabs::-webkit-scrollbar{display:none}
   .tabs button{flex:0 0 auto;white-space:nowrap}
-  .action-bar .prog-msg{min-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .action-bar .prog-msg{min-height:18px;white-space:normal} /* 完成訊息可換行，日期不被省略號吃掉 */
   .toolbar .check{padding:8px 8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px}
   #btnExport{padding:7px 10px;font-size:13.5px}
   input,select{font-size:16px} /* 避免 iOS 聚焦時自動放大 */
@@ -191,13 +210,23 @@ dialog td,dialog th{white-space:normal;text-align:left}
   td.x{display:none}
   tr.open td.x{display:flex}
   td.reason{grid-column:1/-1;justify-content:flex-start;min-width:0}
-  td.tg{display:block;grid-column:1/-1;text-align:center;color:var(--good);cursor:pointer;padding:7px;font-size:13px}
+  td.tg{display:block;grid-column:1/-1;text-align:center;color:var(--good);cursor:pointer;padding:11px 7px;font-size:13px}
+  /* 依據行：手機卡片全寬一列（在名稱／狀態之後、數字之前）；名稱欄內的桌面小字版隱藏 */
+  td.basisrow{display:block;grid-column:1/-1;order:-1;font-size:13.5px;line-height:1.5;color:var(--text);padding:2px 8px}
+  .basis-sub{display:none}
   td.tg::before{content:''}
   /* 卡片上的關鍵價位放大，一眼看到進場／停損／目標 */
   #resultBody td[data-label="進場區間"],#resultBody td[data-label="停損"],#resultBody td[data-label="目標1 / 目標2"]{font-size:16.5px;font-weight:700}
   /* 卡片第一層加一整列小字停損・目標一（全寬不折行，高度只多一行） */
   td.lvrow{display:block;grid-column:1/-1;font-size:13px;line-height:1.25;padding:1px 8px;color:var(--muted)}
   .table-wrap{max-height:none;border:none}
+}
+/* 手機（≤768px）隱藏：AI 解讀入口、Gemini 設定、CSV 匯入（桌面版完整保留） */
+@media (max-width:768px){
+  .ai-only{display:none!important}
+  #tabAI{display:none!important}
+  .b-gem{display:none!important}
+  .csv-import{display:none!important}
 }
 /* 歷史表現：策略回測總覽（卡片式，數字同 historyStats 文字明細） */
 .bt-title{font-size:19px;font-weight:700;margin:2px 0 10px;line-height:1.4}
@@ -233,7 +262,7 @@ dialog td,dialog th{white-space:normal;text-align:left}
 .bt-detail[open ] summary::after{content:'▴'}
 .bt-detail-text{padding:0 12px 12px;font-size:14px;line-height:1.7}
 .bt-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.bt-chips button,.kl-chips button{background:#1b3357;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13.5px;cursor:pointer}
+.bt-chips button,.kl-chips button{background:#1b3357;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13.5px;cursor:pointer;min-height:38px}
 .bt-chips button.active,.kl-chips button.active{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700}
 .bt-toggle{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 /* K 線回顧 */
