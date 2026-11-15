@@ -269,43 +269,99 @@ function revTierDays() {
   if (!Number.isFinite(v)) v = 10;
   return Math.max(1, Math.min(19, v));
 }
-// 營收名單排序（使用者可切換；預設 fresh＝事件新鮮度：age 小到大、同 age 時 yoy 大到小，
-// 與改版前完全相同）。選擇存 localStorage（twstock_rev_sort），非法值回退 fresh。
-// 只影響營收檢視的顯示順序：state.results 的分層與內容不動，預設模式名單的排序
-// （選股設定的 sortMode）不在此範圍、不受影響。
-const REV_SORT_KEYS = ['fresh', 'tech', 'entry', 'yoy'];
-function revSortKey() {
-  try { const v = localStorage.getItem('twstock_rev_sort'); return REV_SORT_KEYS.includes(v) ? v : 'fresh'; }
-  catch (e) { return 'fresh'; }
+// 營收名單排序：Excel 式多重排序鍵——可疊加、可逐一取消。revSortKeys 為有序陣列，
+// 元素 ⊆ {tech, entry, yoy, fresh}、不重複、最多 4；順序即加入順序（先加的先排：
+// 主鍵 → 次鍵 → …，同 Excel 的 Sort by / Then by）。[]＝預設：沿用 buildRevList 的
+// 新鮮度原序不重排，與改版前完全相同。只影響營收檢視的顯示順序：state.results 的
+// 分層與內容不動，預設模式名單的排序（選股設定的 sortMode）不在此範圍、不受影響。
+// 持久化鍵 twstock_rev_sort_keys（JSON 陣列字串）；舊單選鍵 twstock_rev_sort 於新鍵
+// 不存在時一次性遷移：tech→[tech]、entry→[entry]、yoy→[yoy]、fresh→[]、
+// both→[tech, entry]，遷移後寫入新鍵。讀取一律清洗（非法值／重複剔除），不 throw。
+const REV_SORT_DEFS = [['tech', '技術分'], ['entry', '進場適合度'], ['yoy', '年增'], ['fresh', '事件新鮮度']];
+const REV_SORT_VALID = REV_SORT_DEFS.map(d => d[0]);
+const REV_SORT_LABEL = {};
+REV_SORT_DEFS.forEach(d => { REV_SORT_LABEL[d[0]] = d[1]; });
+let revSortKeysCache = null; // null＝尚未自 localStorage 讀取
+function sanitizeRevSortKeys(v) {
+  if (!Array.isArray(v)) return [];
+  const out = [];
+  for (const k of v) if (REV_SORT_VALID.includes(k) && !out.includes(k)) out.push(k);
+  return out.slice(0, 4);
 }
-// 檢視標頭的排序說明（跟著目前選擇走；fresh 的文字與改版前完全相同）
+function persistRevSortKeys(keys) {
+  try { localStorage.setItem('twstock_rev_sort_keys', JSON.stringify(keys)); } catch (e) { /* 寫入失敗（如隱私模式）時僅本次瀏覽有效 */ }
+}
+function revSortKeys() {
+  if (revSortKeysCache) return revSortKeysCache;
+  let keys = [];
+  try {
+    const raw = localStorage.getItem('twstock_rev_sort_keys');
+    if (raw != null) keys = sanitizeRevSortKeys(JSON.parse(raw));
+    else {
+      const old = localStorage.getItem('twstock_rev_sort');
+      if (old != null) { // 舊單選鍵遷移（僅在新鍵不存在時發生一次）
+        const mig = { tech: ['tech'], entry: ['entry'], yoy: ['yoy'], fresh: [], both: ['tech', 'entry'] };
+        keys = Object.prototype.hasOwnProperty.call(mig, old) ? [...mig[old]] : [];
+        persistRevSortKeys(keys);
+      }
+    }
+  } catch (e) { keys = []; } // 解析失敗（非法 JSON 等）→ 回退預設，不中斷頁面
+  revSortKeysCache = keys;
+  return revSortKeysCache;
+}
+function setRevSortKeys(keys) {
+  revSortKeysCache = sanitizeRevSortKeys(keys);
+  persistRevSortKeys(revSortKeysCache);
+  renderList(); // 即時重排目前名單，不需重掃；renderList 內含 syncRevSortUI 與標頭更新
+}
+// 檢視標頭的排序說明（跟著目前鍵列走；無鍵時的文字與改版前完全相同）
 function revSortText() {
-  switch (revSortKey()) {
-    case 'tech': return '技術分高到低';
-    case 'entry': return '進場適合度高到低';
-    case 'yoy': return '年增高到低';
-    default: return '事件新到舊、年增高到低';
-  }
+  const keys = revSortKeys();
+  if (!keys.length) return '事件新到舊、年增高到低';
+  return keys.map(k => REV_SORT_LABEL[k]).join(' → ') + '（皆高到低）';
 }
-// 非 fresh 排序比較：主鍵降冪，tie-break 依序 age 小到大、yoy 大到小、代號小到大（穩定確定）
+// 單鍵比較（沿用既有語意）：tech/entry/yoy 降冪；fresh 年齡小到大、同 age 再 yoy 大到小。
+function cmpRevKey(k, a, b) {
+  if (k === 'tech') return b.techScore - a.techScore;
+  if (k === 'entry') return b.entryScore - a.entryScore;
+  if (k === 'yoy') return (b._rev ? b._rev.yoy : -Infinity) - (a._rev ? a._rev.yoy : -Infinity);
+  if (k === 'fresh') {
+    const d = (a._rev ? a._rev.age : 0) - (b._rev ? b._rev.age : 0);
+    if (d) return d;
+    return (b._rev ? b._rev.yoy : 0) - (a._rev ? a._rev.yoy : 0);
+  }
+  return 0;
+}
+// 多鍵比較：依鍵列順序逐鍵比，全平手時最終 tie-break 沿用既有 age 小到大、yoy 大到小、代號小到大。
 function cmpRevSort(a, b) {
-  const k = revSortKey();
-  let d = 0;
-  if (k === 'tech') d = b.techScore - a.techScore;
-  else if (k === 'entry') d = b.entryScore - a.entryScore;
-  else if (k === 'yoy') d = (b._rev ? b._rev.yoy : -Infinity) - (a._rev ? a._rev.yoy : -Infinity);
-  if (d) return d;
-  d = (a._rev ? a._rev.age : 0) - (b._rev ? b._rev.age : 0);
+  for (const k of revSortKeys()) {
+    const d = cmpRevKey(k, a, b);
+    if (d) return d;
+  }
+  let d = (a._rev ? a._rev.age : 0) - (b._rev ? b._rev.age : 0);
   if (d) return d;
   d = (b._rev ? b._rev.yoy : 0) - (a._rev ? a._rev.yoy : 0);
   if (d) return d;
   return a.code < b.code ? -1 : a.code > b.code ? 1 : 0;
 }
-// 排序下拉只在營收模式顯示（預設模式隱藏），且值與持久化選擇同步
+// 排序 UI 只在營收模式顯示（預設模式隱藏）：chips 依鍵列順序編號（× 可逐一移除）、
+// 加入下拉只列未啟用的鍵（4 鍵全啟用時隱藏）、有鍵時才顯示「清除」。
 function syncRevSortUI() {
-  const sel = $('selRevSort'); if (!sel) return;
-  sel.value = revSortKey();
-  sel.classList.toggle('hidden', !revActive());
+  const box = $('revSortBox'); if (!box) return;
+  const keys = revSortKeys();
+  box.classList.toggle('hidden', !revActive());
+  const chips = $('revSortChips');
+  if (chips) chips.innerHTML = keys.map((k, i) =>
+    `<span class="rev-sort-chip">${i + 1} ${REV_SORT_LABEL[k]}<button type="button" class="rev-sort-x" data-revkey="${k}" aria-label="移除排序：${REV_SORT_LABEL[k]}">×</button></span>`).join('');
+  const add = $('selRevSortAdd');
+  if (add) {
+    const unused = REV_SORT_VALID.filter(k => !keys.includes(k));
+    add.innerHTML = '<option value="">＋加入排序</option>' + unused.map(k => `<option value="${k}">${REV_SORT_LABEL[k]}</option>`).join('');
+    add.value = '';
+    add.classList.toggle('hidden', !unused.length);
+  }
+  const clear = $('btnRevSortClear');
+  if (clear) clear.classList.toggle('hidden', !keys.length);
 }
 // 檢視標頭的分層定義（跟著分層日設定值走）：E1 全集（age <= 20）依新鮮度拆兩層
 const revRecDef = () => `營收推薦：月營收年增 > 20%，事件後 ${revTierDays()} 個交易日內（不套用風格門檻）`;
@@ -628,16 +684,13 @@ async function buildRevList(onProgress) {
   return out;
 }
 // 營收檢視（推薦／觀察）的標頭：僅在營收檢視＋正式模式＋營收資料已載入時出現。
-// 標頭固定一行該層的定義與排序說明（事實文案）；名單恆為該層完整集合（檢視內無篩選下拉），
-// 計數只隨關鍵字搜尋變動（displayed 由 renderList 傳入實際顯示檔數）。
-// chkNear 是主名單的顯示篩選，營收檢視不套用，故在檢視期間隱藏其標籤。
+// 標頭固定一行該層的定義與排序說明（事實文案）；名單為該層完整集合再套用關鍵字搜尋、
+// 「只看接近進場」與排序，計數隨篩選後檔數變動（displayed 由 renderList 傳入實際顯示檔數）。
 function updateRevLine(displayed) {
   const el = $('revLine'); if (!el) return;
   const view = revView();
   const isRev = !!view && !!state.revenue && state.mode === 'real';
   el.classList.toggle('hidden', !isRev);
-  const nearLbl = $('chkNear') && $('chkNear').closest('label');
-  if (nearLbl) nearLbl.classList.toggle('hidden', isRev);
   if (!isRev) return;
   const def = view === 'revwatch' ? revWatchDef() : revRecDef();
   if (state.revLoading) { el.textContent = def + `・排序：${revSortText()}｜名單載入中…`; return; }
@@ -645,8 +698,9 @@ function updateRevLine(displayed) {
   const cardableAll = state.results.rev.length + state.results.revwatch.length;
   const cardable = state.results[view].length;
   const shown = displayed != null ? displayed : cardable;
+  const filterWhy = $('inpFilter').value.trim() ? '搜尋後' : '只看接近進場後';
   el.textContent = def + `・排序：${revSortText()}｜` +
-    (shown < cardable ? `共 ${cardable} 檔，搜尋後顯示 ${shown} 檔` : `目前 ${cardable} 檔`) +
+    (shown < cardable ? `共 ${cardable} 檔，${filterWhy}顯示 ${shown} 檔` : `目前 ${cardable} 檔`) +
     (total > cardableAll ? `（另 ${total - cardableAll} 檔歷史不足 125 日，無法產生卡片）` : '');
 }
 // 名單下拉改為模式專屬（兩套系統不在同一下拉混列）：預設模式只有候選／觀察／查詢
@@ -976,15 +1030,15 @@ function currentList() {
   let list = state.results[kind] || [];
   const q = $('inpFilter').value.trim();
   if (q) list = list.filter(a => a.code.includes(q) || a.name.includes(q));
-  // 營收檢視（推薦／觀察）恆顯示該層完整名單本體（檢視內不設狀態／新鮮度篩選，僅關鍵字
-  // 搜尋，與其他名單同層次）；chkNear 的「只看接近進場」只作用於主名單，不套用到營收檢視。
-  if (kind !== 'rev' && kind !== 'revwatch' && $('chkNear').checked) {
+  // 「只看接近進場」對所有名單都生效（含營收檢視）：套用順序為關鍵字搜尋 → chkNear
+  // 篩選 → 排序，與其他篩選同層次、可疊加。
+  if ($('chkNear').checked) {
     list = list.filter(a => a.status === '接近進場');
   }
-  // 營收檢視的排序：先關鍵字篩選、後排序（可疊加）。fresh＝state 陣列本身的新鮮度
-  // 順序（buildRevList 已排好），不重排以維持改版前完全相同的順序；其餘排序排副本，
-  // 不動 state.results 本體，切回 fresh 即恢復原順序。
-  if ((kind === 'rev' || kind === 'revwatch') && revSortKey() !== 'fresh') {
+  // 營收檢視的排序：篩選後再排序（可疊加）。排序鍵列為空＝state 陣列本身的新鮮度
+  // 順序（buildRevList 已排好），不重排以維持改版前完全相同的順序；有鍵時排副本，
+  // 不動 state.results 本體，清掉所有鍵即恢復原順序。
+  if ((kind === 'rev' || kind === 'revwatch') && revSortKeys().length) {
     list = [...list].sort(cmpRevSort);
   }
   return list;
@@ -1040,6 +1094,11 @@ function renderList() {
       if (state.revLoading) empty.textContent = '營收推薦名單載入中…';
       else if (!state.revenue) empty.textContent = '營收資料尚未載入。';
       else if ($('inpFilter').value.trim()) empty.textContent = '沒有符合搜尋的股票，請清除搜尋再試。';
+      else if ((state.results[revView()] || []).length > 0) {
+        // 本層名單非空、卻被「只看接近進場」篩到空（關鍵字已在上一支處理）：講清楚是
+        // 篩選結果，不要丟分層或門檻那套。本層本身 0 檔時不走這支，維持原本分層文案。
+        empty.textContent = '這份名單裡目前沒有「接近進場」的股票（已開啟只看接近進場），取消勾選即可看全部。';
+      }
       else if (revView() === 'rev') {
         const w = state.results.revwatch.length;
         const tier = revTierDays();
@@ -1852,9 +1911,14 @@ $('selList').addEventListener('change', async () => {
   if (revView()) await enterRevMode($('selList').value); // 與營收鈕同一條路徑：同步先原子切換 UI，再以進度回饋重建名單（推薦／觀察皆然）
   else { state.revHistShown = false; renderList(); syncModeUI(); } // 檢視切換即模式切換：按鈕 active／說明／摘要一併收斂
 });
-$('selRevSort').addEventListener('change', () => {
-  try { localStorage.setItem('twstock_rev_sort', $('selRevSort').value); } catch (e) { /* 寫入失敗（如隱私模式）時僅本次瀏覽有效 */ }
-  renderList(); // 即時重排目前名單，不需重掃；檢視標頭的排序說明由 updateRevLine 跟著目前選擇更新
+$('selRevSortAdd').addEventListener('change', () => {
+  const v = $('selRevSortAdd').value;
+  if (v) setRevSortKeys([...revSortKeys(), v]); // 追加至尾端＝次要排序鍵（Excel 的 Then by）
+});
+$('btnRevSortClear').addEventListener('click', () => setRevSortKeys([]));
+$('revSortChips').addEventListener('click', e => {
+  const btn = e.target && e.target.closest ? e.target.closest('[data-revkey]') : null;
+  if (btn) setRevSortKeys(revSortKeys().filter(k => k !== btn.getAttribute('data-revkey'))); // 移除後序號由 syncRevSortUI 依新鍵列重編
 });
 $('inpFilter').addEventListener('input', renderList);
 $('chkNear').addEventListener('change', renderList);

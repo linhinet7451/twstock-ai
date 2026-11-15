@@ -128,6 +128,14 @@ td.tg{display:none}
 .rev-sub{font-size:11.5px;color:var(--muted);font-weight:400;white-space:nowrap;margin-top:1px}
 .empty{border:1px dashed var(--warn);color:var(--warn);border-radius:8px;padding:10px;margin-bottom:8px;font-size:14px;line-height:1.6}
 .rev-line{color:var(--muted);font-size:13.5px;margin:2px 2px 8px}
+/* 營收名單多重排序（Excel 式可疊加鍵）：chips 依加入順序編號，× 逐一移除；窄屏可換行不溢出 */
+.rev-sort-box{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rev-sort-chips{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rev-sort-chip{display:inline-flex;align-items:center;background:#1b3357;border:1px solid var(--line);border-radius:999px;padding:0 2px 0 10px;min-height:40px;font-size:13.5px;white-space:nowrap}
+.rev-sort-x{background:none;border:none;color:var(--muted);font-size:16px;line-height:1;cursor:pointer;min-width:40px;min-height:40px;border-radius:999px;padding:0}
+.rev-sort-x:hover{color:var(--text)}
+.rev-sort-clear{background:#0b1626;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:13.5px;cursor:pointer;min-height:40px}
+.rev-sort-clear:hover{color:var(--text)}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;margin:12px 0 8px}
 .tabs button{background:#0b1626;color:var(--muted);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:8px 10px;font-size:14px;cursor:pointer;min-height:40px}
 .tabs button.active{background:var(--panel2);color:var(--text);font-weight:700}
