@@ -53,7 +53,7 @@ function updateCompactInfo() {
 }
 
 // ---------- 設定保存 (#65；不含 API Key #68) ----------
-const SETTING_IDS = ['inpTopN', 'inpMinTech', 'inpMinAmount', 'selPeriod', 'selSort', 'inpMinEntry', 'chkEtf', 'inpNewsCount', 'inpModel', 'inpDays'];
+const SETTING_IDS = ['inpTopN', 'inpMinTech', 'inpMinAmount', 'selPeriod', 'selSort', 'inpMinEntry', 'chkEtf', 'inpNewsCount', 'inpModel', 'inpDays', 'inpRevTier'];
 function saveSettings() {
   const d = {};
   for (const id of SETTING_IDS) { const el = $(id); d[id] = el.type === 'checkbox' ? el.checked : el.value; }
@@ -97,7 +97,7 @@ function markPreset() {
 function syncModeUI() { markPreset(); syncRevButton(); refreshSumLine(); }
 async function applyPreset(k) {
   const p = PRESETS[k]; if (!p) return;
-  if (revView()) { $('selList').value = 'candidates'; state.revHistShown = false; } // 離開營收模式（推薦／觀察任一檢視）：先切回候選名單，markPreset 才能正確渲染預設群組
+  if (revView()) { setListOptions('preset', 'candidates'); state.revHistShown = false; } // 離開營收模式（推薦／觀察任一檢視）：下拉先換回預設模式選項並切回候選名單，markPreset 才能正確渲染預設群組
   $('inpMinTech').value = p.tech; $('inpMinEntry').value = p.entry;
   saveSettings(); syncModeUI(); // 同步收斂（任何 await 之前）：新預設立即亮起、營收鈕立即熄滅、說明／摘要立即回預設脈絡，掃描期間不得雙亮
   log(`已套用選股風格「${p.label}」（技術分 ≥ ${p.tech}、進場適合度 ≥ ${p.entry}）`);
@@ -258,9 +258,18 @@ async function fetchGzipJson(url, onProgress) {
 // revenue.json.gz 是可選資料：與後端主資料平行加載，抓不到（404／失敗）就靜默維持
 // 無營收模式，絕不可讓主載入失敗或跳錯誤提示。標記皆為事實陳述（營收月份＋年增率）。
 const REV_DEF = '營收推薦：月營收年增 > 20%，公布後 20 個交易日內（不套用風格門檻）';
-// 檢視標頭的分層定義：E1 全集（age <= 20）依新鮮度拆兩層——age <= 10 營收推薦、11–20 營收觀察
-const REV_REC_DEF = '營收推薦：月營收年增 > 20%，事件後 10 個交易日內（不套用風格門檻）';
-const REV_WATCH_DEF = '營收觀察：月營收年增 > 20%，事件後 11–20 個交易日（不套用風格門檻）';
+// 推薦分層日：使用者可在「選股設定」自訂（1–19，預設 10，持久化於 twstock_settings）。
+// age <= 分層日為營收推薦、分層日 < age <= 20 為營收觀察；年增門檻 > 20% 與事件窗
+// 20 日是 E1 驗證標準、鎖定不給改，故只有分層日開放自訂。
+function revTierDays() {
+  const el = $('inpRevTier');
+  let v = el ? parseInt(el.value, 10) : 10;
+  if (!Number.isFinite(v)) v = 10;
+  return Math.max(1, Math.min(19, v));
+}
+// 檢視標頭的分層定義（跟著分層日設定值走）：E1 全集（age <= 20）依新鮮度拆兩層
+const revRecDef = () => `營收推薦：月營收年增 > 20%，事件後 ${revTierDays()} 個交易日內（不套用風格門檻）`;
+const revWatchDef = () => `營收觀察：月營收年增 > 20%，事件後 ${revTierDays() + 1}–20 個交易日（不套用風格門檻）`;
 const HIST_STANDBY = '還沒算過。按上面的按鈕，看這檔以前出現強勢訊號時，後來通常漲還是跌。';
 // 目前檢視是否為營收檢視（rev＝營收推薦／revwatch＝營收觀察），是回傳其 value、否則回傳 ''
 function revView() {
@@ -549,10 +558,11 @@ async function buildRevList(onProgress) {
     }
     out.sort((x, y) => (x._rev.age - y._rev.age) || (y._rev.yoy - x._rev.yoy));
   }
-  // 分層：age <= 10 為營收推薦、11–20 為營收觀察（E1 全集不變）；out 已全域排序，
-  // 兩份子名單各自維持 age 小到大、同 age 以 yoy 大到小。
-  state.results.rev = out.filter(a => a._rev && a._rev.age <= 10);
-  state.results.revwatch = out.filter(a => a._rev && a._rev.age > 10);
+  // 分層：age <= 分層日（設定值，預設 10）為營收推薦、其後至 20 日為營收觀察（E1 全集
+  // 不變）；out 已全域排序，兩份子名單各自維持 age 小到大、同 age 以 yoy 大到小。
+  const tier = revTierDays();
+  state.results.rev = out.filter(a => a._rev && a._rev.age <= tier);
+  state.results.revwatch = out.filter(a => a._rev && a._rev.age > tier);
   updateRevLine();
   if (revView()) renderList();
   return out;
@@ -569,7 +579,7 @@ function updateRevLine(displayed) {
   const nearLbl = $('chkNear') && $('chkNear').closest('label');
   if (nearLbl) nearLbl.classList.toggle('hidden', isRev);
   if (!isRev) return;
-  const def = view === 'revwatch' ? REV_WATCH_DEF : REV_REC_DEF;
+  const def = view === 'revwatch' ? revWatchDef() : revRecDef();
   if (state.revLoading) { el.textContent = def + '・排序：事件新到舊、年增高到低｜名單載入中…'; return; }
   const total = state.revTotal != null ? state.revTotal : revEventEntries().length;
   const cardableAll = state.results.rev.length + state.results.revwatch.length;
@@ -579,28 +589,41 @@ function updateRevLine(displayed) {
     (shown < cardable ? `共 ${cardable} 檔，搜尋後顯示 ${shown} 檔` : `目前 ${cardable} 檔`) +
     (total > cardableAll ? `（另 ${total - cardableAll} 檔歷史不足 125 日，無法產生卡片）` : '');
 }
+// 名單下拉改為模式專屬（兩套系統不在同一下拉混列）：預設模式只有候選／觀察／查詢
+// 三項，營收模式只有營收推薦／營收觀察兩項；營收檢視只能由「營收推薦」按鈕進入，
+// 進入後在營收模式內以下拉切換推薦／觀察。選項集合的切換點：enterRevMode（進營收）、
+// applyPreset／runScan（離營收）、syncRevOption（營收資料變得不可用時收斂回預設）。
+const LIST_OPTIONS = {
+  preset: [['candidates', '可進場候選'], ['watch', '技術強勢觀察'], ['custom', '個股查詢結果']],
+  rev: [['rev', '營收推薦'], ['revwatch', '營收觀察']],
+};
+function setListOptions(mode, value) {
+  const sel = $('selList'); if (!sel) return;
+  const opts = LIST_OPTIONS[mode] || LIST_OPTIONS.preset;
+  const keep = opts.some(([v]) => v === sel.value) ? sel.value : '';
+  sel.innerHTML = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+  sel.value = value && opts.some(([v]) => v === value) ? value : (keep || opts[0][0]);
+}
 function syncRevOption() {
   const sel = $('selList'); if (!sel) return;
   const show = !!state.revenue && state.mode === 'real';
-  for (const [val, label] of [['rev', '營收推薦'], ['revwatch', '營收觀察']]) {
-    let opt = sel.querySelector(`option[value="${val}"]`);
-    if (show && !opt) {
-      opt = document.createElement('option');
-      opt.value = val; opt.textContent = label;
-      sel.appendChild(opt);
-    } else if (!show && opt) {
-      if (sel.value === val) sel.value = 'candidates';
-      opt.remove();
-    }
+  if (!show) {
+    // 營收不可用（示範模式／未載入／載入失敗）：下拉收斂回預設三項；
+    // 正停在營收檢視時一併切回候選名單，避免 selList 指向不存在的選項。
+    if (revView()) { setListOptions('preset', 'candidates'); state.revHistShown = false; }
+    else setListOptions('preset'); // 已是預設檢視：重建同組選項並保留目前值
+    updateRevLine();
   }
-  if (!show) updateRevLine();
+  // 營收可用時不在此更動選項集合：目前是哪個模式就維持該模式的選項，
+  // 避免在預設模式把營收選項塞回下拉（模式轉換點才負責切換集合）。
   syncRevButton();
 }
 // 「營收推薦」按鈕：與四顆風格預設完全同級的按鈕元件（同 .btn.preset 樣式、同尺寸、
 // 同 active 呈現），排進同一組按鈕列做第五顆；僅營收資料已載入且正式模式時出現。
-// 點按直接切到營收推薦檢視——名單就是 E1 集合本體依新鮮度分層（age <= 10），不套用
-// 任何風格預設門檻（忠實度紅線）；「不套用風格門檻」的說明放在檢視標頭行。
-// 營收觀察（11–20 日）由名單下拉切換，與推薦共用同一顆按鈕的 active 狀態。
+// 點按直接切到營收推薦檢視——名單就是 E1 集合本體依新鮮度分層（age <= 分層日，
+// 設定值預設 10），不套用任何風格預設門檻（忠實度紅線）；「不套用風格門檻」的
+// 說明放在檢視標頭行。營收觀察（分層日後至 20 日）在營收模式內由名單下拉切換
+// （下拉此時只有營收推薦／營收觀察兩項），與推薦共用同一顆按鈕的 active 狀態。
 // 點按即進入營收模式：五顆按鈕互斥、說明與摘要同步切換（見 syncModeUI）。
 function ensureRevButton() {
   let btn = $('btnRevPreset');
@@ -632,7 +655,7 @@ function ensureRevButton() {
 // 說明改營收定義、摘要改「載入中」、已建立的名單先即時呈現（不殘留預設名單）；
 // 之後才以掃描式進度回饋重建名單，完成後摘要定版。任何時間點畫面不得雙亮。
 async function enterRevMode(target) {
-  $('selList').value = target === 'revwatch' ? 'revwatch' : 'rev';
+  setListOptions('rev', target === 'revwatch' ? 'revwatch' : 'rev'); // 下拉同步換成營收模式專屬選項（只有推薦／觀察兩項）
   resetRevHistView(); // 歷史表現分頁回到待機（按鈕驅動，與其他模式一致）
   state.revLoading = true;
   syncModeUI(); // 互斥收斂：預設鈕全取消 active、營收鈕 active、說明改營收定義、摘要改載入中
@@ -667,7 +690,9 @@ function syncRevButton() {
   const row = $('presetRow'); if (row) row.classList.toggle('has-rev', show);
   const active = show && !!revView(); // 推薦／觀察任一檢視下按鈕都亮（同一模式）
   btn.classList.toggle('active', active);
-  btn.innerHTML = `<span class="p-name">營收推薦</span><span class="p-sub">${active ? (state.revLoading ? '載入中…' : '✓ 使用中') : '套用並重掃'}</span>`;
+  // 分層日自訂（≠ 預設 10）時，比照預設群組「自訂」的標示慣例，在使用中副標註明分層自訂
+  const sub = active ? (state.revLoading ? '載入中…' : (revTierDays() !== 10 ? '✓ 使用中（分層自訂）' : '✓ 使用中')) : '套用並重掃';
+  btn.innerHTML = `<span class="p-name">營收推薦</span><span class="p-sub">${sub}</span>`;
   updateCompactInfo(); // 精簡列跟著模式走（營收模式顯示推薦／觀察雙計數）
 }
 function rowsToStock(code, name, market, rows) {
@@ -811,7 +836,7 @@ async function runScan() {
     } else {
       setProgress(100, `掃描完成：推薦 ${state.results.candidates.length} 檔、觀察 ${res.watch.length} 檔（最新日期 ${res.latestDate}）`);
     }
-    $('selList').value = 'candidates';
+    setListOptions('preset', 'candidates'); // 下拉收斂回預設模式選項（涵蓋由營收模式經更新資料等路徑觸發掃描的情況）
     state.revHistShown = false; // 預設掃描即離開營收模式
     syncModeUI(); // 按鈕群組／說明／摘要回到預設脈絡（避免殘留營收模式的 active 與文案）
     renderList();
@@ -891,13 +916,15 @@ function renderList() {
       else if ($('inpFilter').value.trim()) empty.textContent = '沒有符合搜尋的股票，請清除搜尋再試。';
       else if (revView() === 'rev') {
         const w = state.results.revwatch.length;
+        const tier = revTierDays();
         empty.textContent = w > 0
-          ? `目前沒有 10 個交易日內的營收事件；11–20 日的事件在營收觀察（${w} 檔），用上方名單下拉切換即可看。`
+          ? `目前沒有 ${tier} 個交易日內的營收事件；${tier + 1}–20 日的事件在營收觀察（${w} 檔），用上方名單下拉切換即可看。`
           : '目前沒有股票在營收事件窗內（月營收年增 > 20%，公布後 20 個交易日）。';
       } else {
         const r = state.results.rev.length;
+        const tier = revTierDays();
         empty.textContent = r > 0
-          ? `目前沒有 11–20 個交易日的營收事件；10 個交易日內的事件在營收推薦（${r} 檔），用上方名單下拉切換即可看。`
+          ? `目前沒有 ${tier + 1}–20 個交易日的營收事件；${tier} 個交易日內的事件在營收推薦（${r} 檔），用上方名單下拉切換即可看。`
           : '目前沒有股票在營收事件窗內（月營收年增 > 20%，公布後 20 個交易日）。';
       }
     } else if (st && st.scanned === 0 && st.qualityBad > 0 && st.qualityBad >= st.typeExcluded && st.qualityBad >= st.historyShort) {
@@ -1148,7 +1175,7 @@ if (!found.length) {
 // 查無此代號/名稱：明講查無，並清掉舊的查詢結果顯示、回到掃描名單（不再留著上一筆誤導）
 // （舊版官方逐檔補抓同樣受 CORS 限制多半失敗，一併移除，改以此訊息收尾）
 state.results.custom = [];
-$('selList').value = 'candidates';
+if (!revView()) $('selList').value = 'candidates'; // 營收模式：下拉沒有候選選項，留在目前營收檢視（即該模式的名單），僅清查詢結果
 renderList();
 setProgress(0, `查無「${q}」，請確認代號或名稱`);
 log(`個股查詢查無「${q}」`);
@@ -1162,8 +1189,8 @@ try { a = TWCore.analyze(stock, $('selPeriod').value);} catch (e) {}
 if (!a) { alert('策略無法計算（資料不足或 ATR 異常）'); return;}
 a.reason = '個股查詢結果（不列入每日推薦排行）';
 state.results.custom = [a];
-$('selList').value = 'custom';
-renderList(); selectAnalysis(a, true);
+if (!revView()) { $('selList').value = 'custom'; renderList(); } // 營收模式：下拉只有營收檢視（無 custom 選項），不硬塞；個股明細照常由 selectAnalysis 呈現，名單維持營收檢視
+selectAnalysis(a, true);
 switchTab('tabStrategy');
 setProgress(100, `已載入 ${a.code} ${a.name}｜技術 ${a.techScore} 分｜進場適合度 ${a.entryScore} 分 — 明細在下方`);
 fetchNews(a); // #173 自動取得新聞（不自動呼叫 Gemini #174）
@@ -1699,7 +1726,27 @@ $('btnExport').addEventListener('click', exportExcel);
 document.querySelectorAll('#detailTabs button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 window.addEventListener('resize', () => { if (state.selected) drawChart(state.selected); if ($('tabKline').classList.contains('active') && klState.a) drawKline(); });
 $('btnReloadData').addEventListener('click', updateToLatest);
-$('btnClearQuery').addEventListener('click', () => { $('inpQuery').value = ''; state.results.custom = []; $('selList').value = 'candidates'; renderList(); syncModeUI(); $('inpQuery').focus(); }); // 切回候選檢視即離開營收模式，按鈕／說明／摘要同步收斂
+$('btnClearQuery').addEventListener('click', () => { $('inpQuery').value = ''; state.results.custom = []; $('selList').value = revView() ? 'rev' : 'candidates'; renderList(); syncModeUI(); $('inpQuery').focus(); }); // 清除查詢：營收模式回營收推薦檢視、預設模式回候選檢視（下拉選項為模式專屬，值須落在目前選項集合內），按鈕／說明／摘要同步收斂
+$('inpRevTier').addEventListener('change', async () => {
+  // 分層日自訂：夾限 1–19 後存檔（SETTING_IDS 的 change 保存會先跑一次，這裡夾限後再存定版）
+  const el = $('inpRevTier');
+  let v = parseInt(el.value, 10);
+  if (!Number.isFinite(v)) v = 10;
+  el.value = Math.max(1, Math.min(19, v));
+  saveSettings();
+  if (revActive()) {
+    // 營收模式：分層界線變了 → 即時重建推薦／觀察兩份名單並重繪（比照 enterRevMode 的建名單段）
+    state.revLoading = true;
+    syncModeUI();
+    renderList();
+    const wasBusy = state.busy;
+    if (!wasBusy) setBusy(true);
+    try { await runRevBuild(); }
+    finally { if (!wasBusy) setBusy(false); }
+  } else {
+    syncRevButton(); // 預設模式：只存設定並更新營收鈕副標（分層自訂標記），不打斷目前畫面
+  }
+});
 idb.open().then(async () => { const saved = await idb.get('realStocks'); if (Array.isArray(saved) && saved.length) { state.realStocks = saved; log(`已還原先前匯入資料 ${saved.length} 檔`);} refreshStatus(); loadBackendData(true); }).catch(() => { refreshStatus(); loadBackendData(true); });
 refreshStatus();
 log('台股 AI 智慧選股工作台 V2.0（網頁版）就緒。建議先按「載入離線示範資料」體驗完整流程。');

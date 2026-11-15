@@ -84,6 +84,9 @@
           <select id="selSort"><option>綜合模式</option><option>技術強勢優先</option><option>近期進場優先</option></select></label>
         <label>最低進場適合度（進階微調，0～100）<input type="number" id="inpMinEntry" min="0" max="100" value="45"></label>
         <label class="check"><input type="checkbox" id="chkEtf"> 納入 ETF 推薦</label>
+        <p class="hint rev-set-h">營收推薦設定</p>
+        <label>推薦分層（事件後幾日內算推薦，1～19 日）<input type="number" id="inpRevTier" min="1" max="19" step="1" value="10"></label>
+        <p class="hint">分層日之後到 20 日的事件列在「營收觀察」。年增門檻 &gt; 20%、事件窗 20 日（驗證標準，固定）。</p>
         <button id="btnExplain" class="btn">查看技術分／進場適合度計算說明</button>
       </div>
     </details>
