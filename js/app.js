@@ -265,6 +265,16 @@ function refreshSumLine() {
   if (state.sumBase == null) return;
   $('sumLine').textContent = state.sumBase; // 摘要只報已掃描／推薦／觀察，不含營收事件計數（兩套分離）
 }
+// 主名單第一層的營收數據（純文字、非標籤造型）：有營收資料的股票都在名稱欄下方
+// 以小字顯示「M月營收 ±XX.X%」，不分是否達標事件，與其他數據欄同級。
+// 營收事件檢視用狀態欄的事件標籤呈現同一資訊，故 rev 檢視不重複顯示此行。
+function revTextHtml(a) {
+  if (!a || a.isDemo) return '';
+  if ($('selList') && $('selList').value === 'rev') return '';
+  const info = revInfo(a.code);
+  if (!info) return '';
+  return `<div class="rev-sub">${parseInt(info.m.slice(5), 10)}月營收 ${fmtSign(info.yoy, 1)}%</div>`;
+}
 function loadRevenue() {
   return fetchDataGzip('revenue.json.gz').then(d => {
     state.revenue = (d && d.stocks && typeof d.stocks === 'object') ? d : null;
@@ -755,7 +765,7 @@ function renderList() {
     const tr = document.createElement('tr');
     if (state.selected && state.selected.code === a.code) tr.className = 'selected';
     const cells = [
-      ['排行', i + 1], ['代號', a.code], ['名稱', a.name], ['市場', a.market], ['最新日期', a.date],
+      ['排行', i + 1], ['代號', a.code], ['名稱', `${a.name}${revTextHtml(a)}`], ['市場', a.market], ['最新日期', a.date],
       ['收盤', fmt(a.close)], ['當日漲跌', `<span class="${a.change >= 0 ? 'up' : 'down'}">${fmtSign(a.change)}</span>`],
       ['漲跌幅', `<span class="${a.changePct >= 0 ? 'up' : 'down'}">${fmtSign(a.changePct)}%</span>`],
       ['技術分', `${a.techScore}`],
@@ -770,13 +780,6 @@ function renderList() {
     lv.className = 'lvrow';
     lv.innerHTML = `<span class="stop-txt">停損 ${fmt(a.strat.stop)}</span>・<span class="target-txt">目標一 ${fmt(a.strat.target1)}</span>`;
     tr.appendChild(lv);
-    const ri = revInfo(a.code); // 個股層級營收資訊：有營收資料的股票都補一行（不限事件股、與策略卡同口徑），手機展開欄位才顯示；桌面由策略卡呈現
-    if (ri) {
-      const rv = document.createElement('td');
-      rv.className = 'revrow'; rv.dataset.label = '最新月營收';
-      rv.textContent = `${ri.m}・年增 ${fmtSign(ri.yoy, 1)}%`;
-      tr.appendChild(rv);
-    }
     const tg = document.createElement('td');
     tg.className = 'tg'; tg.textContent = '▾ 展開全部欄位';
     tg.addEventListener('click', ev => { ev.stopPropagation(); const open = tr.classList.toggle('open'); tg.textContent = open ? '▴ 收合欄位' : '▾ 展開全部欄位'; });
