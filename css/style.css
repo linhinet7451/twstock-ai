@@ -80,10 +80,7 @@ input[type=checkbox]{width:auto}
 /* 營收事件按鈕與四顆風格預設完全同級：同列第五顆、同樣式（.btn.preset），
    出現時按鈕列由 4 欄改 5 欄 */
 .preset-btns.has-rev{grid-template-columns:repeat(5,1fr)}
-/* 營收事件檢視：狀態／新鮮度篩選列；整體歷史統計由歷史表現分頁按鈕產出至 #historyResult（比照回測總覽卡片） */
-.rev-filter{display:flex;gap:8px;flex-wrap:wrap;margin:0 2px 8px;align-items:center}
-.rev-filter label{flex-direction:row;align-items:center;gap:6px;font-size:13.5px;color:var(--muted)}
-.rev-filter select{width:auto;padding:6px 8px;font-size:14px}
+/* 營收事件檢視恆顯示完整名單（無檢視內篩選）；整體歷史統計由歷史表現分頁按鈕產出至 #historyResult（比照回測總覽卡片） */
 #historyResult .rs-note{margin-top:10px;font-size:13px;color:var(--muted);line-height:1.6}
 .rev-hist{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
 .rev-hist .rh-note{color:var(--muted);font-size:13px}
