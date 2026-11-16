@@ -685,8 +685,10 @@ async function buildRevList(onProgress) {
 }
 // 營收檢視（推薦／觀察）的標頭：僅在營收檢視＋正式模式＋營收資料已載入時出現。
 // 標頭固定一行該層的定義與排序說明（事實文案）；名單為該層完整集合再套用關鍵字搜尋、
-// 「只看接近進場」與排序，計數隨篩選後檔數變動（displayed 由 renderList 傳入實際顯示檔數）。
-function updateRevLine(displayed) {
+// 「只看接近進場」與排序，計數隨篩選後檔數變動（displayed 由 renderList 傳入篩選後檔數）；
+// 營收名單另比照其他名單套用「顯示檔數」上限（僅渲染層截斷），rendered 為實際渲染檔數，
+// 被截斷時在計數最後接「顯示前 N 檔」。
+function updateRevLine(displayed, rendered) {
   const el = $('revLine'); if (!el) return;
   const view = revView();
   const isRev = !!view && !!state.revenue && state.mode === 'real';
@@ -698,9 +700,16 @@ function updateRevLine(displayed) {
   const cardableAll = state.results.rev.length + state.results.revwatch.length;
   const cardable = state.results[view].length;
   const shown = displayed != null ? displayed : cardable;
+  const capped = rendered != null && rendered < shown;
   const filterWhy = $('inpFilter').value.trim() ? '搜尋後' : '只看接近進場後';
-  el.textContent = def + `・排序：${revSortText()}｜` +
-    (shown < cardable ? `共 ${cardable} 檔，${filterWhy}顯示 ${shown} 檔` : `目前 ${cardable} 檔`) +
+  let countTxt;
+  if (shown < cardable) {
+    countTxt = capped ? `共 ${cardable} 檔，${filterWhy} ${shown} 檔，顯示前 ${rendered} 檔`
+                      : `共 ${cardable} 檔，${filterWhy}顯示 ${shown} 檔`;
+  } else {
+    countTxt = capped ? `目前 ${cardable} 檔，顯示前 ${rendered} 檔` : `目前 ${cardable} 檔`;
+  }
+  el.textContent = def + `・排序：${revSortText()}｜` + countTxt +
     (total > cardableAll ? `（另 ${total - cardableAll} 檔歷史不足 125 日，無法產生卡片）` : '');
 }
 // 名單下拉改為模式專屬（兩套系統不在同一下拉混列）：預設模式只有候選／觀察／查詢
@@ -1051,7 +1060,16 @@ function renderList() {
   updateRevLine();
   syncRevButton();
   syncRevSortUI();
-  const list = currentList();
+  const fullList = currentList();
+  // 營收名單比照其他名單套用「顯示檔數」上限（scanOpts().topN，沿用選股設定同一欄位）：
+  // 只在渲染層取「篩選＋排序後」的前 topN 檔；篩選、排序與選取邏輯永遠作用在完整集合
+  // （fullList），state.results 與 currentList 本身不截斷。topN >= 總數時 list 即 fullList。
+  let list = fullList;
+  const listKind = $('selList').value;
+  if (listKind === 'rev' || listKind === 'revwatch') {
+    const topN = scanOpts().topN;
+    if (fullList.length > topN) list = fullList.slice(0, topN);
+  }
   const body = $('resultBody');
   body.innerHTML = '';
   list.forEach((a, i) => {
@@ -1134,8 +1152,8 @@ function renderList() {
       }
     }
   } else empty.classList.add('hidden');
-  if (revView()) updateRevLine(list.length); // 營收檢視標頭計數跟著關鍵字搜尋後檔數走
-  if (list.length && (!state.selected || !list.some(a => a.code === state.selected.code))) selectAnalysis(list[0], false);
+  if (revView()) updateRevLine(fullList.length, list.length); // 營收標頭計數：篩選後檔數＋實際渲染檔數（顯示檔數截斷）
+  if (fullList.length && (!state.selected || !fullList.some(a => a.code === state.selected.code))) selectAnalysis(list[0], false);
   else if (state.selected) selectAnalysis(state.selected, false);
 }
 
@@ -1867,6 +1885,7 @@ if (id === 'tabNews' && state.selected && !state.newsStatus[state.selected.code]
 function init() {
 loadSettings();
 SETTING_IDS.forEach(id => $(id).addEventListener('change', saveSettings));
+$('inpTopN').addEventListener('change', () => { if (revView()) renderList(); }); // 顯示檔數：預設模式於下次掃描套用（原行為）；營收檢視即時重繪套用渲染層上限
 document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
 ['inpMinTech', 'inpMinEntry'].forEach(id => $(id).addEventListener('change', markPreset));
 markPreset();
